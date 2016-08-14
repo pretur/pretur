@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "mocha --compilers ts:ts-node/register tsx:ts-node/register packages/**/*.spec.ts",
+    "test": "mocha --compilers ts:ts-node/register --compilers tsx:ts-node/register packages/**/*.spec.ts",
     "postinstall": "lerna bootstrap"
   },
   "repository": {
