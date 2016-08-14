@@ -28,5 +28,8 @@
   "homepage": "https://github.com/pretur/pretur#readme",
   "dependencies": {
     "messageformat": "^0.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^2.1.0-dev.20160814"
   }
 }
