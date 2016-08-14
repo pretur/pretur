@@ -1,0 +1,32 @@
+{
+  "name": "pretur.i18n",
+  "version": "0.3.6",
+  "description": "Internationalization using MessageFormat",
+  "main": "lib/main.js",
+  "typings": "lib/main.d.ts",
+  "files": [
+    "lib",
+    "typings.json"
+  ],
+  "scripts": {
+    "build": "tsc -d ../../typings/index.d.ts src/main.ts --rootDir src --outDir lib --module commonjs --removeComments",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "pretur",
+    "i18n",
+    "internationalization",
+    "messageformat",
+    "localization",
+    "l10n"
+  ],
+  "author": "Ali Taheri Moghaddar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pretur/pretur/issues"
+  },
+  "homepage": "https://github.com/pretur/pretur#readme",
+  "dependencies": {
+    "messageformat": "^0.3.1"
+  }
+}
