@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "lerna": "lerna",
-    "test": "mocha --compilers ts:ts-node/register --compilers tsx:ts-node/register packages/**/*.spec.ts"
+    "test": "mocha --compilers ts:ts-node/register --compilers tsx:ts-node/register packages/**/*.spec.ts",
+    "postinstall": "typings install && lerna bootstrap"
   },
   "repository": {
     "type": "git",

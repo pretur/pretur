@@ -3,5 +3,4 @@ node_js:
   - "stable"
 sudo: false
 script:
-  - npm run lerna bootstrap
   - npm test
