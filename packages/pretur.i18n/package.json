@@ -1,6 +1,6 @@
 {
   "name": "pretur.i18n",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Internationalization using MessageFormat",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/pretur/pretur/issues"
   },
-  "homepage": "https://github.com/pretur/pretur#readme",
+  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.i18n",
   "dependencies": {
     "messageformat": "^0.3.1"
   },

@@ -1,4 +1,4 @@
-# [Pretur i18n](https://github.com/pretur/pretur/packages/pretur.i18n)
+# [Pretur i18n](https://github.com/pretur/pretur/tree/master/packages/pretur.i18n)
 [![npm](https://badge.fury.io/js/pretur.i18n.svg)](https://badge.fury.io/js/pretur.i18n)
 [![Build Status](https://travis-ci.org/pretur/pretur.svg?branch=master)](https://travis-ci.org/pretur/pretur)
 

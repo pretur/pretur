@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lerna": "lerna",
+    "lerna:publish": "lerna publish --skip-npm --skip-git",
     "test": "mocha --compilers ts:ts-node/register --compilers tsx:ts-node/register packages/**/*.spec.ts",
     "postinstall": "typings install && lerna bootstrap"
   },
