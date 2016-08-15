@@ -1,7 +1,7 @@
 {
-  "name": "pretur.i18n",
-  "version": "0.3.8",
-  "description": "Internationalization using MessageFormat",
+  "name": "pretur.validation",
+  "version": "0.1.2",
+  "description": "Validation library with good support for i18n",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
   "files": [
@@ -9,16 +9,14 @@
     "typings.json"
   ],
   "scripts": {
-    "build": "tsc -d ../../typings/index.d.ts src/main.ts --rootDir src --outDir lib --module commonjs --removeComments",
+    "build": "tsc -d ../../typings/index.d.ts src/main.ts --rootDir src --outDir lib --target es5 --module commonjs --removeComments",
     "prepublish": "npm run build"
   },
   "keywords": [
     "pretur",
-    "i18n",
-    "internationalization",
-    "messageformat",
-    "localization",
-    "l10n"
+    "validation",
+    "validate",
+    "i18n"
   ],
   "author": "Ali Taheri Moghaddar",
   "license": "MIT",
@@ -29,9 +27,10 @@
   "bugs": {
     "url": "https://github.com/pretur/pretur/issues"
   },
-  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.i18n",
+  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.validation",
   "dependencies": {
-    "messageformat": "^0.3.1"
+    "iban": "0.0.6",
+    "pretur.i18n": "0.3.8"
   },
   "devDependencies": {
     "typescript": "^2.1.0-dev.20160814"
