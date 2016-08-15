@@ -5,6 +5,7 @@
   "scripts": {
     "lerna:publish": "lerna publish --skip-npm --skip-git",
     "lerna:bootstrap": "lerna exec -- npm install",
+    "lint": "tslint -e packages/*/node_modules/** -e packages/*/lib/** packages/**/*.ts packages/**/*.tsx",
     "test": "mocha --compilers ts:ts-node/register --compilers tsx:ts-node/register packages/**/*.spec.ts",
     "postinstall": "typings install && npm run lerna:bootstrap"
   },
@@ -17,6 +18,8 @@
     "lerna": "2.0.0-beta.26",
     "mocha": "^3.0.2",
     "ts-node": "^1.2.2",
+    "tslint": "^3.14.0",
+    "tslint-eslint-rules": "^1.3.0",
     "typescript": "^2.1.0-dev.20160814",
     "typings": "^1.3.2"
   }

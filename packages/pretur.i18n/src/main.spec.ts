@@ -33,7 +33,9 @@ describe('buildCompiler', () => {
     const formatter = messageFormatCompile<{ HUMAN: string }>('hello {HUMAN}');
     expect(formatter({ HUMAN: 'jack' })).to.be.equals('hello jack');
 
-    const formatter2 = messageFormatCompile<{ PLACE: number }>('hello {PLACE, selectordinal, other{#th}} human');
+    const formatter2 = messageFormatCompile<{ PLACE: number }>(
+      'hello {PLACE, selectordinal, other{#th}} human'
+    );
     expect(formatter2({ PLACE: 4 })).to.be.equals('hello 4th human');
   });
 
@@ -141,7 +143,7 @@ const french = {
     a: {
       b: {
         c: {
-          de: englishCompiler.constant('bonjour'),
+          de: frenchCompiler.constant('bonjour'),
         },
       },
     },
@@ -189,9 +191,13 @@ describe('internationalize', () => {
     expect(i18n.buildFormatter('fr')('A_B_C_DE')()).to.be.equals('bonjour');
   });
 
-  it('should properly build format builder that works on the other provided languages with main as fallback', () => {
-    const i18n = internationalize(english, french);
-    expect(i18n.buildFormatter('fr')('C')()).to.be.equals('bye');
-  });
+  it(
+    'should properly build format builder that works on ' +
+    ' the other provided languages with main as fallback',
+    () => {
+      const i18n = internationalize(english, french);
+      expect(i18n.buildFormatter('fr')('C')()).to.be.equals('bye');
+    }
+  );
 
 });

@@ -18,9 +18,21 @@ export interface Language {
   [key: string]: I18nStringBuilder<string, any>;
 }
 
-export function format(language: Language, fallback: Language, bundle: I18nBundle): string;
-export function format(language: Language, fallback: Language, key: string): I18nStringBuilder<string, any>;
-export function format(language: Language, fallback: Language, bundleOrKey: string | I18nBundle): any {
+export function format(
+  language: Language,
+  fallback: Language,
+  bundle: I18nBundle
+): string;
+export function format(
+  language: Language,
+  fallback: Language,
+  key: string
+): I18nStringBuilder<string, any>;
+export function format(
+  language: Language,
+  fallback: Language,
+  bundleOrKey: string | I18nBundle
+): any {
   if (process.env.NODE_ENV !== 'production' && !language) {
     throw new TypeError('language must be provided');
   }
@@ -50,7 +62,10 @@ export function format(language: Language, fallback: Language, bundleOrKey: stri
   }
 }
 
-export function buildFormatter<F extends I18nFormatter>(language: Language, fallback: Language = null): F {
+export function buildFormatter<F extends I18nFormatter>(
+  language: Language,
+  fallback: Language = null
+): F {
   return format.bind(null, language, fallback);
 }
 
@@ -61,7 +76,9 @@ export interface MessageFormatParameters {
 export interface Compiler {
   constant(str: string): I18nStringBuilder<string, void>;
   callback<D>(callback: (data?: D) => string): I18nStringBuilder<string, D>;
-  messageFormat<D extends MessageFormatParameters>(formatString: string): I18nStringBuilder<string, D>;
+  messageFormat<D extends MessageFormatParameters>(
+    formatString: string
+  ): I18nStringBuilder<string, D>;
   describe<T>(tree: T): LanguageDescriptor<T>;
 }
 
@@ -93,7 +110,7 @@ export function buildCompiler(locale: string): Compiler {
         locale,
         tree,
       };
-    }
+    },
   };
 }
 

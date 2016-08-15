@@ -1,6 +1,6 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 
-import {rangedNumber} from './rangedNumber';
+import { rangedNumber } from './rangedNumber';
 
 describe('validator:rangedNumber', () => {
 
@@ -14,36 +14,81 @@ describe('validator:rangedNumber', () => {
     expect(validator3(Number.POSITIVE_INFINITY)).to.be.null;
   });
 
-  it('should return bundle with {VALUE, FROM, TO, INCLUSIVE_FROM, INCLUSIVE_TO} for invalid input', () => {
-    const validator = rangedNumber('A', -10, 10, true, false);
-    expect(validator(null)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: null, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-    expect(validator(undefined)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: undefined, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-    expect(validator(Number.NaN)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: Number.NaN, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-    expect(validator(Number.POSITIVE_INFINITY)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: Number.POSITIVE_INFINITY, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-    expect(validator(Number.NEGATIVE_INFINITY)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: Number.NEGATIVE_INFINITY, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-    expect(validator(-10.1)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: -10.1, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-    expect(validator(10)).to.deep.equal({
-      key: 'A',
-      data: { VALUE: 10, FROM: -10, TO: 10, INCLUSIVE_FROM: true, INCLUSIVE_TO: false, },
-    });
-  });
+  it(
+    'should return bundle with {VALUE, FROM, TO, INCLUSIVE_FROM, INCLUSIVE_TO} for invalid input',
+    () => {
+      const validator = rangedNumber('A', -10, 10, true, false);
+      expect(validator(null)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: null,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+      expect(validator(undefined)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: undefined,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+      expect(validator(Number.NaN)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: Number.NaN,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+      expect(validator(Number.POSITIVE_INFINITY)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: Number.POSITIVE_INFINITY,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+      expect(validator(Number.NEGATIVE_INFINITY)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: Number.NEGATIVE_INFINITY,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+      expect(validator(-10.1)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: -10.1,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+      expect(validator(10)).to.deep.equal({
+        key: 'A',
+        data: {
+          VALUE: 10,
+          FROM: -10,
+          TO: 10,
+          INCLUSIVE_FROM: true,
+          INCLUSIVE_TO: false,
+        },
+      });
+    }
+  );
 
 });
