@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lerna:publish": "lerna publish --skip-npm --skip-git",
     "lerna:bootstrap": "lerna exec -- npm install",
+    "lerna:publish": "lerna publish --skip-npm --skip-git",
+    "publish-all": "lerna exec -- npm publish",
     "lint": "tslint -e packages/*/node_modules/** -e packages/*/lib/** packages/**/*.ts packages/**/*.tsx",
     "test": "mocha --compilers ts:ts-node/register --compilers tsx:ts-node/register packages/**/*.spec.ts",
     "postinstall": "typings install && npm run lerna:bootstrap"
