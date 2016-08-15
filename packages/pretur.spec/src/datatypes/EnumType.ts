@@ -38,10 +38,8 @@ export default class EnumType<TKey extends string> extends AbstractType {
 
     const filteredValues = values.filter(Array.isArray);
 
-    if (process.env.NODE_ENV !== 'production') {
-      if (filteredValues.length === 0) {
-        throw new Error(`enum ${name} contains no value.`);
-      }
+    if (process.env.NODE_ENV !== 'production' && filteredValues.length === 0) {
+      throw new Error(`enum ${name} contains no value.`);
     }
 
     this.values = filteredValues

@@ -103,11 +103,15 @@ export function validateAttribute(attribute: Attribute<any>) {
       throw new Error(`Only primary keys can be auto increment. Check ${attribute.name}.`);
     }
 
-    if (attribute.unique && attribute.required && attribute.primary) {
+    if (attribute.primary && (attribute.unique || attribute.required)) {
       throw new Error(`primary means unique and required. Providing both is redundant.`);
     }
 
-    if (attribute.validator && attribute.validator(attribute.defaultValue) !== null) {
+    if (
+      attribute.defaultValue !== undefined &&
+      attribute.validator &&
+      attribute.validator(attribute.defaultValue) !== null
+    ) {
       throw new Error(
         `The validator does not validate the defaultValue of ${attribute.defaultValue}`
       );
@@ -140,6 +144,10 @@ export function appendAttribute(model: RawModel<any>, ...attributes: Attribute<a
 }
 
 export function createAttributeBuilder(model: RawModel<any>): AttributeBuilder {
+  if (process.env.NODE_ENV !== 'production' && !model) {
+    throw new Error('model must be provided');
+  }
+
   const commonDefaults = getCommonDefaults(model.owner);
   const pkDefaults = getPrimaryKeyDefaults(model.owner);
   const uniqueDefaults = getUniqueDefaults(model.owner);
