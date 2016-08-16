@@ -1,7 +1,7 @@
 import { Validator } from 'pretur.validation';
-import { assign, chain } from 'lodash';
+import { assign, chain, find } from 'lodash';
 import { RawModel } from './model';
-import { DataTypes, AbstractType, EnumType, IntegerType, StringType } from './datatypes';
+import { DataTypes, AbstractType, IntegerType, StringType } from './datatypes';
 
 export * from './datatypes';
 
@@ -34,10 +34,8 @@ function getCommonDefaults(owner: string | string[]): Attribute<any> {
 export interface PrimaryKeyOptions<T> {
   name: string;
   type?: IntegerType | StringType;
-  owner?: string | string[];
   autoIncrement?: boolean;
   mutable?: boolean;
-  defaultValue?: T;
   validator?: Validator<T>;
 }
 
@@ -50,47 +48,9 @@ function getPrimaryKeyDefaults(owner: string | string[]): Attribute<any> {
   });
 };
 
-export interface SimpleOptions<T> {
-  name: string;
-  type: AbstractType;
-  owner?: string | string[];
-  required?: boolean;
-  defaultValue?: T;
-  validator?: Validator<T>;
-}
-
-export interface UniqueOptions<T> {
-  name: string;
-  type: AbstractType;
-  owner?: string | string[];
-  required?: boolean;
-  mutable?: boolean;
-  validator?: Validator<T>;
-}
-
-function getUniqueDefaults(owner: string | string[]): Attribute<any> {
-  return assign<Attribute<any>, Attribute<any>>(getCommonDefaults(owner), {
-    unique: true,
-  });
-}
-
-export interface EnumOptions<TKey extends string> {
-  name: string;
-  type: EnumType<TKey>;
-  owner?: string | string[];
-  required?: boolean;
-  unique?: boolean;
-  mutable?: boolean;
-  defaultValue?: TKey;
-  validator?: Validator<TKey>;
-}
-
 export interface AttributeBuilder {
   <T>(options: Attribute<T>): void;
   primaryKey?<T>(options?: PrimaryKeyOptions<T>): void;
-  simple?<T>(options: SimpleOptions<T>): void;
-  unique?<T>(options: UniqueOptions<T>): void;
-  enum?<TKey extends string>(options: EnumOptions<TKey>): void;
 }
 
 export function validateAttribute(attribute: Attribute<any>) {
@@ -99,12 +59,24 @@ export function validateAttribute(attribute: Attribute<any>) {
       throw new Error(`Attribute name < ${attribute.name} > is invalid`);
     }
 
+    if (!(attribute.type instanceof AbstractType)) {
+      throw new Error(`Attribute ${attribute.name} does not have a valid type.`);
+    }
+
     if (attribute.autoIncrement && !attribute.primary) {
       throw new Error(`Only primary keys can be auto increment. Check ${attribute.name}.`);
     }
 
+    if (attribute.autoIncrement && !IntegerType.is(attribute.type)) {
+      throw new Error(`Only integer attributes can be auto incremented. Check ${attribute.name}.`);
+    }
+
     if (attribute.primary && (attribute.unique || attribute.required)) {
       throw new Error(`primary means unique and required. Providing both is redundant.`);
+    }
+
+    if (attribute.validator && typeof attribute.validator !== 'function') {
+      throw new Error(`Attribute ${attribute.name} has non function validator.`);
     }
 
     if (
@@ -137,6 +109,15 @@ export function appendAttribute(model: RawModel<any>, ...attributes: Attribute<a
       );
     }
 
+    if (attribute.primary) {
+      const previousPrimary = find(model.attributes, a => a.primary);
+      if (previousPrimary) {
+        throw new Error(
+          `Model ${model.name} already has a primaryKey attribute of ${previousPrimary.name}.`
+        );
+      }
+    }
+
     validateAttribute(attribute);
   }
 
@@ -150,7 +131,6 @@ export function createAttributeBuilder(model: RawModel<any>): AttributeBuilder {
 
   const commonDefaults = getCommonDefaults(model.owner);
   const pkDefaults = getPrimaryKeyDefaults(model.owner);
-  const uniqueDefaults = getUniqueDefaults(model.owner);
 
   function attributeBuilder<T>(options: Attribute<T>): void {
     appendAttribute(model, commonDefaults, options);
@@ -159,19 +139,10 @@ export function createAttributeBuilder(model: RawModel<any>): AttributeBuilder {
   const ab = <AttributeBuilder>attributeBuilder;
 
   ab.primaryKey = function buildPrimaryKey<T>(options?: PrimaryKeyOptions<T>): void {
+    if (options && StringType.is(options.type) && !('autoIncrement' in options)) {
+      options.autoIncrement = false;
+    }
     appendAttribute(model, pkDefaults, <Attribute<T>>options);
-  };
-
-  ab.simple = function buildSimple<T>(options?: SimpleOptions<T>): void {
-    appendAttribute(model, commonDefaults, options);
-  };
-
-  ab.unique = function buildUnique<T>(options: UniqueOptions<T>): void {
-    appendAttribute(model, uniqueDefaults, options);
-  };
-
-  ab.enum = function buildEnum<TKey extends string>(options: EnumOptions<TKey>): void {
-    appendAttribute(model, commonDefaults, options);
   };
 
   return ab;

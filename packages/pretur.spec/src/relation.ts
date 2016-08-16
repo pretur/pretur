@@ -102,7 +102,10 @@ export function appendRelation(model: RawModel<any>, relation: Relation): void {
   if (!Array.isArray(model.relations)) {
     model.relations = [];
   }
-  if (model.relations.filter(r => r.alias === relation.alias).length > 0) {
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    model.relations.filter(r => r.alias === relation.alias).length > 0
+  ) {
     throw new Error(`relation from ${model.name} to ${relation.model} as ${relation.alias} ` +
       `cannot be applied because there is already another relation with the same alias.`);
   }

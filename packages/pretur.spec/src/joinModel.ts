@@ -81,13 +81,13 @@ export function createJoinModel<T>(
     attribute: createAttributeBuilder(model),
   };
 
-  builder.attribute.simple({
+  builder.attribute({
     name: firstJoinee.key,
     type: firstJoinee.type,
     required: true,
   });
 
-  builder.attribute.simple({
+  builder.attribute({
     name: secondJoinee.key,
     type: secondJoinee.type,
     required: true,
