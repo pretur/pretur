@@ -1,4 +1,5 @@
 import { Validator } from 'pretur.validation';
+import { assign } from 'lodash';
 import { appendAttribute, AbstractType, DataTypes, EnumValue } from './attribute';
 import { Model, UninitializedStateModel } from './model';
 
@@ -25,8 +26,8 @@ export interface Relation {
   alias: string;
   key: string;
   through?: string;
-  required: boolean;
-  virtual: boolean;
+  required?: boolean;
+  virtual?: boolean;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
@@ -39,11 +40,11 @@ export interface Inheritor {
 
 export interface InheritorsOptions<T> {
   sharedExistingUniqueField: string;
-  typeIdentifierField: string;
   aliasOnSubclasses: string;
-  enumTypeName?: string;
-  required?: boolean;
-  validator?: Validator<T>;
+  typeIdentifierFieldName?: string;
+  typeIdentifierEnumTypeName?: string;
+  typeIdentifierRequired?: boolean;
+  typeIdentifierValidator?: Validator<T>;
   inheritors: Inheritor[];
 }
 
@@ -84,8 +85,18 @@ export interface RecursiveOptions<T> {
   validator?: Validator<T>;
 }
 
-export function appendRelation(model: Model<any>, relation: Relation): void {
+export function appendRelation(model: Model<any>, ...relations: Relation[]): void {
+  const relation = assign<{}, Relation>({}, ...relations);
+
   if (process.env.NODE_ENV !== 'production') {
+    if (!model) {
+      throw new Error('Model must be provided.');
+    }
+
+    if (relations.length === 0) {
+      throw new Error(`No relation provided to be appended to ${model.name}.`);
+    }
+
     if (!relation.alias) {
       throw new Error('Relation should have an alias.');
     }
@@ -150,6 +161,7 @@ export function appendRelation(model: Model<any>, relation: Relation): void {
     checkMod(relation.onDelete);
     checkMod(relation.onUpdate);
   }
+
   model.relations.push(relation);
 }
 
@@ -181,19 +193,21 @@ function inheritors<T>(model: Model<any>, options: InheritorsOptions<T>) {
       onUpdate: 'CASCADE',
     });
 
+    typeEnumValues.push({ name: inheritor.alias, i18nKey: inheritor.i18nKey });
   });
 
   const typeEnum = DataTypes.ENUM(
-    options.enumTypeName || model.name + '_SUBCLASS_TYPE',
-    typeEnumValues
+    options.typeIdentifierEnumTypeName || model.name + 'SubclassType',
+    typeEnumValues,
+    typeEnumValues.map(t => `'${t.name}'`).join(' | ')
   );
 
   appendAttribute(model, {
-    name: options.typeIdentifierField,
+    name: options.typeIdentifierFieldName || 'type',
     type: typeEnum,
-    required: options.required || false,
+    required: !!options.typeIdentifierRequired,
     mutable: true,
-    validator: options.validator,
+    validator: options.typeIdentifierValidator,
   });
 }
 
