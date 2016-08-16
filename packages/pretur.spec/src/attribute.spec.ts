@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { RawModel } from './model';
+import { Model } from './model';
 import { appendAttribute, createAttributeBuilder, DataTypes } from './attribute';
 
-function mockRawModel(name: string): RawModel<any> {
+function mockModel(name: string): Model<any> {
   return {
     name: name,
     owner: null,
@@ -19,7 +19,7 @@ describe('attribute', () => {
   describe('validateAttribute', () => {
 
     it('should fail when name is invalid', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, { name: null, type: t })).to.throw();
@@ -29,14 +29,14 @@ describe('attribute', () => {
     });
 
     it('should fail when type is invalid', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = <any>DataTypes.INTEGER;
 
       expect(() => appendAttribute(model, { name: 'a', type: t })).to.throw();
     });
 
     it('should fail when autoIncrement is used with non-primary', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, {
@@ -48,7 +48,7 @@ describe('attribute', () => {
     });
 
     it('should fail when autoIncrement is used with non-integers', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.STRING();
 
       expect(() => appendAttribute(model, {
@@ -60,7 +60,7 @@ describe('attribute', () => {
     });
 
     it('should fail when primary is used with either unique or require or both', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, {
@@ -95,7 +95,7 @@ describe('attribute', () => {
     });
 
     it('should fail when validator is provided and is not a function', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, {
@@ -106,7 +106,7 @@ describe('attribute', () => {
     });
 
     it('should fail when the validator cannot validate the provided default value', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, {
@@ -139,11 +139,11 @@ describe('attribute', () => {
     });
 
     it('should fail if no attribute is provided', () => {
-      expect(() => appendAttribute(mockRawModel('A'))).to.throw();
+      expect(() => appendAttribute(mockModel('A'))).to.throw();
     });
 
     it('should fail if 2 attributes with the same name are added', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, { name: 'a', type: t })).not.to.throw();
@@ -151,7 +151,7 @@ describe('attribute', () => {
     });
 
     it('should fail if 2 or more attributes are marked primary', () => {
-      const model = mockRawModel('A');
+      const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, { name: 'a', type: t, primary: true })).not.to.throw();
@@ -170,7 +170,7 @@ describe('attribute', () => {
     describe('attributeBuilder', () => {
 
       it('should properly build a valid attribute', () => {
-        const builder = createAttributeBuilder(mockRawModel('a'));
+        const builder = createAttributeBuilder(mockModel('a'));
 
         expect(() => builder({
           name: 'a',
@@ -179,7 +179,7 @@ describe('attribute', () => {
       });
 
       it('should properly build a valid integer primary key attribute', () => {
-        const builder = createAttributeBuilder(mockRawModel('a'));
+        const builder = createAttributeBuilder(mockModel('a'));
 
         expect(() => builder.primaryKey({
           name: 'a',
@@ -188,7 +188,7 @@ describe('attribute', () => {
       });
 
       it('should properly build a valid manual integer primary key attribute', () => {
-        const model = mockRawModel('a');
+        const model = mockModel('a');
         const builder = createAttributeBuilder(model);
 
         expect(() => builder.primaryKey({
@@ -201,7 +201,7 @@ describe('attribute', () => {
       });
 
       it('should properly build a valid string primary key attribute', () => {
-        const builder = createAttributeBuilder(mockRawModel('a'));
+        const builder = createAttributeBuilder(mockModel('a'));
 
         expect(() => builder.primaryKey({
           name: 'b',

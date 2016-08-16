@@ -1,8 +1,8 @@
 import { assign } from 'lodash';
 import { ModificationActions, appendRelation } from './relation';
 import { AbstractType, AttributeBuilder, createAttributeBuilder, DataTypes } from './attribute';
-import { RawModel, UninitializedStateModel } from './model';
-import { Model, buildModelFromRaw } from './api';
+import { Model, UninitializedStateModel } from './model';
+import { Spec, buildSpecFromModel } from './api';
 
 export interface JoinModelBuilder {
   attribute: AttributeBuilder;
@@ -65,7 +65,7 @@ export function createJoinModel<T>(
   const firstJoinee = normalizedOptions.firstJoinee;
   const secondJoinee = normalizedOptions.secondJoinee;
 
-  const model: RawModel<any> = {
+  const model: Model<any> = {
     name: normalizedOptions.name,
     owner: normalizedOptions.owner,
     virtual: normalizedOptions.virtual,
@@ -117,7 +117,7 @@ export function createJoinModel<T>(
     virtual: secondJoinee.model.virtual,
   });
 
-  appendRelation(firstJoinee.model.rawModel, {
+  appendRelation(firstJoinee.model.model, {
     type: 'MANY_TO_MANY',
     owner: normalizedOptions.owner,
     virtual: normalizedOptions.virtual,
@@ -130,7 +130,7 @@ export function createJoinModel<T>(
     required: true,
   });
 
-  appendRelation(secondJoinee.model.rawModel, {
+  appendRelation(secondJoinee.model.model, {
     type: 'MANY_TO_MANY',
     owner: normalizedOptions.owner,
     virtual: normalizedOptions.virtual,
@@ -143,15 +143,15 @@ export function createJoinModel<T>(
     required: true,
   });
 
-  function initialize(): Model<T> {
+  function initialize(): Spec<T> {
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return buildModelFromRaw(model);
+    return buildSpecFromModel(model);
   }
 
   return {
-    rawModel: model,
+    model: model,
     name: normalizedOptions.name,
     owner: normalizedOptions.owner,
     virtual: normalizedOptions.virtual,

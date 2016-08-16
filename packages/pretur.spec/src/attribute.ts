@@ -1,6 +1,6 @@
 import { Validator } from 'pretur.validation';
 import { assign, chain, find } from 'lodash';
-import { RawModel } from './model';
+import { Model } from './model';
 import { DataTypes, AbstractType, IntegerType, StringType } from './datatypes';
 
 export * from './datatypes';
@@ -48,11 +48,6 @@ function getPrimaryKeyDefaults(owner: string | string[]): Attribute<any> {
   });
 };
 
-export interface AttributeBuilder {
-  <T>(options: Attribute<T>): void;
-  primaryKey?<T>(options?: PrimaryKeyOptions<T>): void;
-}
-
 export function validateAttribute(attribute: Attribute<any>) {
   if (process.env.NODE_ENV !== 'production') {
     if (!attribute.name || typeof attribute.name !== 'string') {
@@ -91,7 +86,7 @@ export function validateAttribute(attribute: Attribute<any>) {
   }
 }
 
-export function appendAttribute(model: RawModel<any>, ...attributes: Attribute<any>[]): void {
+export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>[]): void {
   const attribute = assign<{}, Attribute<any>>({}, ...attributes);
 
   if (process.env.NODE_ENV !== 'production') {
@@ -124,7 +119,12 @@ export function appendAttribute(model: RawModel<any>, ...attributes: Attribute<a
   model.attributes.push(attribute);
 }
 
-export function createAttributeBuilder(model: RawModel<any>): AttributeBuilder {
+export interface AttributeBuilder {
+  <T>(options: Attribute<T>): void;
+  primaryKey?<T>(options?: PrimaryKeyOptions<T>): void;
+}
+
+export function createAttributeBuilder(model: Model<any>): AttributeBuilder {
   if (process.env.NODE_ENV !== 'production' && !model) {
     throw new Error('model must be provided');
   }

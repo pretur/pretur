@@ -1,5 +1,5 @@
 import { Validator } from 'pretur.validation';
-import { Indexes, RawModel } from './model';
+import { Indexes, Model } from './model';
 import { Attribute } from './attribute';
 import { Relation } from './relation';
 import { uniq, find, assign, castArray, intersection } from 'lodash';
@@ -27,7 +27,7 @@ export interface Relations {
   byAlias(alias: string): Relation;
 }
 
-export interface Model<T> {
+export interface Spec<T> {
   name: string;
   owner: string | string[];
   virtual: boolean;
@@ -42,7 +42,7 @@ export interface Model<T> {
   nonVirtualRelationArray: Relation[];
   dependencies: string[];
   nonVirtualDependencies: string[];
-  filterByOwner(owner: string | string[]): Model<T>;
+  filterByOwner(owner: string | string[]): Spec<T>;
 }
 
 function ownersIntersect(first: string | string[], second: string | string[]): boolean {
@@ -52,12 +52,12 @@ function ownersIntersect(first: string | string[], second: string | string[]): b
   return intersection(f, s).filter(i => i).length > 0;
 }
 
-export function buildModelFromRaw<T>(raw: RawModel<T>): Model<T> {
+export function buildSpecFromModel<T>(raw: Model<T>): Spec<T> {
   const relations = () => raw.relations;
   const nonVirtualRelations = () => raw.relations.filter(r => !r.virtual);
   const attributes = () => raw.attributes;
 
-  const model = <Model<T>>{
+  const model = <Spec<T>>{
     get name() {
       return raw.name;
     },
@@ -200,7 +200,7 @@ export function buildModelFromRaw<T>(raw: RawModel<T>): Model<T> {
       return null;
     }
 
-    return buildModelFromRaw(assign<{}, RawModel<T>>({}, raw, {
+    return buildSpecFromModel(assign<{}, Model<T>>({}, raw, {
       attributes: raw.attributes.filter(a => !a.owner || ownersIntersect(owner, a.owner)),
       relations: raw.relations.filter(r => !r.owner || ownersIntersect(owner, r.owner)),
     }));

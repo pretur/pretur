@@ -2,29 +2,22 @@ import { Validator } from 'pretur.validation';
 import { assign } from 'lodash';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
-import { buildModelFromRaw, Model } from './api';
+import { buildSpecFromModel, Spec } from './api';
 
 export interface Indexes {
   unique: string[][];
 }
 
-export interface ModelBuilder<T> {
-  attribute: AttributeBuilder;
-  relation: RelationsBuilder;
-  validator(validator: Validator<T>): void;
-  multicolumnUniqueIndex(...fields: string[]): void;
-}
-
 export interface UninitializedStateModel<T> {
-  rawModel: RawModel<T>;
+  model: Model<T>;
   name: string;
   owner: string | string[];
   virtual: boolean;
   join: boolean;
-  initialize: () => Model<T>;
+  initialize: () => Spec<T>;
 }
 
-export interface RawModel<T> {
+export interface Model<T> {
   name: string;
   owner: string | string[];
   virtual: boolean;
@@ -47,13 +40,20 @@ const defaultCreateModelOptions: CreateModelOptions = {
   virtual: false,
 };
 
+export interface ModelBuilder<T> {
+  attribute: AttributeBuilder;
+  relation: RelationsBuilder;
+  validator(validator: Validator<T>): void;
+  multicolumnUniqueIndex(...fields: string[]): void;
+}
+
 export function createModel<T>(
   options: CreateModelOptions,
   initializer: (modelBuilder: ModelBuilder<T>) => void
 ): UninitializedStateModel<T> {
   const normalizedOptions = assign<{}, CreateModelOptions>({}, defaultCreateModelOptions, options);
 
-  const model: RawModel<T> = {
+  const model: Model<T> = {
     name: normalizedOptions.name,
     owner: normalizedOptions.owner,
     virtual: normalizedOptions.virtual,
@@ -76,15 +76,15 @@ export function createModel<T>(
     },
   };
 
-  function initialize(): Model<T> {
+  function initialize(): Spec<T> {
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return buildModelFromRaw(model);
+    return buildSpecFromModel(model);
   }
 
   return {
-    rawModel: model,
+    model: model,
     name: model.name,
     owner: model.owner,
     virtual: model.virtual,
