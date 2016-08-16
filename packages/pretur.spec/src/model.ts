@@ -1,5 +1,4 @@
 import { Validator } from 'pretur.validation';
-import { assign } from 'lodash';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 import { buildSpecFromModel, Spec } from './spec';
@@ -34,12 +33,6 @@ export interface CreateModelOptions {
   virtual?: boolean;
 }
 
-const defaultCreateModelOptions: CreateModelOptions = {
-  name: null,
-  owner: null,
-  virtual: false,
-};
-
 export interface ModelBuilder<T> {
   attribute: AttributeBuilder;
   relation: RelationsBuilder;
@@ -51,12 +44,10 @@ export function createModel<T>(
   options: CreateModelOptions,
   initializer: (modelBuilder: ModelBuilder<T>) => void
 ): UninitializedStateModel<T> {
-  const normalizedOptions = assign<{}, CreateModelOptions>({}, defaultCreateModelOptions, options);
-
   const model: Model<T> = {
-    name: normalizedOptions.name,
-    owner: normalizedOptions.owner,
-    virtual: normalizedOptions.virtual,
+    name: options.name,
+    owner: options.owner,
+    virtual: !!options.virtual,
     join: false,
     attributes: [],
     indexes: { unique: [] },

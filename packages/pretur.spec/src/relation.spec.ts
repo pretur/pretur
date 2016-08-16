@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Model, UninitializedStateModel } from './model';
-import { EnumType } from './attribute';
+import { EnumType, IntegerType, DataTypes, StringType } from './attribute';
 import {
   Relation,
   appendRelation,
@@ -280,8 +280,78 @@ describe('relation', () => {
 
     describe('master builder', () => {
 
-      it('should', () => {
+      it('should properly initialize a master builder', () => {
+        const main = mockModel('Main');
+        expect(() =>
+          createRelationBuilder(main).inheritors
+        ).not.to.throw();
+      });
 
+      it('should properly append master/detail relations and fk on source', () => {
+        const master = mockModel('Master');
+        const detail = mockModel('Detail');
+
+        createRelationBuilder(detail).master({
+          target: mockUninitializedStateModel(master),
+          ownAliasOnTarget: 'details',
+          alias: 'master',
+        });
+
+        expect(master.relations[0].alias).to.be.equals('details');
+        expect(master.relations[0].type).to.be.equals('DETAIL');
+
+        expect(detail.relations[0].alias).to.be.equals('master');
+        expect(detail.relations[0].type).to.be.equals('MASTER');
+
+        expect(detail.attributes[0].name).to.be.equals('masterId');
+        expect(detail.attributes[0].type).to.be.instanceof(IntegerType);
+      });
+
+      it('should properly override the properties of relations and the fk attribute', () => {
+        const master = mockModel('Master');
+        const detail = mockModel('Detail');
+        const noop = () => null;
+
+        detail.virtual = true;
+
+        createRelationBuilder(detail).master({
+          target: mockUninitializedStateModel(master),
+          ownAliasOnTarget: 'details',
+          alias: 'master',
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          owner: 'owner',
+          targetOwner: 'owner2',
+          required: true,
+          validator: noop,
+          foreignKey: 'someId',
+          foreignKeyType: DataTypes.STRING(),
+        });
+
+        expect(master.relations[0].owner).to.be.equals('owner2');
+        expect(master.relations[0].type).to.be.equals('DETAIL');
+        expect(master.relations[0].model).to.be.equals('Detail');
+        expect(master.relations[0].alias).to.be.equals('details');
+        expect(master.relations[0].key).to.be.equals('someId');
+        expect(master.relations[0].required).to.be.equals(true);
+        expect(master.relations[0].virtual).to.be.equals(true);
+        expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
+        expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
+
+        expect(detail.relations[0].owner).to.be.equals('owner');
+        expect(detail.relations[0].type).to.be.equals('MASTER');
+        expect(detail.relations[0].model).to.be.equals('Master');
+        expect(detail.relations[0].alias).to.be.equals('master');
+        expect(detail.relations[0].key).to.be.equals('someId');
+        expect(detail.relations[0].required).to.be.equals(true);
+        expect(detail.relations[0].virtual).to.be.equals(false);
+        expect(detail.relations[0].onDelete).to.be.equals('RESTRICT');
+        expect(detail.relations[0].onUpdate).to.be.equals('NO ACTION');
+
+        expect(detail.attributes[0].name).to.be.equals('someId');
+        expect(detail.attributes[0].type).to.be.instanceof(StringType);
+        expect(detail.attributes[0].required).to.be.equals(true);
+        expect(detail.attributes[0].validator).to.be.equals(noop);
       });
 
     });
