@@ -2,7 +2,7 @@ import { assign } from 'lodash';
 import { ModificationActions, appendRelation } from './relation';
 import { AbstractType, AttributeBuilder, createAttributeBuilder, DataTypes } from './attribute';
 import { Model, UninitializedStateModel } from './model';
-import { Spec, buildSpecFromModel } from './api';
+import { Spec, buildSpecFromModel } from './spec';
 
 export interface JoinModelBuilder {
   attribute: AttributeBuilder;

@@ -2,7 +2,7 @@ import { Validator } from 'pretur.validation';
 import { assign } from 'lodash';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
-import { buildSpecFromModel, Spec } from './api';
+import { buildSpecFromModel, Spec } from './spec';
 
 export interface Indexes {
   unique: string[][];
