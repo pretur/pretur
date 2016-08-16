@@ -24,4 +24,13 @@ describe('EnumType', () => {
     expect(() => EnumType.create<'a'>('A', [undefined], `'a'`)).to.throw();
   });
 
+  it('should throw if any of the values have invalid name', () => {
+    expect(() => EnumType.create<'a'>('A', [[null, 'A'], ['a', 'A']], `'a'`)).to.throw();
+  });
+
+  it('should throw if any of the values have the same name', () => {
+    expect(() => EnumType.create<'a'>('A', [['a', 'A'], ['a', 'A']], `'a'`)).to.throw();
+    expect(() => EnumType.create<'a'>('A', [['a', 'A'], ['a', 'B']], `'a'`)).to.throw();
+  });
+
 });
