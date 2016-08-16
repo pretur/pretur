@@ -134,6 +134,19 @@ describe('attribute', () => {
 
   describe('appendAttribute', () => {
 
+    it('should properly append attributes to the model', () => {
+      const model = mockModel('A');
+      const type = DataTypes.INTEGER();
+
+      appendAttribute(model, { name: 'a', type });
+      appendAttribute(model, { name: 'a', type: null }, { name: 'b', type });
+      appendAttribute(model, <any>{}, { name: 'c', type });
+
+      expect(model.attributes[0].name).to.be.equals('a');
+      expect(model.attributes[1].name).to.be.equals('b');
+      expect(model.attributes[2].name).to.be.equals('c');
+    });
+
     it('should fail if no model is provided', () => {
       expect(() => appendAttribute(null, <any>{})).to.throw();
     });
@@ -144,19 +157,19 @@ describe('attribute', () => {
 
     it('should fail if 2 attributes with the same name are added', () => {
       const model = mockModel('A');
-      const t = DataTypes.INTEGER();
+      const type = DataTypes.INTEGER();
 
-      expect(() => appendAttribute(model, { name: 'a', type: t })).not.to.throw();
-      expect(() => appendAttribute(model, { name: 'a', type: t })).to.throw();
+      expect(() => appendAttribute(model, { name: 'a', type })).not.to.throw();
+      expect(() => appendAttribute(model, { name: 'a', type })).to.throw();
     });
 
     it('should fail if 2 or more attributes are marked primary', () => {
       const model = mockModel('A');
-      const t = DataTypes.INTEGER();
+      const type = DataTypes.INTEGER();
 
-      expect(() => appendAttribute(model, { name: 'a', type: t, primary: true })).not.to.throw();
-      expect(() => appendAttribute(model, { name: 'b', type: t, primary: true })).to.throw();
-      expect(() => appendAttribute(model, { name: 'c', type: t, primary: true })).to.throw();
+      expect(() => appendAttribute(model, { name: 'a', type, primary: true })).not.to.throw();
+      expect(() => appendAttribute(model, { name: 'b', type, primary: true })).to.throw();
+      expect(() => appendAttribute(model, { name: 'c', type, primary: true })).to.throw();
     });
 
   });
