@@ -358,8 +358,78 @@ describe('relation', () => {
 
     describe('injective builder', () => {
 
-      it('should', () => {
+      it('should properly initialize a injective builder', () => {
+        const main = mockModel('Main');
+        expect(() =>
+          createRelationBuilder(main).inheritors
+        ).not.to.throw();
+      });
 
+      it('should properly append injective/master relations and fk on source', () => {
+        const master = mockModel('Master');
+        const injected = mockModel('Injected');
+
+        createRelationBuilder(injected).injective({
+          target: mockUninitializedStateModel(master),
+          ownAliasOnTarget: 'injected',
+          alias: 'master',
+        });
+
+        expect(master.relations[0].alias).to.be.equals('injected');
+        expect(master.relations[0].type).to.be.equals('INJECTIVE');
+
+        expect(injected.relations[0].alias).to.be.equals('master');
+        expect(injected.relations[0].type).to.be.equals('MASTER');
+
+        expect(injected.attributes[0].name).to.be.equals('masterId');
+        expect(injected.attributes[0].type).to.be.instanceof(IntegerType);
+      });
+
+      it('should properly override the properties of relations and the fk attribute', () => {
+        const master = mockModel('Master');
+        const injected = mockModel('Injected');
+        const noop = () => null;
+
+        injected.virtual = true;
+
+        createRelationBuilder(injected).injective({
+          target: mockUninitializedStateModel(master),
+          ownAliasOnTarget: 'injected',
+          alias: 'master',
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          owner: 'owner',
+          targetOwner: 'owner2',
+          required: true,
+          validator: noop,
+          foreignKey: 'someId',
+          foreignKeyType: DataTypes.STRING(),
+        });
+
+        expect(master.relations[0].owner).to.be.equals('owner2');
+        expect(master.relations[0].type).to.be.equals('INJECTIVE');
+        expect(master.relations[0].model).to.be.equals('Injected');
+        expect(master.relations[0].alias).to.be.equals('injected');
+        expect(master.relations[0].key).to.be.equals('someId');
+        expect(master.relations[0].required).to.be.equals(true);
+        expect(master.relations[0].virtual).to.be.equals(true);
+        expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
+        expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
+
+        expect(injected.relations[0].owner).to.be.equals('owner');
+        expect(injected.relations[0].type).to.be.equals('MASTER');
+        expect(injected.relations[0].model).to.be.equals('Master');
+        expect(injected.relations[0].alias).to.be.equals('master');
+        expect(injected.relations[0].key).to.be.equals('someId');
+        expect(injected.relations[0].required).to.be.equals(true);
+        expect(injected.relations[0].virtual).to.be.equals(false);
+        expect(injected.relations[0].onDelete).to.be.equals('RESTRICT');
+        expect(injected.relations[0].onUpdate).to.be.equals('NO ACTION');
+
+        expect(injected.attributes[0].name).to.be.equals('someId');
+        expect(injected.attributes[0].type).to.be.instanceof(StringType);
+        expect(injected.attributes[0].required).to.be.equals(true);
+        expect(injected.attributes[0].validator).to.be.equals(noop);
       });
 
     });
