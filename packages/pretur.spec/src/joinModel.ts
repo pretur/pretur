@@ -1,8 +1,14 @@
 import { assign } from 'lodash';
 import { ModificationActions, appendRelation } from './relation';
-import { AbstractType, AttributeBuilder, createAttributeBuilder, DataTypes } from './attribute';
 import { Model, UninitializedStateModel } from './model';
 import { Spec, buildSpecFromModel } from './spec';
+import {
+  IntegerType,
+  StringType,
+  AttributeBuilder,
+  createAttributeBuilder,
+  DataTypes,
+} from './attribute';
 
 export interface JoinModelBuilder {
   attribute: AttributeBuilder;
@@ -10,7 +16,7 @@ export interface JoinModelBuilder {
 
 export interface JoineeOptions {
   key?: string;
-  type?: AbstractType;
+  type?: IntegerType | StringType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
 }
@@ -19,7 +25,7 @@ export interface Joinee {
   model: UninitializedStateModel<any>;
   alias: string;
   key: string;
-  type: AbstractType;
+  type?: IntegerType | StringType;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
@@ -29,6 +35,16 @@ export function joinee(
   alias: string,
   options?: JoineeOptions
 ): Joinee {
+  if (process.env.NODE_ENV !== 'production') {
+    if (!model) {
+      throw new Error('model is not provided');
+    }
+
+    if (typeof alias !== 'string') {
+      throw new Error(`alias ${alias} is not valid`);
+    }
+  }
+
   return {
     model,
     alias,
