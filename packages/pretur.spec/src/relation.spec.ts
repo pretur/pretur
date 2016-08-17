@@ -436,8 +436,57 @@ describe('relation', () => {
 
     describe('recursive builder', () => {
 
-      it('should', () => {
+      it('should properly initialize a recursive builder', () => {
+        const main = mockModel('Main');
+        expect(() =>
+          createRelationBuilder(main).recursive
+        ).not.to.throw();
+      });
 
+      it('should properly append the recursive relation and its key', () => {
+        const master = mockModel('Master');
+
+        createRelationBuilder(master).recursive({
+          alias: 'parent',
+        });
+
+        expect(master.relations[0].alias).to.be.equals('parent');
+        expect(master.relations[0].type).to.be.equals('RECURSIVE');
+
+        expect(master.attributes[0].name).to.be.equals('parentId');
+        expect(master.attributes[0].type).to.be.instanceof(IntegerType);
+      });
+
+      it('should properly override the properties of the relation and the key', () => {
+        const master = mockModel('Master');
+        const noop = () => null;
+
+        master.owner = 'owner';
+        master.virtual = true;
+
+        createRelationBuilder(master).recursive({
+          alias: 'parent',
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          validator: noop,
+          key: 'someId',
+          keyType: DataTypes.STRING(),
+        });
+
+        expect(master.relations[0].owner).to.be.equals('owner');
+        expect(master.relations[0].type).to.be.equals('RECURSIVE');
+        expect(master.relations[0].model).to.be.equals('Master');
+        expect(master.relations[0].alias).to.be.equals('parent');
+        expect(master.relations[0].key).to.be.equals('someId');
+        expect(master.relations[0].required).to.be.equals(false);
+        expect(master.relations[0].virtual).to.be.equals(true);
+        expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
+        expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
+
+        expect(master.attributes[0].name).to.be.equals('someId');
+        expect(master.attributes[0].type).to.be.instanceof(StringType);
+        expect(master.attributes[0].required).to.be.equals(false);
+        expect(master.attributes[0].validator).to.be.equals(noop);
       });
 
     });

@@ -78,8 +78,8 @@ export interface InjectiveOptions<T> {
 
 export interface RecursiveOptions<T> {
   alias: string;
-  foreignKey?: string;
-  foreignKeyType?: AbstractType;
+  key?: string;
+  keyType?: AbstractType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   validator?: Validator<T>;
@@ -283,16 +283,16 @@ function recursive<T>(model: Model<any>, options: RecursiveOptions<T>) {
     type: 'RECURSIVE',
     model: model.name,
     alias: options.alias,
-    key: options.foreignKey || `${options.alias}Id`,
+    key: options.key || `${options.alias}Id`,
     required: false,
     virtual: model.virtual,
-    onDelete: 'RESTRICT',
-    onUpdate: 'CASCADE',
+    onDelete: options.onDelete || 'RESTRICT',
+    onUpdate: options.onUpdate || 'CASCADE',
   });
 
   appendAttribute(model, {
-    name: options.foreignKey || `${options.alias}Id`,
-    type: options.foreignKeyType || DataTypes.INTEGER(),
+    name: options.key || `${options.alias}Id`,
+    type: options.keyType || DataTypes.INTEGER(),
     required: false,
     validator: options.validator,
   });
