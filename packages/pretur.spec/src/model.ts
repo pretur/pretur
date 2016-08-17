@@ -29,7 +29,7 @@ export interface Model<T> {
 
 export interface CreateModelOptions {
   name: string;
-  owner: string;
+  owner: string | string[];
   virtual?: boolean;
 }
 
@@ -42,7 +42,7 @@ export interface ModelBuilder<T> {
 
 export function createModel<T>(
   options: CreateModelOptions,
-  initializer: (modelBuilder: ModelBuilder<T>) => void
+  initializer?: (modelBuilder: ModelBuilder<T>) => void
 ): UninitializedStateModel<T> {
   const model: Model<T> = {
     name: options.name,

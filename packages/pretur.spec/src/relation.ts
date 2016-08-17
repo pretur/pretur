@@ -58,8 +58,8 @@ export interface MasterOptions<T> {
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   validator?: Validator<T>;
-  owner?: string;
-  targetOwner?: string;
+  owner?: string | string[];
+  targetOwner?: string | string[];
 }
 
 export interface InjectiveOptions<T> {
@@ -72,8 +72,8 @@ export interface InjectiveOptions<T> {
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   validator?: Validator<T>;
-  owner?: string;
-  targetOwner?: string;
+  owner?: string | string[];
+  targetOwner?: string | string[];
 }
 
 export interface RecursiveOptions<T> {
