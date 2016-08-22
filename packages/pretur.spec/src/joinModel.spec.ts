@@ -143,7 +143,7 @@ describe('joinModel', () => {
       const modelB = mockModel('B');
 
       createJoinModel({
-        name: 'a',
+        name: 'J',
         owner: ['b', 'c'],
         virtual: true,
         firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
@@ -155,6 +155,7 @@ describe('joinModel', () => {
       expect(modelA.relations[0].alias).to.be.equals('b');
       expect(modelA.relations[0].key).to.be.equals('aId');
       expect(modelA.relations[0].model).to.be.equals('B');
+      expect(modelA.relations[0].through).to.be.equals('J');
       expect(modelA.relations[0].onDelete).to.be.equals('CASCADE');
       expect(modelA.relations[0].onUpdate).to.be.equals('CASCADE');
       expect(modelA.relations[0].required).to.be.true;
@@ -165,6 +166,7 @@ describe('joinModel', () => {
       expect(modelB.relations[0].alias).to.be.equals('a');
       expect(modelB.relations[0].key).to.be.equals('bId');
       expect(modelB.relations[0].model).to.be.equals('A');
+      expect(modelB.relations[0].through).to.be.equals('J');
       expect(modelB.relations[0].onDelete).to.be.equals('CASCADE');
       expect(modelB.relations[0].onUpdate).to.be.equals('CASCADE');
       expect(modelB.relations[0].required).to.be.true;
