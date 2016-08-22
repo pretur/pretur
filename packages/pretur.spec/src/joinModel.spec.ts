@@ -67,7 +67,7 @@ describe('joinModel', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
 
-      const model = createJoinModel({
+      const joinModel = createJoinModel({
         name: 'a',
         owner: ['b', 'c'],
         virtual: true,
@@ -75,11 +75,127 @@ describe('joinModel', () => {
         secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
       });
 
-      expect(model.join).to.be.true;
-      expect(model.owner).to.deep.equal(['b', 'c']);
-      expect(model.name).to.be.equals('a');
-      expect(model.virtual).to.be.true;
-      expect(model.initialize).to.be.a('function');
+      expect(joinModel.join).to.be.true;
+      expect(joinModel.owner).to.deep.equal(['b', 'c']);
+      expect(joinModel.name).to.be.equals('a');
+      expect(joinModel.virtual).to.be.true;
+      expect(joinModel.initialize).to.be.a('function');
+    });
+
+    it('should properly add a unique constraint on the join model', () => {
+      const modelA = mockModel('A');
+      const modelB = mockModel('B');
+
+      const joinModel = createJoinModel({
+        name: 'a',
+        owner: ['b', 'c'],
+        virtual: true,
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+      });
+
+      expect(joinModel.model.indexes.unique[0]).to.deep.equal(['aId', 'bId']);
+    });
+
+    it('should properly append relations and attributes to the join model', () => {
+      const modelA = mockModel('A');
+      const modelB = mockModel('B');
+
+      const joinModel = createJoinModel({
+        name: 'a',
+        owner: ['b', 'c'],
+        virtual: true,
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+      });
+
+      expect(joinModel.model.attributes[0].name).to.be.equals('aId');
+      expect(joinModel.model.attributes[0].type).to.be.instanceof(IntegerType);
+      expect(joinModel.model.attributes[0].required).to.be.true;
+
+      expect(joinModel.model.attributes[1].name).to.be.equals('bId');
+      expect(joinModel.model.attributes[1].type).to.be.instanceof(IntegerType);
+      expect(joinModel.model.attributes[1].required).to.be.true;
+
+      expect(joinModel.model.relations[0].type).to.be.equals('MASTER');
+      expect(joinModel.model.relations[0].owner).to.deep.equal(['b', 'c']);
+      expect(joinModel.model.relations[0].alias).to.be.equals('a');
+      expect(joinModel.model.relations[0].key).to.be.equals('aId');
+      expect(joinModel.model.relations[0].model).to.be.equals('A');
+      expect(joinModel.model.relations[0].onDelete).to.be.equals('CASCADE');
+      expect(joinModel.model.relations[0].onUpdate).to.be.equals('CASCADE');
+      expect(joinModel.model.relations[0].required).to.be.true;
+      expect(joinModel.model.relations[0].virtual).to.be.false;
+
+      expect(joinModel.model.relations[1].type).to.be.equals('MASTER');
+      expect(joinModel.model.relations[1].owner).to.deep.equal(['b', 'c']);
+      expect(joinModel.model.relations[1].alias).to.be.equals('b');
+      expect(joinModel.model.relations[1].key).to.be.equals('bId');
+      expect(joinModel.model.relations[1].model).to.be.equals('B');
+      expect(joinModel.model.relations[1].onDelete).to.be.equals('CASCADE');
+      expect(joinModel.model.relations[1].onUpdate).to.be.equals('CASCADE');
+      expect(joinModel.model.relations[1].required).to.be.true;
+      expect(joinModel.model.relations[1].virtual).to.be.false;
+    });
+
+    it('should properly append relations to the joined models', () => {
+      const modelA = mockModel('A');
+      const modelB = mockModel('B');
+
+      createJoinModel({
+        name: 'a',
+        owner: ['b', 'c'],
+        virtual: true,
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+      });
+
+      expect(modelA.relations[0].type).to.be.equals('MANY_TO_MANY');
+      expect(modelA.relations[0].owner).to.deep.equal(['b', 'c']);
+      expect(modelA.relations[0].alias).to.be.equals('b');
+      expect(modelA.relations[0].key).to.be.equals('aId');
+      expect(modelA.relations[0].model).to.be.equals('B');
+      expect(modelA.relations[0].onDelete).to.be.equals('CASCADE');
+      expect(modelA.relations[0].onUpdate).to.be.equals('CASCADE');
+      expect(modelA.relations[0].required).to.be.true;
+      expect(modelA.relations[0].virtual).to.be.true;
+
+      expect(modelB.relations[0].type).to.be.equals('MANY_TO_MANY');
+      expect(modelB.relations[0].owner).to.deep.equal(['b', 'c']);
+      expect(modelB.relations[0].alias).to.be.equals('a');
+      expect(modelB.relations[0].key).to.be.equals('bId');
+      expect(modelB.relations[0].model).to.be.equals('A');
+      expect(modelB.relations[0].onDelete).to.be.equals('CASCADE');
+      expect(modelB.relations[0].onUpdate).to.be.equals('CASCADE');
+      expect(modelB.relations[0].required).to.be.true;
+      expect(modelB.relations[0].virtual).to.be.true;
+    });
+
+    it('should properly add other attributes to the join model', () => {
+      const modelA = mockModel('A');
+      const modelB = mockModel('B');
+
+      const joinModel = createJoinModel(
+        {
+          name: 'a',
+          owner: ['b', 'c'],
+          virtual: true,
+          firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+          secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+        },
+        ({attribute}) => {
+
+          attribute({
+            name: 'count',
+            type: DataTypes.INTEGER(),
+          });
+
+        },
+      );
+
+      joinModel.initialize();
+
+      expect(joinModel.model.attributes[2].name).to.be.equals('count');
     });
 
   });
