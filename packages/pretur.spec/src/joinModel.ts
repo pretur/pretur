@@ -1,7 +1,7 @@
 import { assign } from 'lodash';
 import { ModificationActions, appendRelation } from './relation';
 import { Model, UninitializedStateModel } from './model';
-import { Spec, buildSpecFromModel } from './spec';
+import { Spec } from './spec';
 import {
   IntegerType,
   StringType,
@@ -163,7 +163,7 @@ export function createJoinModel<T>(
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return buildSpecFromModel(model);
+    return new Spec(model);
   }
 
   return {

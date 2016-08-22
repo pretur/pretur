@@ -8,14 +8,6 @@ export interface AttributeMap {
   [name: string]: Attribute<any>;
 }
 
-export interface AliasModelMap {
-  [alias: string]: string;
-}
-
-export interface AliasKeyMap {
-  [alias: string]: string;
-}
-
 export interface Relations {
   superclass: Relation[];
   subclass: Relation[];
@@ -27,24 +19,6 @@ export interface Relations {
   byAlias(alias: string): Relation;
 }
 
-export interface Spec<T> {
-  name: string;
-  owner: string | string[];
-  virtual: boolean;
-  join: boolean;
-  validator?: Validator<T>;
-  attributes: AttributeMap;
-  attributeArray: Attribute<any>[];
-  indexes: Indexes;
-  relations: Relations;
-  relationArray: Relation[];
-  nonVirtualRelations: Relations;
-  nonVirtualRelationArray: Relation[];
-  dependencies: string[];
-  nonVirtualDependencies: string[];
-  filterByOwner(owner: string | string[]): Spec<T>;
-}
-
 function ownersIntersect(first: string | string[], second: string | string[]): boolean {
   const f = castArray(first);
   const s = castArray(second);
@@ -52,159 +26,152 @@ function ownersIntersect(first: string | string[], second: string | string[]): b
   return intersection(f, s).filter(i => i).length > 0;
 }
 
-export function buildSpecFromModel<T>(raw: Model<T>): Spec<T> {
-  const relations = () => raw.relations;
-  const nonVirtualRelations = () => raw.relations.filter(r => !r.virtual);
-  const attributes = () => raw.attributes;
+function populateRelations(relationsObj: Relations, relationsArray: Relation[]) {
+  relationsArray.forEach(relation => {
+    switch (relation.type) {
+      case 'SUPERCLASS':
+        relationsObj.superclass.push(relation);
+        break;
+      case 'SUBCLASS':
+        relationsObj.subclass.push(relation);
+        break;
+      case 'MASTER':
+        relationsObj.master.push(relation);
+        break;
+      case 'DETAIL':
+        relationsObj.detail.push(relation);
+        break;
+      case 'RECURSIVE':
+        relationsObj.recursive.push(relation);
+        break;
+      case 'MANY_TO_MANY':
+        relationsObj.manyToMany.push(relation);
+        break;
+      case 'INJECTIVE':
+        relationsObj.injective.push(relation);
+        break;
+    }
+  });
+}
 
-  const model = <Spec<T>>{
-    get name() {
-      return raw.name;
-    },
-    get owner() {
-      return raw.owner;
-    },
-    get virtual() {
-      return raw.virtual;
-    },
-    get join() {
-      return raw.join;
-    },
-    get validator() {
-      return raw.validator;
-    },
-    get attributes() {
-      return attributes().reduce(
-        (map, attrib) => {
-          map[attrib.name] = attrib;
-          return map;
-        },
-        <AttributeMap>{}
-      );
-    },
-    get attributeArray() {
-      return attributes();
-    },
-    get indexes() {
-      return raw.indexes;
-    },
-    get relations() {
-      return relations().reduce(
-        (map, relation) => {
-          switch (relation.type) {
-            case 'SUPERCLASS':
-              map.superclass.push(relation);
-              break;
-            case 'SUBCLASS':
-              map.subclass.push(relation);
-              break;
-            case 'MASTER':
-              map.master.push(relation);
-              break;
-            case 'DETAIL':
-              map.detail.push(relation);
-              break;
-            case 'RECURSIVE':
-              map.recursive.push(relation);
-              break;
-            case 'MANY_TO_MANY':
-              map.manyToMany.push(relation);
-              break;
-            case 'INJECTIVE':
-              map.injective.push(relation);
-              break;
-          }
-          return map;
-        },
-        <Relations>{
-          superclass: [],
-          subclass: [],
-          master: [],
-          detail: [],
-          recursive: [],
-          manyToMany: [],
-          injective: [],
-          byAlias: alias => find(relations(), { alias }),
-        }
-      );
-    },
-    get relationArray() {
-      return relations();
-    },
-    get nonVirtualRelations() {
-      return nonVirtualRelations().reduce(
-        (map, relation) => {
-          switch (relation.type) {
-            case 'SUPERCLASS':
-              map.superclass.push(relation);
-              break;
-            case 'SUBCLASS':
-              map.subclass.push(relation);
-              break;
-            case 'MASTER':
-              map.master.push(relation);
-              break;
-            case 'DETAIL':
-              map.detail.push(relation);
-              break;
-            case 'RECURSIVE':
-              map.recursive.push(relation);
-              break;
-            case 'MANY_TO_MANY':
-              map.manyToMany.push(relation);
-              break;
-            case 'INJECTIVE':
-              map.injective.push(relation);
-              break;
-          }
-          return map;
-        },
-        <Relations>{
-          superclass: [],
-          subclass: [],
-          master: [],
-          detail: [],
-          recursive: [],
-          manyToMany: [],
-          injective: [],
-          byAlias: alias => find(relations(), { alias }),
-        }
-      );
-    },
-    get nonVirtualRelationArray() {
-      return nonVirtualRelations();
-    },
-    get dependencies() {
-      const allRelations = relations();
-      return uniq([].concat(
-        allRelations.map(r => r.model),
-        allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through)
-      )).sort();
-    },
-    get nonVirtualDependencies() {
-      const allRelations = nonVirtualRelations();
-      return uniq([].concat(
-        allRelations.map(r => r.model),
-        allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through)
-      )).sort();
-    },
-    filterByOwner: null,
-  };
+export class Spec<T> {
+  private _model: Model<T>;
+  private _byAlias = alias => find(this._model.relations, { alias });
+  private _nonVirtualByAlias = alias =>
+    find(this._model.relations.filter(r => !r.virtual), { alias });
 
-  model.filterByOwner = function filterByOwner(owner: string | string[]) {
-    if (!owner || !raw.owner || owner.length === 0 || raw.owner.length === 0) {
-      return model;
+  public get name(): string {
+    return this._model.name;
+  }
+
+  public get owner(): string | string[] {
+    return this._model.owner;
+  }
+
+  public get virtual(): boolean {
+    return this._model.virtual;
+  }
+
+  public get join(): boolean {
+    return this._model.join;
+  }
+
+  public get validator(): Validator<T> {
+    return this._model.validator;
+  }
+
+  public get attributes(): AttributeMap {
+    const map: AttributeMap = {};
+    this._model.attributes.forEach(attrib => map[attrib.name] = attrib);
+    return map;
+  }
+
+  public get attributeArray(): Attribute<any>[] {
+    return this._model.attributes;
+  }
+
+  public get indexes(): Indexes {
+    return this._model.indexes;
+  }
+
+  public get relations(): Relations {
+    const rels: Relations = {
+      superclass: [],
+      subclass: [],
+      master: [],
+      detail: [],
+      recursive: [],
+      manyToMany: [],
+      injective: [],
+      byAlias: this._byAlias,
+    };
+
+    populateRelations(rels, this._model.relations);
+
+    return rels;
+  }
+
+  public get relationArray(): Relation[] {
+    return this._model.relations;
+  }
+
+  public get nonVirtualRelations(): Relations {
+    const rels: Relations = {
+      superclass: [],
+      subclass: [],
+      master: [],
+      detail: [],
+      recursive: [],
+      manyToMany: [],
+      injective: [],
+      byAlias: this._nonVirtualByAlias,
+    };
+
+    const nonVirtualRelations = this._model.relations.filter(r => !r.virtual);
+
+    populateRelations(rels, nonVirtualRelations);
+
+    return rels;
+  }
+
+  public get nonVirtualRelationArray(): Relation[] {
+    return this._model.relations.filter(r => !r.virtual);
+  }
+
+  public get dependencies(): string[] {
+    const allRelations = this._model.relations;
+    return uniq([
+      ...allRelations.map(r => r.model),
+      ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through),
+    ]).sort();
+  }
+
+  public get nonVirtualDependencies(): string[] {
+    const allRelations = this._model.relations.filter(r => !r.virtual);
+    return uniq([
+      ...allRelations.map(r => r.model),
+      ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through),
+    ]).sort();
+  }
+
+  public constructor(model: Model<T>) {
+    this._model = model;
+  }
+
+  public filterByOwner(owner: string | string[]): Spec<T> {
+    if (!owner || !this._model.owner || owner.length === 0 || this._model.owner.length === 0) {
+      return this;
     }
 
-    if (!ownersIntersect(owner, raw.owner)) {
+    if (!ownersIntersect(owner, this._model.owner)) {
       return null;
     }
 
-    return buildSpecFromModel(assign<{}, Model<T>>({}, raw, {
-      attributes: raw.attributes.filter(a => !a.owner || ownersIntersect(owner, a.owner)),
-      relations: raw.relations.filter(r => !r.owner || ownersIntersect(owner, r.owner)),
-    }));
-  };
+    const newModel = assign<{}, Model<T>>({}, this._model, {
+      attributes: this._model.attributes.filter(a => !a.owner || ownersIntersect(owner, a.owner)),
+      relations: this._model.relations.filter(r => !r.owner || ownersIntersect(owner, r.owner)),
+    });
 
-  return model;
+    return new Spec<T>(newModel);
+  }
 }

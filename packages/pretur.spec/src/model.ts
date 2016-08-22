@@ -1,7 +1,7 @@
 import { Validator } from 'pretur.validation';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
-import { buildSpecFromModel, Spec } from './spec';
+import { Spec } from './spec';
 
 export interface Indexes {
   unique: string[][];
@@ -71,7 +71,7 @@ export function createModel<T>(
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return buildSpecFromModel(model);
+    return new Spec(model);
   }
 
   return {
