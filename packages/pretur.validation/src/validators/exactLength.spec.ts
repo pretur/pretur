@@ -1,6 +1,5 @@
-import {expect} from 'chai';
-
-import {exactLength} from './exactLength';
+import { expect } from 'chai';
+import { exactLength } from './exactLength';
 
 describe('validator:exactLength', () => {
 

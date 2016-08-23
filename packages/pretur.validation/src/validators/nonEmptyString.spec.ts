@@ -1,6 +1,6 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 
-import {nonEmptyString} from './nonEmptyString';
+import { nonEmptyString } from './nonEmptyString';
 
 describe('validator:nonEmptyString', () => {
 

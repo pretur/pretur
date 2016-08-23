@@ -1,6 +1,6 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 
-import {integer} from './integer';
+import { integer } from './integer';
 
 describe('validator:integer', () => {
 

@@ -1,6 +1,5 @@
-import {expect} from 'chai';
-
-import {compose} from './validator';
+import { expect } from 'chai';
+import { compose } from './validator';
 
 describe('compose', () => {
 

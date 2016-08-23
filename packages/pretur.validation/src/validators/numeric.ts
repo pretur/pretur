@@ -1,4 +1,4 @@
-import {Validator} from '../validator';
+import { Validator } from '../validator';
 
 export function numeric(key: string): Validator<string> {
   return function numericValidator(str: string) {

@@ -1,4 +1,4 @@
-import {Validator} from '../validator';
+import { Validator } from '../validator';
 
 export function positive(key: string): Validator<number> {
   return function positiveValidator(num: number) {

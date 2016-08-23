@@ -1,4 +1,4 @@
-import {Validator} from '../validator';
+import { Validator } from '../validator';
 
 export function exactLength(key: string, length: number, acceptEmpty = false): Validator<string> {
   return function exactLengthValidator(str: string) {

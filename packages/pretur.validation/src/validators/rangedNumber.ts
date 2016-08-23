@@ -1,4 +1,4 @@
-import {Validator} from '../validator';
+import { Validator } from '../validator';
 
 export function rangedNumber(
   key: string,

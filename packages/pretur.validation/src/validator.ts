@@ -1,4 +1,4 @@
-import {I18nBundle} from 'pretur.i18n';
+import { I18nBundle } from 'pretur.i18n';
 
 export interface ValidatorDescriptor {
   name: string;

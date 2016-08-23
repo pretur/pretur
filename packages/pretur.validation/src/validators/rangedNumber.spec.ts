@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-
 import { rangedNumber } from './rangedNumber';
 
 describe('validator:rangedNumber', () => {

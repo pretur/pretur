@@ -1,6 +1,5 @@
-import {expect} from 'chai';
-
-import {positive} from './positive';
+import { expect } from 'chai';
+import { positive } from './positive';
 
 describe('validator:positive', () => {
 

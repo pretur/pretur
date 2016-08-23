@@ -1,6 +1,5 @@
-import {expect} from 'chai';
-
-import {minimumLength} from './minimumLength';
+import { expect } from 'chai';
+import { minimumLength } from './minimumLength';
 
 describe('validator:minimumLength', () => {
 

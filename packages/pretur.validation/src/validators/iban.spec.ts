@@ -1,6 +1,5 @@
-import {expect} from 'chai';
-
-import {iban} from './iban';
+import { expect } from 'chai';
+import { iban } from './iban';
 
 describe('validator:iban', () => {
 

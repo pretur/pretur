@@ -1,4 +1,4 @@
-import {Validator} from '../validator';
+import { Validator } from '../validator';
 
 export function nonEmptyString(key: string): Validator<string> {
   return function nonEmptyStringValidator(str: string) {
