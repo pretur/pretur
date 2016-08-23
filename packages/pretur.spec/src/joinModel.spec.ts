@@ -6,7 +6,7 @@ import { createJoinModel, joinee } from './joinModel';
 function mockModel(name: string): Model<any> {
   return {
     name: name,
-    owner: null,
+    owner: null!,
     virtual: false,
     join: false,
     attributes: [],
@@ -20,9 +20,9 @@ function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel
     model: model,
     name: model.name,
     owner: model.owner,
-    virtual: model.virtual,
+    virtual: model.virtual!,
     join: model.join,
-    initialize: () => null,
+    initialize: () => null!,
   };
 }
 

@@ -17,7 +17,7 @@ describe('validator:rangedNumber', () => {
     'should return bundle with {VALUE, FROM, TO, INCLUSIVE_FROM, INCLUSIVE_TO} for invalid input',
     () => {
       const validator = rangedNumber('A', -10, 10, true, false);
-      expect(validator(null)).to.deep.equal({
+      expect(validator(null!)).to.deep.equal({
         key: 'A',
         data: {
           VALUE: null,
@@ -27,7 +27,7 @@ describe('validator:rangedNumber', () => {
           INCLUSIVE_TO: false,
         },
       });
-      expect(validator(undefined)).to.deep.equal({
+      expect(validator(undefined!)).to.deep.equal({
         key: 'A',
         data: {
           VALUE: undefined,

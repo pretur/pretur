@@ -1,6 +1,6 @@
 import { assign } from 'lodash';
 import { ModificationActions, appendRelation } from './relation';
-import { Model, UninitializedStateModel } from './model';
+import { Model, UninitializedStateModel, Owner } from './model';
 import { Spec } from './spec';
 import {
   IntegerType,
@@ -25,7 +25,7 @@ export interface Joinee {
   model: UninitializedStateModel<any>;
   alias: string;
   key: string;
-  type?: IntegerType | StringType;
+  type: IntegerType | StringType;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
@@ -57,17 +57,17 @@ export function joinee(
 
 export interface CreateJoinModelOptions {
   name: string;
-  owner: string | string[];
+  owner: Owner;
   firstJoinee: Joinee;
   secondJoinee: Joinee;
   virtual?: boolean;
 }
 
 const defaultCreateJoinModelOptions: CreateJoinModelOptions = {
-  name: null,
-  owner: null,
-  firstJoinee: null,
-  secondJoinee: null,
+  name: null!,
+  owner: null!,
+  firstJoinee: null!,
+  secondJoinee: null!,
   virtual: false,
 };
 
@@ -84,7 +84,7 @@ export function createJoinModel<T>(
   const model: Model<any> = {
     name: normalizedOptions.name,
     owner: normalizedOptions.owner,
-    virtual: normalizedOptions.virtual,
+    virtual: normalizedOptions.virtual!,
     join: true,
     attributes: [],
     relations: [],
@@ -170,7 +170,7 @@ export function createJoinModel<T>(
     model: model,
     name: normalizedOptions.name,
     owner: normalizedOptions.owner,
-    virtual: normalizedOptions.virtual,
+    virtual: normalizedOptions.virtual!,
     join: true,
     initialize,
   };

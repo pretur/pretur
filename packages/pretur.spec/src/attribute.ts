@@ -1,6 +1,6 @@
 import { Validator } from 'pretur.validation';
 import { assign, chain, find } from 'lodash';
-import { Model } from './model';
+import { Model, Owner } from './model';
 import { DataTypes, AbstractType, IntegerType, StringType } from './datatypes';
 
 export * from './datatypes';
@@ -8,7 +8,7 @@ export * from './datatypes';
 export interface Attribute<T> {
   name: string;
   type: AbstractType;
-  owner?: string | string[];
+  owner?: Owner;
   required?: boolean;
   unique?: boolean;
   primary?: boolean;
@@ -18,11 +18,11 @@ export interface Attribute<T> {
   validator?: Validator<T>;
 }
 
-function getCommonDefaults(owner: string | string[]): Attribute<any> {
+function getCommonDefaults(owner: Owner): Attribute<any> {
   return {
     owner,
-    name: null,
-    type: null,
+    name: null!,
+    type: null!,
     required: false,
     unique: false,
     primary: false,
@@ -39,7 +39,7 @@ export interface PrimaryKeyOptions<T> {
   validator?: Validator<T>;
 }
 
-function getPrimaryKeyDefaults(owner: string | string[]): Attribute<any> {
+function getPrimaryKeyDefaults(owner: Owner): Attribute<any> {
   return assign<Attribute<any>, Attribute<any>>(getCommonDefaults(owner), {
     type: DataTypes.INTEGER(),
     primary: true,
@@ -121,7 +121,7 @@ export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>
 
 export interface AttributeBuilder {
   <T>(options: Attribute<T>): void;
-  primaryKey?<T>(options?: PrimaryKeyOptions<T>): void;
+  primaryKey<T>(options?: PrimaryKeyOptions<T>): void;
 }
 
 export function createAttributeBuilder(model: Model<any>): AttributeBuilder {

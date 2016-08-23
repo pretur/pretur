@@ -15,8 +15,8 @@ describe('validator:nonEmptyString', () => {
     expect(validator(' ')).to.deep.equal({ key: 'A', data: { VALUE: ' ' } });
     expect(validator('    \n ')).to.deep.equal({ key: 'A', data: { VALUE: '    \n ' } });
     expect(validator('')).to.deep.equal({ key: 'A', data: { VALUE: '' } });
-    expect(validator(null)).to.deep.equal({ key: 'A', data: { VALUE: null } });
-    expect(validator(undefined)).to.deep.equal({ key: 'A', data: { VALUE: undefined } });
+    expect(validator(null!)).to.deep.equal({ key: 'A', data: { VALUE: null } });
+    expect(validator(undefined!)).to.deep.equal({ key: 'A', data: { VALUE: undefined } });
   });
 
 });

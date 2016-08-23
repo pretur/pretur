@@ -92,11 +92,11 @@ describe('format', () => {
   });
 
   it('should fail if key or bundle is not provided', () => {
-    expect(() => format({}, {}, undefined)).to.throw();
+    expect(() => format({}, {}, undefined!)).to.throw();
   });
 
   it('should not fail if bundle is null', () => {
-    expect(() => format({}, {}, null)).not.to.throw();
+    expect(() => format({}, {}, null!)).not.to.throw();
   });
 
 });

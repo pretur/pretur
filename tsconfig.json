@@ -1,7 +1,18 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs"
+    "module": "commonjs",
+    "jsx": "react",
+    "strictNullChecks": true,
+    "pretty": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
+    "newLine": "LF",
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true
   },
   "exclude": [
     "node_modules",

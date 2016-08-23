@@ -9,8 +9,8 @@ describe('validator:exactLength', () => {
     expect(validator1('12')).to.be.null;
     expect(validator2('123')).to.be.null;
     expect(validator2('')).to.be.null;
-    expect(validator2(null)).to.be.null;
-    expect(validator2(undefined)).to.be.null;
+    expect(validator2(null!)).to.be.null;
+    expect(validator2(undefined!)).to.be.null;
   });
 
   it('should return bundle with {VALUE, EXPECTED_LENGTH, ACCEPT_EMPTY} for invalid input', () => {
@@ -24,11 +24,11 @@ describe('validator:exactLength', () => {
       key: 'A',
       data: { VALUE: '', EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });
-    expect(validator1(null)).to.deep.equal({
+    expect(validator1(null!)).to.deep.equal({
       key: 'A',
       data: { VALUE: null, EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });
-    expect(validator1(undefined)).to.deep.equal({
+    expect(validator1(undefined!)).to.deep.equal({
       key: 'A',
       data: { VALUE: undefined, EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });

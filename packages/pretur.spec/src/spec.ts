@@ -1,5 +1,5 @@
 import { Validator } from 'pretur.validation';
-import { Indexes, Model } from './model';
+import { Indexes, Model, Owner } from './model';
 import { Attribute } from './attribute';
 import { Relation } from './relation';
 import { uniq, find, assign, castArray, intersection } from 'lodash';
@@ -19,9 +19,9 @@ export interface Relations {
   byAlias(alias: string): Relation;
 }
 
-function ownersIntersect(first: string | string[], second: string | string[]): boolean {
-  const f = castArray(first);
-  const s = castArray(second);
+function ownersIntersect(first: Owner, second: Owner): boolean {
+  const f = castArray(first!);
+  const s = castArray(second!);
 
   return intersection(f, s).filter(i => i).length > 0;
 }
@@ -56,15 +56,15 @@ function populateRelations(relationsObj: Relations, relationsArray: Relation[]) 
 
 export class Spec<T> {
   private _model: Model<T>;
-  private _byAlias = alias => find(this._model.relations, { alias });
-  private _nonVirtualByAlias = alias =>
+  private _byAlias = (alias: string) => find(this._model.relations, { alias });
+  private _nonVirtualByAlias = (alias: string) =>
     find(this._model.relations.filter(r => !r.virtual), { alias });
 
   public get name(): string {
     return this._model.name;
   }
 
-  public get owner(): string | string[] {
+  public get owner(): Owner {
     return this._model.owner;
   }
 
@@ -76,7 +76,7 @@ export class Spec<T> {
     return this._model.join;
   }
 
-  public get validator(): Validator<T> {
+  public get validator(): Validator<T> | undefined {
     return this._model.validator;
   }
 
@@ -142,7 +142,7 @@ export class Spec<T> {
     const allRelations = this._model.relations;
     return uniq([
       ...allRelations.map(r => r.model),
-      ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through),
+      ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through!),
     ]).sort();
   }
 
@@ -150,7 +150,7 @@ export class Spec<T> {
     const allRelations = this._model.relations.filter(r => !r.virtual);
     return uniq([
       ...allRelations.map(r => r.model),
-      ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through),
+      ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through!),
     ]).sort();
   }
 
@@ -158,7 +158,7 @@ export class Spec<T> {
     this._model = model;
   }
 
-  public filterByOwner(owner: string | string[]): Spec<T> {
+  public filterByOwner(owner: Owner): Spec<T> | null {
     if (!owner || !this._model.owner || owner.length === 0 || this._model.owner.length === 0) {
       return this;
     }

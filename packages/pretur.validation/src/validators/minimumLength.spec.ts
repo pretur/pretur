@@ -11,8 +11,8 @@ describe('validator:minimumLength', () => {
     expect(validator2('123')).to.be.null;
     expect(validator2('123456')).to.be.null;
     expect(validator2('')).to.be.null;
-    expect(validator2(null)).to.be.null;
-    expect(validator2(undefined)).to.be.null;
+    expect(validator2(null!)).to.be.null;
+    expect(validator2(undefined!)).to.be.null;
   });
 
   it('should return bundle with {VALUE, MINIMUM_LENGTH, ACCEPT_EMPTY} for invalid input', () => {
@@ -26,11 +26,11 @@ describe('validator:minimumLength', () => {
       key: 'A',
       data: { VALUE: '', MINIMUM_LENGTH: 2, ACCEPT_EMPTY: false },
     });
-    expect(validator1(null)).to.deep.equal({
+    expect(validator1(null!)).to.deep.equal({
       key: 'A',
       data: { VALUE: null, MINIMUM_LENGTH: 2, ACCEPT_EMPTY: false },
     });
-    expect(validator1(undefined)).to.deep.equal({
+    expect(validator1(undefined!)).to.deep.equal({
       key: 'A',
       data: { VALUE: undefined, MINIMUM_LENGTH: 2, ACCEPT_EMPTY: false },
     });

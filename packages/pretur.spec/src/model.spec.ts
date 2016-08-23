@@ -21,7 +21,7 @@ describe('model', () => {
 
     it('should properly call the builder with valid attribute and relation builder', () => {
       const model = createModel(
-        { name: 'a', owner: null },
+        { name: 'a', owner: null! },
         ({attribute, relation}) => {
           expect(attribute).to.be.a('function');
           expect(attribute.primaryKey).to.be.a('function');
@@ -37,7 +37,7 @@ describe('model', () => {
 
     it('should properly call the builder with valid multicolumnUniqueIndex builder', () => {
       const model = createModel(
-        { name: 'a', owner: null },
+        { name: 'a', owner: null! },
         ({multicolumnUniqueIndex}) => {
           expect(multicolumnUniqueIndex).to.be.a('function');
           multicolumnUniqueIndex('a', 'b');
@@ -54,9 +54,9 @@ describe('model', () => {
     });
 
     it('should properly call the builder with valid validator setter', () => {
-      const noop = () => null;
+      const noop = () => null!;
       const model = createModel(
-        { name: 'a', owner: null },
+        { name: 'a', owner: null! },
         ({validator}) => {
           expect(validator).to.be.a('function');
           validator(noop);

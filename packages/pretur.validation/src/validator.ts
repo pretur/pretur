@@ -7,11 +7,11 @@ export interface ValidatorDescriptor {
 }
 
 export interface Validator<T> {
-  (value: T): I18nBundle;
+  (value: T): I18nBundle | null;
 }
 
 export function compose<T>(...validators: Validator<T>[]): Validator<T> {
-  return function compositeValidator(value: T): I18nBundle {
+  return function compositeValidator(value: T): I18nBundle | null {
     for (let i = 0; i < validators.length; i++) {
       if (typeof validators[i] === 'function') {
         const result = validators[i](value);

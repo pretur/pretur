@@ -5,7 +5,7 @@ import { appendAttribute, createAttributeBuilder, DataTypes } from './attribute'
 function mockModel(name: string): Model<any> {
   return {
     name: name,
-    owner: null,
+    owner: null!,
     virtual: false,
     join: false,
     attributes: [],
@@ -22,7 +22,7 @@ describe('attribute', () => {
       const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
-      expect(() => appendAttribute(model, { name: null, type: t })).to.throw();
+      expect(() => appendAttribute(model, { name: null!, type: t })).to.throw();
       expect(() => appendAttribute(model, { name: <any>1, type: t })).to.throw();
       expect(() => appendAttribute(model, { name: <any>0, type: t })).to.throw();
       expect(() => appendAttribute(model, { name: <any>false, type: t })).to.throw();
@@ -40,7 +40,7 @@ describe('attribute', () => {
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, {
-        name: null,
+        name: null!,
         type: t,
         primary: false,
         autoIncrement: true,
@@ -52,7 +52,7 @@ describe('attribute', () => {
       const t = DataTypes.STRING();
 
       expect(() => appendAttribute(model, {
-        name: null,
+        name: null!,
         type: t,
         primary: true,
         autoIncrement: true,
@@ -113,20 +113,20 @@ describe('attribute', () => {
         name: 'a',
         type: t,
         defaultValue: 1,
-        validator: n => n > 0 ? { data: null, key: 'A' } : null,
+        validator: n => n > 0 ? { data: null, key: 'A' } : null!,
       })).to.throw();
 
       expect(() => appendAttribute(model, {
         name: 'a',
         type: t,
         defaultValue: null,
-        validator: n => n === null ? { data: null, key: 'A' } : null,
+        validator: n => n === null ? { data: null, key: 'A' } : null!,
       })).to.throw();
 
       expect(() => appendAttribute(model, {
         name: 'a',
         type: t,
-        validator: n => n > 0 ? { data: null, key: 'A' } : null,
+        validator: n => n > 0 ? { data: null, key: 'A' } : null!,
       })).not.to.throw();
     });
 
@@ -139,7 +139,7 @@ describe('attribute', () => {
       const type = DataTypes.INTEGER();
 
       appendAttribute(model, { name: 'a', type });
-      appendAttribute(model, { name: 'a', type: null }, { name: 'b', type });
+      appendAttribute(model, { name: 'a', type: null! }, { name: 'b', type });
       appendAttribute(model, <any>{}, { name: 'c', type });
 
       expect(model.attributes[0].name).to.be.equals('a');
@@ -148,7 +148,7 @@ describe('attribute', () => {
     });
 
     it('should fail if no model is provided', () => {
-      expect(() => appendAttribute(null, <any>{})).to.throw();
+      expect(() => appendAttribute(null!, <any>{})).to.throw();
     });
 
     it('should fail if no attribute is provided', () => {
@@ -177,7 +177,7 @@ describe('attribute', () => {
   describe('createAttributeBuilder', () => {
 
     it('should fail if no model is provided', () => {
-      expect(() => createAttributeBuilder(null)).to.throw();
+      expect(() => createAttributeBuilder(null!)).to.throw();
     });
 
     describe('attributeBuilder', () => {

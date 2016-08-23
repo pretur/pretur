@@ -6,10 +6,10 @@ import { Relation } from './relation';
 function mockModel(name: string): Model<any> {
   return {
     name: name,
-    owner: null,
+    owner: null!,
     virtual: false,
     join: false,
-    validator: null,
+    validator: null!,
     attributes: [],
     relations: [],
     indexes: { unique: [] },
@@ -25,7 +25,7 @@ describe('spec', () => {
   it('should properly forward the model properties without caching', () => {
     const model = mockModel('a');
     const spec = new Spec(model);
-    const noop = () => null;
+    const noop = () => null!;
 
     expect(spec.name).to.be.equals('a');
     expect(spec.owner).to.be.equals(null);
@@ -56,7 +56,7 @@ describe('spec', () => {
 
     expect(Object.keys(spec.attributes).length).to.be.equals(0);
 
-    model.attributes.push({ name: 'id', type: null });
+    model.attributes.push({ name: 'id', owner: null, type: null! });
 
     expect(Object.keys(spec.attributes).length).to.be.equals(1);
     expect(spec.attributes['id'].name).to.be.equals('id');
@@ -219,15 +219,15 @@ describe('spec', () => {
       model.relations.push(<any>{ alias: '3', owner: ['c', 'b'] });
       model.relations.push(<any>{ alias: '4', owner: null });
 
-      expect(spec.filterByOwner('b').relations.byAlias('1')).not.to.be.undefined;
-      expect(spec.filterByOwner('b').relations.byAlias('2')).to.be.undefined;
-      expect(spec.filterByOwner('b').relations.byAlias('3')).not.to.be.undefined;
-      expect(spec.filterByOwner('b').relations.byAlias('4')).not.to.be.undefined;
+      expect(spec.filterByOwner('b') !.relations.byAlias('1')).not.to.be.undefined;
+      expect(spec.filterByOwner('b') !.relations.byAlias('2')).to.be.undefined;
+      expect(spec.filterByOwner('b') !.relations.byAlias('3')).not.to.be.undefined;
+      expect(spec.filterByOwner('b') !.relations.byAlias('4')).not.to.be.undefined;
 
-      expect(spec.filterByOwner(['b', 'c']).relations.byAlias('1')).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']).relations.byAlias('2')).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']).relations.byAlias('3')).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']).relations.byAlias('4')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('1')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('2')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('3')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('4')).not.to.be.undefined;
     });
 
     it('should properly filter attributes', () => {
@@ -241,15 +241,15 @@ describe('spec', () => {
       model.attributes.push(<any>{ name: '3', owner: ['c', 'b'] });
       model.attributes.push(<any>{ name: '4', owner: null });
 
-      expect(spec.filterByOwner('b').attributes['1']).not.to.be.undefined;
-      expect(spec.filterByOwner('b').attributes['2']).to.be.undefined;
-      expect(spec.filterByOwner('b').attributes['3']).not.to.be.undefined;
-      expect(spec.filterByOwner('b').attributes['4']).not.to.be.undefined;
+      expect(spec.filterByOwner('b') !.attributes['1']).not.to.be.undefined;
+      expect(spec.filterByOwner('b') !.attributes['2']).to.be.undefined;
+      expect(spec.filterByOwner('b') !.attributes['3']).not.to.be.undefined;
+      expect(spec.filterByOwner('b') !.attributes['4']).not.to.be.undefined;
 
-      expect(spec.filterByOwner(['b', 'c']).attributes['1']).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']).attributes['2']).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']).attributes['3']).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']).attributes['4']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.attributes['1']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.attributes['2']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.attributes['3']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c']) !.attributes['4']).not.to.be.undefined;
     });
 
   });

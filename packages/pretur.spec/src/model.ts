@@ -3,6 +3,8 @@ import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 import { Spec } from './spec';
 
+export type Owner = null | string | string[];
+
 export interface Indexes {
   unique: string[][];
 }
@@ -10,7 +12,7 @@ export interface Indexes {
 export interface UninitializedStateModel<T> {
   model: Model<T>;
   name: string;
-  owner: string | string[];
+  owner: Owner;
   virtual: boolean;
   join: boolean;
   initialize: () => Spec<T>;
@@ -18,7 +20,7 @@ export interface UninitializedStateModel<T> {
 
 export interface Model<T> {
   name: string;
-  owner: string | string[];
+  owner: Owner;
   virtual: boolean;
   join: boolean;
   attributes: Attribute<any>[];
@@ -29,7 +31,7 @@ export interface Model<T> {
 
 export interface CreateModelOptions {
   name: string;
-  owner: string | string[];
+  owner: Owner;
   virtual?: boolean;
 }
 

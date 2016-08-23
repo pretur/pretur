@@ -16,7 +16,7 @@ describe('RangeType', () => {
   });
 
   it('should throw if subtype is not valid', () => {
-    expect(() => RangeType.create(null)).to.throw();
+    expect(() => RangeType.create(null!)).to.throw();
     expect(() => RangeType.create(<any>{})).to.throw();
     expect(() => RangeType.create(<any>true)).to.throw();
     expect(() => RangeType.create(<any>[])).to.throw();

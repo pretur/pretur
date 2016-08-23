@@ -12,7 +12,7 @@ import {
 function mockModel(name: string): Model<any> {
   return {
     name: name,
-    owner: null,
+    owner: null!,
     virtual: false,
     join: false,
     attributes: [],
@@ -28,13 +28,15 @@ function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel
     owner: model.owner,
     virtual: model.virtual,
     join: model.join,
-    initialize: () => null,
+    initialize: () => null!,
   };
 }
 
 const baseRelation = <Relation>{
+  alias: null!,
   key: 'aId',
-  owner: null,
+  type: null!,
+  owner: null!,
   model: 'A',
   onUpdate: 'CASCADE',
   onDelete: 'CASCADE',
@@ -55,7 +57,7 @@ describe('relation', () => {
     });
 
     it('should fail when model is invalid', () => {
-      expect(() => appendRelation(null)).to.throw();
+      expect(() => appendRelation(null!)).to.throw();
     });
 
     it('should fail when no relations are provided', () => {
@@ -184,7 +186,7 @@ describe('relation', () => {
         [
           'should add the type enum with required and validator',
           (main, inheritor, append) => {
-            const validator = () => null;
+            const validator = () => null!;
             append({
               aliasOnSubclasses: 'main',
               sharedExistingUniqueField: 'id',
@@ -264,7 +266,7 @@ describe('relation', () => {
 
       testCases.forEach(([expectation, testCase]) => {
         const main = mockModel('Main');
-        const inheritor = (name, alias, i18nKey) => ({
+        const inheritor = (name: string, alias: string, i18nKey: string) => ({
           alias,
           i18nKey,
           target: mockUninitializedStateModel(mockModel(name)),
@@ -310,7 +312,7 @@ describe('relation', () => {
       it('should properly override the properties of relations and the fk attribute', () => {
         const master = mockModel('Master');
         const detail = mockModel('Detail');
-        const noop = () => null;
+        const noop = () => null!;
 
         detail.virtual = true;
 
@@ -388,7 +390,7 @@ describe('relation', () => {
       it('should properly override the properties of relations and the fk attribute', () => {
         const master = mockModel('Master');
         const injected = mockModel('Injected');
-        const noop = () => null;
+        const noop = () => null!;
 
         injected.virtual = true;
 
@@ -459,7 +461,7 @@ describe('relation', () => {
 
       it('should properly override the properties of the relation and the key', () => {
         const master = mockModel('Master');
-        const noop = () => null;
+        const noop = () => null!;
 
         master.owner = 'owner';
         master.virtual = true;

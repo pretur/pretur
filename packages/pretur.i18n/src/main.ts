@@ -20,17 +20,17 @@ export interface Language {
 
 export function format(
   language: Language,
-  fallback: Language,
+  fallback: Language | null,
   bundle: I18nBundle
 ): string;
 export function format(
   language: Language,
-  fallback: Language,
+  fallback: Language | null,
   key: string
 ): I18nStringBuilder<string, any>;
 export function format(
   language: Language,
-  fallback: Language,
+  fallback: Language | null,
   bundleOrKey: string | I18nBundle
 ): any {
   if (process.env.NODE_ENV !== 'production' && !language) {
@@ -64,9 +64,9 @@ export function format(
 
 export function buildFormatter<F extends I18nFormatter>(
   language: Language,
-  fallback: Language = null
+  fallback: Language | null = null
 ): F {
-  return format.bind(null, language, fallback);
+  return <F>((bundle: I18nBundle) => format(language, fallback, bundle));
 }
 
 export interface MessageFormatParameters {
@@ -93,19 +93,19 @@ export function buildCompiler(locale: string): Compiler {
 
   return {
     constant(str) {
-      const build = (() => str) as any as I18nStringBuilder<string, any>;
+      const build = <I18nStringBuilder<string, any>>(() => str);
       return build;
     },
-    callback(callback) {
-      const build = ((d) => callback(d)) as any as I18nStringBuilder<string, any>;
+    callback(cb: (data?: any) => string) {
+      const build = <I18nStringBuilder<string, any>>(d => cb(d));
       return build;
     },
-    messageFormat(formatString) {
+    messageFormat(formatString: string) {
       const formatter = mf.compile(formatString);
-      const build = ((d) => formatter(d)) as any as I18nStringBuilder<string, any>;
+      const build = <I18nStringBuilder<string, any>>((d) => formatter(d));
       return build;
     },
-    describe(tree) {
+    describe(tree: any) {
       return {
         locale,
         tree,
@@ -114,11 +114,11 @@ export function buildCompiler(locale: string): Compiler {
   };
 }
 
-function buildKey(prefix: string, key: string) {
+function buildKey(prefix: string | undefined, key: string) {
   return `${prefix || ''}${prefix ? '_' : ''}${key.toUpperCase()}`;
 }
 
-function buildPath(prefix: string, key: string) {
+function buildPath(prefix: string | undefined, key: string) {
   return `${prefix || ''}${prefix ? '.' : ''}${key}`;
 }
 

@@ -1,7 +1,7 @@
 import { Validator } from 'pretur.validation';
 import { assign } from 'lodash';
 import { appendAttribute, AbstractType, DataTypes, EnumValue } from './attribute';
-import { Model, UninitializedStateModel } from './model';
+import { Model, UninitializedStateModel, Owner } from './model';
 
 export type ModificationActions =
   'RESTRICT' |
@@ -22,7 +22,7 @@ export type RelationType =
 export interface Relation {
   type: RelationType;
   model: string;
-  owner: string | string[];
+  owner?: Owner;
   alias: string;
   key: string;
   through?: string;
@@ -58,8 +58,8 @@ export interface MasterOptions<T> {
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   validator?: Validator<T>;
-  owner?: string | string[];
-  targetOwner?: string | string[];
+  owner?: Owner;
+  targetOwner?: Owner;
 }
 
 export interface InjectiveOptions<T> {
@@ -72,8 +72,8 @@ export interface InjectiveOptions<T> {
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   validator?: Validator<T>;
-  owner?: string | string[];
-  targetOwner?: string | string[];
+  owner?: Owner;
+  targetOwner?: Owner;
 }
 
 export interface RecursiveOptions<T> {
@@ -307,9 +307,9 @@ export interface RelationsBuilder {
 
 export function createRelationBuilder(model: Model<any>): RelationsBuilder {
   return {
-    inheritors: options => inheritors(model, options),
-    master: options => master(model, options),
-    injective: options => injective(model, options),
-    recursive: options => recursive(model, options),
+    inheritors: (options: InheritorsOptions<any>) => inheritors(model, options),
+    master: (options: MasterOptions<any>) => master(model, options),
+    injective: (options: InjectiveOptions<any>) => injective(model, options),
+    recursive: (options: RecursiveOptions<any>) => recursive(model, options),
   };
 }
