@@ -1,14 +1,15 @@
 import { expect } from 'chai';
-
 import {
-  format,
-  buildFormatter,
-  Language,
-  buildCompiler,
   I18nFormatter,
   I18nStringBuilder,
+  Language,
+  buildCompiler,
+  buildFormatter,
+  format,
   internationalize,
 } from './main';
+
+const compiler = buildCompiler('en');
 
 describe('buildCompiler', () => {
 
@@ -47,37 +48,35 @@ describe('buildCompiler', () => {
 
 });
 
-const compiler = buildCompiler('en');
-
 describe('format', () => {
 
   it('should format the string using the main language', () => {
-    const language = <Language>{ 'A': compiler.constant('B') };
+    const language = <Language>{ A: compiler.constant('B') };
     const str = format(language, null, 'A')();
     expect(str).to.be.equals('B');
   });
 
   it('should format the string using the main language with data', () => {
-    const language = <Language>{ 'A': compiler.callback((d: { C: string }) => 'B' + d.C) };
+    const language = <Language>{ A: compiler.callback((d: { C: string }) => 'B' + d.C) };
     const str = format(language, null, 'A')({ C: 'C' });
     expect(str).to.be.equals('BC');
   });
 
   it('should format the string using the fallback language', () => {
-    const language = <Language>{ 'A': compiler.constant('B') };
+    const language = <Language>{ A: compiler.constant('B') };
     const str = format({}, language, 'A')();
     expect(str).to.be.equals('B');
   });
 
   it('should format the string using the fallback language with data', () => {
-    const language = <Language>{ 'A': compiler.callback((d: { C: string }) => 'B' + d.C) };
+    const language = <Language>{ A: compiler.callback((d: { C: string }) => 'B' + d.C) };
     const str = format({}, language, 'A')({ C: 'C' });
     expect(str).to.be.equals('BC');
   });
 
   it('should format the string using the main language with bundle with data', () => {
-    const language = <Language>{ 'A': compiler.callback((d: { C: string }) => 'B' + d.C) };
-    const str = format({}, language, { key: 'A', data: { C: 'C' } });
+    const language = <Language>{ A: compiler.callback((d: { C: string }) => 'B' + d.C) };
+    const str = format({}, language, { data: { C: 'C' }, key: 'A' });
     expect(str).to.be.equals('BC');
   });
 
@@ -87,8 +86,8 @@ describe('format', () => {
   });
 
   it('should fail if it finds no match with bundle', () => {
-    expect(() => format({}, {}, { key: 'A', data: { C: 'C' } })).to.throw();
-    expect(() => format({}, null, { key: 'A', data: { C: 'C' } })).to.throw();
+    expect(() => format({}, {}, { data: { C: 'C' }, key: 'A' })).to.throw();
+    expect(() => format({}, null, { data: { C: 'C' }, key: 'A' })).to.throw();
   });
 
   it('should fail if key or bundle is not provided', () => {
@@ -104,8 +103,8 @@ describe('format', () => {
 describe('buildFormatter', () => {
 
   it('should build valid formatter', () => {
-    const language = <Language>{ 'A': compiler.constant('B') };
-    const language2 = <Language>{ 'B': compiler.callback((d: { C: string }) => 'B' + d.C) };
+    const language = <Language>{ A: compiler.constant('B') };
+    const language2 = <Language>{ B: compiler.callback((d: { C: string }) => 'B' + d.C) };
 
     interface Formatter extends I18nFormatter {
       (key: 'A'): I18nStringBuilder<'A', void>;

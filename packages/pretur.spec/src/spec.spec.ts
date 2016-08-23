@@ -5,14 +5,14 @@ import { Relation } from './relation';
 
 function mockModel(name: string): Model<any> {
   return {
-    name: name,
-    owner: null!,
-    virtual: false,
-    join: false,
-    validator: null!,
+    name,
     attributes: [],
-    relations: [],
     indexes: { unique: [] },
+    join: false,
+    owner: null!,
+    relations: [],
+    validator: null!,
+    virtual: false,
   };
 }
 
@@ -74,18 +74,18 @@ describe('spec', () => {
     expect(Object.keys(spec.relations.manyToMany).length).to.be.equals(0);
     expect(Object.keys(spec.relations.injective).length).to.be.equals(0);
 
-    model.relations.push(<Relation>{ type: 'SUPERCLASS', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'SUBCLASS', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'MASTER', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'DETAIL', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'RECURSIVE', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'MANY_TO_MANY', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'INJECTIVE', model: 'A', alias: 'a' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'SUPERCLASS' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'SUBCLASS' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'MASTER' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'DETAIL' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'RECURSIVE' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'MANY_TO_MANY' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'INJECTIVE' });
 
-    model.relations.push(<Relation>{ type: 'SUBCLASS', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'MASTER', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'RECURSIVE', model: 'A', alias: 'a' });
-    model.relations.push(<Relation>{ type: 'INJECTIVE', model: 'H', alias: 'hello' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'SUBCLASS' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'MASTER' });
+    model.relations.push(<Relation>{ alias: 'a', model: 'A', type: 'RECURSIVE' });
+    model.relations.push(<Relation>{ alias: 'hello', model: 'H', type: 'INJECTIVE' });
 
     expect(Object.keys(spec.relations.superclass).length).to.be.equals(1);
     expect(Object.keys(spec.relations.subclass).length).to.be.equals(2);
@@ -110,18 +110,18 @@ describe('spec', () => {
     expect(Object.keys(spec.nonVirtualRelations.manyToMany).length).to.be.equals(0);
     expect(Object.keys(spec.nonVirtualRelations.injective).length).to.be.equals(0);
 
-    model.relations.push(<any>{ type: 'SUPERCLASS', model: 'A', alias: 'a', virtual: false });
-    model.relations.push(<any>{ type: 'SUBCLASS', model: 'A', alias: 'a', virtual: true });
-    model.relations.push(<any>{ type: 'MASTER', model: 'A', alias: 'a', virtual: true });
-    model.relations.push(<any>{ type: 'DETAIL', model: 'A', alias: 'a', virtual: false });
-    model.relations.push(<any>{ type: 'RECURSIVE', model: 'A', alias: 'a', virtual: true });
-    model.relations.push(<any>{ type: 'MANY_TO_MANY', model: 'A', alias: 'a', virtual: true });
-    model.relations.push(<any>{ type: 'INJECTIVE', model: 'A', alias: 'a', virtual: false });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'SUPERCLASS', virtual: false });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'SUBCLASS', virtual: true });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'MASTER', virtual: true });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'DETAIL', virtual: false });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'RECURSIVE', virtual: true });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'MANY_TO_MANY', virtual: true });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'INJECTIVE', virtual: false });
 
-    model.relations.push(<any>{ type: 'SUBCLASS', model: 'A', alias: 'a', virtual: false });
-    model.relations.push(<any>{ type: 'MASTER', model: 'A', alias: 'a', virtual: true });
-    model.relations.push(<any>{ type: 'RECURSIVE', model: 'A', alias: 'a', virtual: false });
-    model.relations.push(<any>{ type: 'INJECTIVE', model: 'H', alias: 'hello', virtual: false });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'SUBCLASS', virtual: false });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'MASTER', virtual: true });
+    model.relations.push(<any>{ alias: 'a', model: 'A', type: 'RECURSIVE', virtual: false });
+    model.relations.push(<any>{ alias: 'hello', model: 'H', type: 'INJECTIVE', virtual: false });
 
     expect(Object.keys(spec.nonVirtualRelations.superclass).length).to.be.equals(1);
     expect(Object.keys(spec.nonVirtualRelations.subclass).length).to.be.equals(1);
@@ -133,7 +133,7 @@ describe('spec', () => {
 
     expect(spec.nonVirtualRelations.byAlias('hello').model).to.be.equals('H');
 
-    model.relations.push(<any>{ type: 'INJECTIVE', model: 'W', alias: 'world', virtual: true });
+    model.relations.push(<any>{ alias: 'world', model: 'W', type: 'INJECTIVE', virtual: true });
 
     expect(spec.nonVirtualRelations.byAlias('world')).to.be.undefined;
 
@@ -145,8 +145,8 @@ describe('spec', () => {
 
     expect(spec.dependencies.length).to.be.equals(0);
 
-    model.relations.push(<any>{ type: 'INJECTIVE', model: 'C', alias: 'a' });
-    model.relations.push(<any>{ type: 'MANY_TO_MANY', model: 'A', alias: 'a', through: 'B' });
+    model.relations.push(<any>{ alias: 'a', model: 'C', type: 'INJECTIVE' });
+    model.relations.push(<any>{ alias: 'a', model: 'A', through: 'B', type: 'MANY_TO_MANY' });
 
     expect(spec.dependencies).to.deep.equal(['A', 'B', 'C']);
   });
@@ -157,8 +157,8 @@ describe('spec', () => {
 
     expect(spec.nonVirtualDependencies.length).to.be.equals(0);
 
-    model.relations.push(<any>{ type: 'INJECTIVE', model: 'C', alias: 'a', virtual: true });
-    model.relations.push(<any>{ type: 'MANY_TO_MANY', model: 'A', alias: 'a', through: 'B' });
+    model.relations.push(<any>{ alias: 'a', model: 'C', type: 'INJECTIVE', virtual: true });
+    model.relations.push(<any>{ alias: 'a', model: 'A', through: 'B', type: 'MANY_TO_MANY' });
 
     expect(spec.nonVirtualDependencies).to.deep.equal(['A', 'B']);
   });

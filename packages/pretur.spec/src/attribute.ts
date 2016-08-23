@@ -21,15 +21,15 @@ export interface Attribute<T> {
 function getCommonDefaults(owner: Owner): Attribute<any> {
   return {
     owner,
-    name: null!,
-    type: null!,
-    required: false,
-    unique: false,
-    primary: false,
     autoIncrement: false,
     mutable: true,
+    name: null!,
+    primary: false,
+    required: false,
+    type: null!,
+    unique: false,
   };
-};
+}
 
 export interface PrimaryKeyOptions<T> {
   name: string;
@@ -41,12 +41,12 @@ export interface PrimaryKeyOptions<T> {
 
 function getPrimaryKeyDefaults(owner: Owner): Attribute<any> {
   return assign<Attribute<any>, Attribute<any>>(getCommonDefaults(owner), {
-    type: DataTypes.INTEGER(),
-    primary: true,
     autoIncrement: true,
     mutable: false,
+    primary: true,
+    type: DataTypes.INTEGER(),
   });
-};
+}
 
 export function validateAttribute(attribute: Attribute<any>) {
   if (process.env.NODE_ENV !== 'production') {

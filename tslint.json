@@ -28,8 +28,7 @@
 			"spaces"
 		],
 		"interface-name": [
-			true,
-			"never-prefix"
+			false
 		],
 		"jsdoc-format": true,
 		"label-position": true,
@@ -48,7 +47,7 @@
 			"variables-before-functions"
 		],
 		"mocha-avoid-only": true,
-		"mocha-no-side-effect-code": true,
+		"mocha-no-side-effect-code": false,
 		"mocha-unneeded-done": true,
 		"new-parens": true,
 		"no-angle-bracket-type-assertion": false,
@@ -79,7 +78,7 @@
 		"no-empty": true,
 		"no-empty-character-class": true,
 		"no-eval": true,
-		"no-ex-assign": true,
+		"no-ex-assign": false,
 		"no-extra-boolean-cast": true,
 		"no-extra-semi": true,
 		"no-for-in": true,
@@ -136,13 +135,7 @@
 		],
 		"one-variable-per-declaration": true,
 		"only-arrow-functions": false,
-		"ordered-imports": [
-			true,
-			{
-				"import-sources-order": "case-insensitive",
-				"named-imports-order": "case-insensitive"
-			}
-		],
+		"ordered-imports": false,
 		"prefer-array-literal": true,
 		"prefer-const": true,
 		"prefer-type-cast": true,
@@ -205,7 +198,8 @@
 		"variable-name": [
 			true,
 			"ban-keywords",
-			"check-format"
+			"check-format",
+			"allow-pascal-case"
 		],
 		"whitespace": [
 			true,
@@ -214,8 +208,7 @@
 			"check-operator",
 			"check-module",
 			"check-separator",
-			"check-type",
-			"check-typecast"
+			"check-type"
 		]
 	}
 }

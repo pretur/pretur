@@ -8,7 +8,7 @@ export function exactLength(key: string, length: number, acceptEmpty = false): V
     }
 
     if (typeof str !== 'string' || str.length !== length) {
-      return { key, data: { VALUE: str, EXPECTED_LENGTH: length, ACCEPT_EMPTY: acceptEmpty } };
+      return { key, data: { ACCEPT_EMPTY: acceptEmpty, EXPECTED_LENGTH: length, VALUE: str } };
     }
 
     return null;

@@ -22,12 +22,12 @@ export {
 };
 
 export const DataTypes = {
-  ENUM: EnumType.create,
   BOOLEAN: BooleanType.create,
-  DOUBLE: DoubleType.create,
-  INTEGER: IntegerType.create,
-  STRING: StringType.create,
-  OBJECT: ObjectType.create,
   DATE: DateType.create,
+  DOUBLE: DoubleType.create,
+  ENUM: EnumType.create,
+  INTEGER: IntegerType.create,
+  OBJECT: ObjectType.create,
   RANGE: RangeType.create,
+  STRING: StringType.create,
 };

@@ -12,11 +12,11 @@ describe('validator:nonEmptyString', () => {
 
   it('should return bundle with {VALUE} for invalid input', () => {
     const validator = nonEmptyString('A');
-    expect(validator(' ')).to.deep.equal({ key: 'A', data: { VALUE: ' ' } });
-    expect(validator('    \n ')).to.deep.equal({ key: 'A', data: { VALUE: '    \n ' } });
-    expect(validator('')).to.deep.equal({ key: 'A', data: { VALUE: '' } });
-    expect(validator(null!)).to.deep.equal({ key: 'A', data: { VALUE: null } });
-    expect(validator(undefined!)).to.deep.equal({ key: 'A', data: { VALUE: undefined } });
+    expect(validator(' ')).to.deep.equal({ data: { VALUE: ' ' }, key: 'A' });
+    expect(validator('    \n ')).to.deep.equal({ data: { VALUE: '    \n ' }, key: 'A' });
+    expect(validator('')).to.deep.equal({ data: { VALUE: '' }, key: 'A' });
+    expect(validator(null!)).to.deep.equal({ data: { VALUE: null }, key: 'A' });
+    expect(validator(undefined!)).to.deep.equal({ data: { VALUE: undefined }, key: 'A' });
   });
 
 });

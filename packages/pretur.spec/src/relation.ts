@@ -170,30 +170,30 @@ function inheritors<T>(model: Model<any>, options: InheritorsOptions<T>) {
 
   options.inheritors.forEach(inheritor => {
     appendRelation(model, {
-      owner: model.owner,
-      type: 'SUBCLASS',
-      model: inheritor.target.name,
       alias: inheritor.alias,
       key: options.sharedExistingUniqueField,
-      required: false,
-      virtual: inheritor.target.virtual,
+      model: inheritor.target.name,
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
+      owner: model.owner,
+      required: false,
+      type: 'SUBCLASS',
+      virtual: inheritor.target.virtual,
     });
 
     appendRelation(inheritor.target.model, {
-      owner: model.owner,
-      type: 'SUPERCLASS',
-      model: model.name,
       alias: options.aliasOnSubclasses,
       key: options.sharedExistingUniqueField,
-      required: false,
-      virtual: model.virtual,
+      model: model.name,
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
+      owner: model.owner,
+      required: false,
+      type: 'SUPERCLASS',
+      virtual: model.virtual,
     });
 
-    typeEnumValues.push({ name: inheritor.alias, i18nKey: inheritor.i18nKey });
+    typeEnumValues.push({ i18nKey: inheritor.i18nKey, name: inheritor.alias });
   });
 
   const typeEnum = DataTypes.ENUM(
@@ -203,97 +203,97 @@ function inheritors<T>(model: Model<any>, options: InheritorsOptions<T>) {
   );
 
   appendAttribute(model, {
-    name: options.typeIdentifierFieldName || 'type',
-    type: typeEnum,
-    required: !!options.typeIdentifierRequired,
     mutable: true,
+    name: options.typeIdentifierFieldName || 'type',
+    required: !!options.typeIdentifierRequired,
+    type: typeEnum,
     validator: options.typeIdentifierValidator,
   });
 }
 
 function master<T>(model: Model<any>, options: MasterOptions<T>) {
   appendRelation(model, {
-    owner: options.owner || model.owner,
-    type: 'MASTER',
-    model: options.target.name,
     alias: options.alias,
     key: options.foreignKey || `${options.alias}Id`,
-    required: options.required || false,
-    virtual: options.target.virtual,
+    model: options.target.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
+    owner: options.owner || model.owner,
+    required: options.required || false,
+    type: 'MASTER',
+    virtual: options.target.virtual,
   });
 
   appendRelation(options.target.model, {
-    owner: options.targetOwner || model.owner,
-    type: 'DETAIL',
-    model: model.name,
     alias: options.ownAliasOnTarget,
     key: options.foreignKey || `${options.alias}Id`,
-    required: options.required || false,
-    virtual: model.virtual,
+    model: model.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
+    owner: options.targetOwner || model.owner,
+    required: options.required || false,
+    type: 'DETAIL',
+    virtual: model.virtual,
   });
 
   appendAttribute(model, {
     name: options.foreignKey || `${options.alias}Id`,
-    type: options.foreignKeyType || DataTypes.INTEGER(),
     required: options.required || false,
+    type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
   });
 }
 
 function injective<T>(model: Model<any>, options: InjectiveOptions<T>) {
   appendRelation(model, {
-    owner: options.owner || model.owner,
-    type: 'MASTER',
-    model: options.target.name,
     alias: options.alias,
     key: options.foreignKey || `${options.alias}Id`,
-    required: options.required || false,
-    virtual: options.target.virtual,
+    model: options.target.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
+    owner: options.owner || model.owner,
+    required: options.required || false,
+    type: 'MASTER',
+    virtual: options.target.virtual,
   });
 
   appendRelation(options.target.model, {
-    owner: options.targetOwner || model.owner,
-    type: 'INJECTIVE',
-    model: model.name,
     alias: options.ownAliasOnTarget,
     key: options.foreignKey || `${options.alias}Id`,
-    required: options.required || false,
-    virtual: model.virtual,
+    model: model.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
+    owner: options.targetOwner || model.owner,
+    required: options.required || false,
+    type: 'INJECTIVE',
+    virtual: model.virtual,
   });
 
   appendAttribute(model, {
     name: options.foreignKey || `${options.alias}Id`,
-    type: options.foreignKeyType || DataTypes.INTEGER(),
     required: options.required || false,
+    type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
   });
 }
 
 function recursive<T>(model: Model<any>, options: RecursiveOptions<T>) {
   appendRelation(model, {
-    owner: model.owner,
-    type: 'RECURSIVE',
-    model: model.name,
     alias: options.alias,
     key: options.key || `${options.alias}Id`,
-    required: false,
-    virtual: model.virtual,
+    model: model.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
+    owner: model.owner,
+    required: false,
+    type: 'RECURSIVE',
+    virtual: model.virtual,
   });
 
   appendAttribute(model, {
     name: options.key || `${options.alias}Id`,
-    type: options.keyType || DataTypes.INTEGER(),
     required: false,
+    type: options.keyType || DataTypes.INTEGER(),
     validator: options.validator,
   });
 }
@@ -308,8 +308,8 @@ export interface RelationsBuilder {
 export function createRelationBuilder(model: Model<any>): RelationsBuilder {
   return {
     inheritors: (options: InheritorsOptions<any>) => inheritors(model, options),
-    master: (options: MasterOptions<any>) => master(model, options),
     injective: (options: InjectiveOptions<any>) => injective(model, options),
+    master: (options: MasterOptions<any>) => master(model, options),
     recursive: (options: RecursiveOptions<any>) => recursive(model, options),
   };
 }

@@ -15,10 +15,9 @@ export function minimumLength(
       return {
         key,
         data: {
-          VALUE: str,
-          MINIMUM_LENGTH:
-          minimumLength,
           ACCEPT_EMPTY: acceptEmpty,
+          MINIMUM_LENGTH: minimumLength,
+          VALUE: str,
         },
       };
     }

@@ -55,79 +55,79 @@ function populateRelations(relationsObj: Relations, relationsArray: Relation[]) 
 }
 
 export class Spec<T> {
-  private _model: Model<T>;
-  private _byAlias = (alias: string) => find(this._model.relations, { alias });
-  private _nonVirtualByAlias = (alias: string) =>
-    find(this._model.relations.filter(r => !r.virtual), { alias });
+  private model: Model<T>;
+  private byAlias = (alias: string) => find(this.model.relations, { alias });
+  private nonVirtualByAlias = (alias: string) =>
+    find(this.model.relations.filter(r => !r.virtual), { alias });
 
   public get name(): string {
-    return this._model.name;
+    return this.model.name;
   }
 
   public get owner(): Owner {
-    return this._model.owner;
+    return this.model.owner;
   }
 
   public get virtual(): boolean {
-    return this._model.virtual;
+    return this.model.virtual;
   }
 
   public get join(): boolean {
-    return this._model.join;
+    return this.model.join;
   }
 
   public get validator(): Validator<T> | undefined {
-    return this._model.validator;
+    return this.model.validator;
   }
 
   public get attributes(): AttributeMap {
     const map: AttributeMap = {};
-    this._model.attributes.forEach(attrib => map[attrib.name] = attrib);
+    this.model.attributes.forEach(attrib => map[attrib.name] = attrib);
     return map;
   }
 
   public get attributeArray(): Attribute<any>[] {
-    return this._model.attributes;
+    return this.model.attributes;
   }
 
   public get indexes(): Indexes {
-    return this._model.indexes;
+    return this.model.indexes;
   }
 
   public get relations(): Relations {
     const rels: Relations = {
-      superclass: [],
-      subclass: [],
-      master: [],
+      byAlias: this.byAlias,
       detail: [],
-      recursive: [],
-      manyToMany: [],
       injective: [],
-      byAlias: this._byAlias,
+      manyToMany: [],
+      master: [],
+      recursive: [],
+      subclass: [],
+      superclass: [],
     };
 
-    populateRelations(rels, this._model.relations);
+    populateRelations(rels, this.model.relations);
 
     return rels;
   }
 
   public get relationArray(): Relation[] {
-    return this._model.relations;
+    return this.model.relations;
   }
 
   public get nonVirtualRelations(): Relations {
     const rels: Relations = {
-      superclass: [],
-      subclass: [],
-      master: [],
+      byAlias: this.nonVirtualByAlias,
       detail: [],
-      recursive: [],
-      manyToMany: [],
       injective: [],
-      byAlias: this._nonVirtualByAlias,
+      manyToMany: [],
+      master: [],
+      recursive: [],
+      subclass: [],
+      superclass: [],
     };
 
-    const nonVirtualRelations = this._model.relations.filter(r => !r.virtual);
+    const nonVirtualRelations = this.model.relations.filter(r => !r.virtual);
 
     populateRelations(rels, nonVirtualRelations);
 
@@ -135,11 +135,11 @@ export class Spec<T> {
   }
 
   public get nonVirtualRelationArray(): Relation[] {
-    return this._model.relations.filter(r => !r.virtual);
+    return this.model.relations.filter(r => !r.virtual);
   }
 
   public get dependencies(): string[] {
-    const allRelations = this._model.relations;
+    const allRelations = this.model.relations;
     return uniq([
       ...allRelations.map(r => r.model),
       ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through!),
@@ -147,7 +147,7 @@ export class Spec<T> {
   }
 
   public get nonVirtualDependencies(): string[] {
-    const allRelations = this._model.relations.filter(r => !r.virtual);
+    const allRelations = this.model.relations.filter(r => !r.virtual);
     return uniq([
       ...allRelations.map(r => r.model),
       ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through!),
@@ -155,21 +155,21 @@ export class Spec<T> {
   }
 
   public constructor(model: Model<T>) {
-    this._model = model;
+    this.model = model;
   }
 
   public filterByOwner(owner: Owner): Spec<T> | null {
-    if (!owner || !this._model.owner || owner.length === 0 || this._model.owner.length === 0) {
+    if (!owner || !this.model.owner || owner.length === 0 || this.model.owner.length === 0) {
       return this;
     }
 
-    if (!ownersIntersect(owner, this._model.owner)) {
+    if (!ownersIntersect(owner, this.model.owner)) {
       return null;
     }
 
-    const newModel = assign<{}, Model<T>>({}, this._model, {
-      attributes: this._model.attributes.filter(a => !a.owner || ownersIntersect(owner, a.owner)),
-      relations: this._model.relations.filter(r => !r.owner || ownersIntersect(owner, r.owner)),
+    const newModel = assign<{}, Model<T>>({}, this.model, {
+      attributes: this.model.attributes.filter(a => !a.owner || ownersIntersect(owner, a.owner)),
+      relations: this.model.relations.filter(r => !r.owner || ownersIntersect(owner, r.owner)),
     });
 
     return new Spec<T>(newModel);

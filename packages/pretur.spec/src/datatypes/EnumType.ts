@@ -8,10 +8,10 @@ export interface EnumValue<TKey extends string> {
 export default class EnumType<TKey extends string> extends AbstractType {
   public name: string;
   public values: EnumValue<TKey>[];
-  private _typename: string;
+  private enumTypeName: string;
 
   public get typeName(): string {
-    return this._typename;
+    return this.enumTypeName;
   }
 
   public static is(obj: any): obj is EnumType<string> {
@@ -20,7 +20,7 @@ export default class EnumType<TKey extends string> extends AbstractType {
 
   public static create<TKey extends string>(
     name: string,
-    values: Array<[TKey, string] | EnumValue<TKey>>,
+    values: ([TKey, string] | EnumValue<TKey>)[],
     typeName?: string
   ): EnumType<TKey> {
     return new EnumType<TKey>(name, values, typeName);
@@ -28,16 +28,16 @@ export default class EnumType<TKey extends string> extends AbstractType {
 
   private constructor(
     name: string,
-    values: Array<[TKey, string] | EnumValue<TKey>>,
+    values: ([TKey, string] | EnumValue<TKey>)[],
     typeName = 'string'
   ) {
     super();
 
     this.name = name;
-    this._typename = typeName;
+    this.enumTypeName = typeName;
 
     this.values = values
-      .map(value => Array.isArray(value) ? ({ name: value[0], i18nKey: value[1] }) : value)
+      .map(value => Array.isArray(value) ? ({ i18nKey: value[1], name: value[0] }) : value)
       .filter(v => v);
 
     if (process.env.NODE_ENV !== 'production') {

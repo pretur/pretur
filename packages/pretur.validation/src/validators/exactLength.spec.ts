@@ -17,28 +17,28 @@ describe('validator:exactLength', () => {
     const validator1 = exactLength('A', 2, false);
     const validator2 = exactLength('A', 3, true);
     expect(validator1('123')).to.deep.equal({
+      data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: '123' },
       key: 'A',
-      data: { VALUE: '123', EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });
     expect(validator1('')).to.deep.equal({
+      data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: '' },
       key: 'A',
-      data: { VALUE: '', EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });
     expect(validator1(null!)).to.deep.equal({
+      data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: null },
       key: 'A',
-      data: { VALUE: null, EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });
     expect(validator1(undefined!)).to.deep.equal({
+      data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: undefined },
       key: 'A',
-      data: { VALUE: undefined, EXPECTED_LENGTH: 2, ACCEPT_EMPTY: false },
     });
     expect(validator2('12')).to.deep.equal({
+      data: { ACCEPT_EMPTY: true, EXPECTED_LENGTH: 3, VALUE: '12' },
       key: 'A',
-      data: { VALUE: '12', EXPECTED_LENGTH: 3, ACCEPT_EMPTY: true },
     });
     expect(validator2('1233')).to.deep.equal({
+      data: { ACCEPT_EMPTY: true, EXPECTED_LENGTH: 3, VALUE: '1233' },
       key: 'A',
-      data: { VALUE: '1233', EXPECTED_LENGTH: 3, ACCEPT_EMPTY: true },
     });
   });
 

@@ -49,9 +49,9 @@ export function joinee(
     model,
     alias,
     key: (options && options.key) || `${alias}Id`,
-    type: (options && options.type) || DataTypes.INTEGER(),
     onDelete: (options && options.onDelete) || 'CASCADE',
     onUpdate: (options && options.onUpdate) || 'CASCADE',
+    type: (options && options.type) || DataTypes.INTEGER(),
   };
 }
 
@@ -64,9 +64,9 @@ export interface CreateJoinModelOptions {
 }
 
 const defaultCreateJoinModelOptions: CreateJoinModelOptions = {
+  firstJoinee: null!,
   name: null!,
   owner: null!,
-  firstJoinee: null!,
   secondJoinee: null!,
   virtual: false,
 };
@@ -82,15 +82,15 @@ export function createJoinModel<T>(
   const secondJoinee = normalizedOptions.secondJoinee;
 
   const model: Model<any> = {
-    name: normalizedOptions.name,
-    owner: normalizedOptions.owner,
-    virtual: normalizedOptions.virtual!,
-    join: true,
     attributes: [],
-    relations: [],
     indexes: {
       unique: [[firstJoinee.key, secondJoinee.key]],
     },
+    join: true,
+    name: normalizedOptions.name,
+    owner: normalizedOptions.owner,
+    relations: [],
+    virtual: normalizedOptions.virtual!,
   };
 
   const builder = <JoinModelBuilder>{
@@ -99,64 +99,64 @@ export function createJoinModel<T>(
 
   builder.attribute({
     name: firstJoinee.key,
-    type: firstJoinee.type,
     required: true,
+    type: firstJoinee.type,
   });
 
   builder.attribute({
     name: secondJoinee.key,
-    type: secondJoinee.type,
     required: true,
+    type: secondJoinee.type,
   });
 
   appendRelation(model, {
-    type: 'MASTER',
-    owner: normalizedOptions.owner,
     alias: firstJoinee.alias,
     key: firstJoinee.key,
     model: firstJoinee.model.name,
     onDelete: firstJoinee.onDelete,
     onUpdate: firstJoinee.onUpdate,
+    owner: normalizedOptions.owner,
     required: true,
+    type: 'MASTER',
     virtual: firstJoinee.model.virtual,
   });
 
   appendRelation(model, {
-    type: 'MASTER',
-    owner: normalizedOptions.owner,
     alias: secondJoinee.alias,
     key: secondJoinee.key,
     model: secondJoinee.model.name,
     onDelete: secondJoinee.onDelete,
     onUpdate: secondJoinee.onUpdate,
+    owner: normalizedOptions.owner,
     required: true,
+    type: 'MASTER',
     virtual: secondJoinee.model.virtual,
   });
 
   appendRelation(firstJoinee.model.model, {
-    type: 'MANY_TO_MANY',
-    owner: normalizedOptions.owner,
-    virtual: normalizedOptions.virtual,
     alias: secondJoinee.alias,
     key: firstJoinee.key,
     model: secondJoinee.model.name,
-    through: model.name,
     onDelete: firstJoinee.onDelete,
     onUpdate: firstJoinee.onUpdate,
+    owner: normalizedOptions.owner,
     required: true,
+    through: model.name,
+    type: 'MANY_TO_MANY',
+    virtual: normalizedOptions.virtual,
   });
 
   appendRelation(secondJoinee.model.model, {
-    type: 'MANY_TO_MANY',
-    owner: normalizedOptions.owner,
-    virtual: normalizedOptions.virtual,
     alias: firstJoinee.alias,
     key: secondJoinee.key,
     model: firstJoinee.model.name,
-    through: model.name,
     onDelete: secondJoinee.onDelete,
     onUpdate: secondJoinee.onUpdate,
+    owner: normalizedOptions.owner,
     required: true,
+    through: model.name,
+    type: 'MANY_TO_MANY',
+    virtual: normalizedOptions.virtual,
   });
 
   function initialize(): Spec<T> {
@@ -167,11 +167,11 @@ export function createJoinModel<T>(
   }
 
   return {
-    model: model,
+    model,
+    join: true,
     name: normalizedOptions.name,
     owner: normalizedOptions.owner,
     virtual: normalizedOptions.virtual!,
-    join: true,
     initialize,
   };
 }

@@ -11,35 +11,35 @@ import {
 
 function mockModel(name: string): Model<any> {
   return {
-    name: name,
-    owner: null!,
-    virtual: false,
-    join: false,
+    name,
     attributes: [],
-    relations: [],
     indexes: { unique: [] },
+    join: false,
+    owner: null!,
+    relations: [],
+    virtual: false,
   };
 }
 
 function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel<any> {
   return {
-    model: model,
+    model,
+    initialize: () => null!,
+    join: model.join,
     name: model.name,
     owner: model.owner,
     virtual: model.virtual,
-    join: model.join,
-    initialize: () => null!,
   };
 }
 
 const baseRelation = <Relation>{
   alias: null!,
   key: 'aId',
-  type: null!,
-  owner: null!,
   model: 'A',
-  onUpdate: 'CASCADE',
   onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+  owner: null!,
+  type: null!,
 };
 
 describe('relation', () => {
@@ -112,7 +112,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE', model: 'B' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', model: 'B', type: 'RECURSIVE' })
       ).to.throw();
     });
 
@@ -120,11 +120,11 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE', onDelete: 'A' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', onDelete: 'A', type: 'RECURSIVE' })
       ).to.throw();
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE', onUpdate: 'A' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', onUpdate: 'A', type: 'RECURSIVE' })
       ).to.throw();
     });
 
@@ -158,11 +158,11 @@ describe('relation', () => {
       ) {
         expect(main.attributes[index].name).to.be.equals(typeName);
         expect(main.attributes[index].type).to.be.instanceof(EnumType);
-        expect((main.attributes[index].type as EnumType<string>).name)
+        expect((<EnumType<string>>main.attributes[index].type).name)
           .to.be.equals(typeEnumName);
-        expect((main.attributes[index].type as EnumType<string>).typeName)
+        expect((<EnumType<string>>main.attributes[index].type).typeName)
           .to.be.equals(enumValueNames.map(t => `'${t}'`).join(' | '));
-        expect((main.attributes[index].type as EnumType<string>).values.map(v => v.name))
+        expect((<EnumType<string>>main.attributes[index].type).values.map(v => v.name))
           .to.deep.equal(enumValueNames);
       }
 
@@ -172,12 +172,12 @@ describe('relation', () => {
           (main, inheritor, append) => {
             append({
               aliasOnSubclasses: 'main',
-              sharedExistingUniqueField: 'id',
               inheritors: [
                 inheritor('Child1', 'a', 'A'),
                 inheritor('Child2', 'b', 'A'),
                 inheritor('Child3', 'c', 'A'),
               ],
+              sharedExistingUniqueField: 'id',
             });
 
             assetEnumType(main, 0, 'type', 'MainSubclassType', ['a', 'b', 'c']);
@@ -189,10 +189,10 @@ describe('relation', () => {
             const validator = () => null!;
             append({
               aliasOnSubclasses: 'main',
+              inheritors: [inheritor('Child1', 'a', 'A')],
               sharedExistingUniqueField: 'id',
               typeIdentifierRequired: true,
               typeIdentifierValidator: validator,
-              inheritors: [inheritor('Child1', 'a', 'A')],
             });
 
             assetEnumType(main, 0, 'type', 'MainSubclassType', ['a']);
@@ -215,8 +215,8 @@ describe('relation', () => {
 
             append({
               aliasOnSubclasses: 'main',
-              sharedExistingUniqueField: 'id',
               inheritors: [child1, child2, child3],
+              sharedExistingUniqueField: 'id',
             });
 
             expect(main.relations[0].owner).to.be.equals('owner');
@@ -271,7 +271,7 @@ describe('relation', () => {
           i18nKey,
           target: mockUninitializedStateModel(mockModel(name)),
         });
-        let appendInheritorGroup = createRelationBuilder(main).inheritors;
+        const appendInheritorGroup = createRelationBuilder(main).inheritors;
 
         it(expectation, () => {
           testCase(main, inheritor, appendInheritorGroup);
@@ -294,9 +294,9 @@ describe('relation', () => {
         const detail = mockModel('Detail');
 
         createRelationBuilder(detail).master({
-          target: mockUninitializedStateModel(master),
-          ownAliasOnTarget: 'details',
           alias: 'master',
+          ownAliasOnTarget: 'details',
+          target: mockUninitializedStateModel(master),
         });
 
         expect(master.relations[0].alias).to.be.equals('details');
@@ -317,17 +317,17 @@ describe('relation', () => {
         detail.virtual = true;
 
         createRelationBuilder(detail).master({
-          target: mockUninitializedStateModel(master),
-          ownAliasOnTarget: 'details',
           alias: 'master',
-          onDelete: 'RESTRICT',
-          onUpdate: 'NO ACTION',
-          owner: 'owner',
-          targetOwner: 'owner2',
-          required: true,
-          validator: noop,
           foreignKey: 'someId',
           foreignKeyType: DataTypes.STRING(),
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          ownAliasOnTarget: 'details',
+          owner: 'owner',
+          required: true,
+          target: mockUninitializedStateModel(master),
+          targetOwner: 'owner2',
+          validator: noop,
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -372,9 +372,9 @@ describe('relation', () => {
         const injected = mockModel('Injected');
 
         createRelationBuilder(injected).injective({
-          target: mockUninitializedStateModel(master),
-          ownAliasOnTarget: 'injected',
           alias: 'master',
+          ownAliasOnTarget: 'injected',
+          target: mockUninitializedStateModel(master),
         });
 
         expect(master.relations[0].alias).to.be.equals('injected');
@@ -395,17 +395,17 @@ describe('relation', () => {
         injected.virtual = true;
 
         createRelationBuilder(injected).injective({
-          target: mockUninitializedStateModel(master),
-          ownAliasOnTarget: 'injected',
           alias: 'master',
-          onDelete: 'RESTRICT',
-          onUpdate: 'NO ACTION',
-          owner: 'owner',
-          targetOwner: 'owner2',
-          required: true,
-          validator: noop,
           foreignKey: 'someId',
           foreignKeyType: DataTypes.STRING(),
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          ownAliasOnTarget: 'injected',
+          owner: 'owner',
+          required: true,
+          target: mockUninitializedStateModel(master),
+          targetOwner: 'owner2',
+          validator: noop,
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -468,11 +468,11 @@ describe('relation', () => {
 
         createRelationBuilder(master).recursive({
           alias: 'parent',
+          key: 'someId',
+          keyType: DataTypes.STRING(),
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           validator: noop,
-          key: 'someId',
-          keyType: DataTypes.STRING(),
         });
 
         expect(master.relations[0].owner).to.be.equals('owner');

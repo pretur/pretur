@@ -1,10 +1,10 @@
 import AbstractType from './AbstractType';
 
 export default class ObjectType extends AbstractType {
-  private _typeName: string;
+  private objectTypeName: string;
 
   public get typeName(): string {
-    return this._typeName;
+    return this.objectTypeName;
   }
 
   public static is(obj: any): obj is ObjectType {
@@ -12,12 +12,11 @@ export default class ObjectType extends AbstractType {
   }
 
   public static create(typeName?: string): ObjectType {
-    const newObj = new ObjectType(typeName);
-    return newObj;
+    return new ObjectType(typeName);
   }
 
   private constructor(typeName = 'Object') {
     super();
-    this._typeName = typeName;
+    this.objectTypeName = typeName;
   }
 }

@@ -16,11 +16,11 @@ export function rangedNumber(
       return {
         key,
         data: {
-          VALUE: num,
           FROM: from,
-          TO: to,
           INCLUSIVE_FROM: inclusiveFrom,
           INCLUSIVE_TO: inclusiveTo,
+          TO: to,
+          VALUE: num,
         },
       };
     }

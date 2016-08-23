@@ -12,13 +12,13 @@ describe('validator:positive', () => {
 
   it('should return bundle with {VALUE} for invalid input', () => {
     const validator = positive('A');
-    expect(validator(null!)).to.deep.equal({ key: 'A', data: { VALUE: null } });
-    expect(validator(undefined!)).to.deep.equal({ key: 'A', data: { VALUE: undefined } });
-    expect(validator(0)).to.deep.equal({ key: 'A', data: { VALUE: 0 } });
-    expect(validator(Number.NaN)).to.deep.equal({ key: 'A', data: { VALUE: Number.NaN } });
+    expect(validator(null!)).to.deep.equal({ data: { VALUE: null }, key: 'A' });
+    expect(validator(undefined!)).to.deep.equal({ data: { VALUE: undefined }, key: 'A' });
+    expect(validator(0)).to.deep.equal({ data: { VALUE: 0 }, key: 'A' });
+    expect(validator(Number.NaN)).to.deep.equal({ data: { VALUE: Number.NaN }, key: 'A' });
     expect(validator(Number.NEGATIVE_INFINITY)).to.deep.equal({
-      key: 'A',
       data: { VALUE: Number.NEGATIVE_INFINITY },
+      key: 'A',
     });
   });
 

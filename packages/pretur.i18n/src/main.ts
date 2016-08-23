@@ -93,17 +93,14 @@ export function buildCompiler(locale: string): Compiler {
 
   return {
     constant(str) {
-      const build = <I18nStringBuilder<string, any>>(() => str);
-      return build;
+      return <I18nStringBuilder<string, any>>(() => str);
     },
     callback(cb: (data?: any) => string) {
-      const build = <I18nStringBuilder<string, any>>(d => cb(d));
-      return build;
+      return <I18nStringBuilder<string, any>>(d => cb(d));
     },
     messageFormat(formatString: string) {
       const formatter = mf.compile(formatString);
-      const build = <I18nStringBuilder<string, any>>((d) => formatter(d));
-      return build;
+      return <I18nStringBuilder<string, any>>((d) => formatter(d));
     },
     describe(tree: any) {
       return {
@@ -127,7 +124,7 @@ function processDescriptor(tree: any, language: Language, prefix?: string, path?
     const processedKey = buildKey(prefix, key);
     const processedPath = buildPath(path, key);
     if (typeof tree[key] === 'function') {
-      const stringBuilder = tree[key] as I18nStringBuilder<string, any>;
+      const stringBuilder = <I18nStringBuilder<string, any>>tree[key];
       stringBuilder.key = processedKey;
       stringBuilder.path = processedPath;
       language[processedKey] = stringBuilder;

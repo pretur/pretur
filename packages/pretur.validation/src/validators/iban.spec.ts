@@ -12,7 +12,7 @@ describe('validator:iban', () => {
 
   it('should return bundle with {VALUE} for invalid input', () => {
     const validator = iban('A');
-    expect(validator('blah')).to.deep.equal({ key: 'A', data: { VALUE: 'blah' } });
+    expect(validator('blah')).to.deep.equal({ data: { VALUE: 'blah' }, key: 'A' });
   });
 
 });

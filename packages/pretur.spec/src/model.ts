@@ -47,13 +47,13 @@ export function createModel<T>(
   initializer?: (modelBuilder: ModelBuilder<T>) => void
 ): UninitializedStateModel<T> {
   const model: Model<T> = {
-    name: options.name,
-    owner: options.owner,
-    virtual: !!options.virtual,
-    join: false,
     attributes: [],
     indexes: { unique: [] },
+    join: false,
+    name: options.name,
+    owner: options.owner,
     relations: [],
+    virtual: !!options.virtual,
   };
 
   const builder = <ModelBuilder<T>>{
@@ -77,11 +77,11 @@ export function createModel<T>(
   }
 
   return {
-    model: model,
+    initialize,
+    model,
+    join: model.join,
     name: model.name,
     owner: model.owner,
     virtual: model.virtual,
-    join: model.join,
-    initialize,
   };
 }
