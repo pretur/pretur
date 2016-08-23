@@ -21,13 +21,13 @@ export {
   RangeType,
 };
 
-export namespace DataTypes {
-  export const ENUM = EnumType.create;
-  export const BOOLEAN = BooleanType.create;
-  export const DOUBLE = DoubleType.create;
-  export const INTEGER = IntegerType.create;
-  export const STRING = StringType.create;
-  export const OBJECT = ObjectType.create;
-  export const DATE = DateType.create;
-  export const RANGE = RangeType.create;
-}
+export const DataTypes = {
+  ENUM: EnumType.create,
+  BOOLEAN: BooleanType.create,
+  DOUBLE: DoubleType.create,
+  INTEGER: IntegerType.create,
+  STRING: StringType.create,
+  OBJECT: ObjectType.create,
+  DATE: DateType.create,
+  RANGE: RangeType.create,
+};

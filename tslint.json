@@ -3,6 +3,7 @@
 		"node_modules/tslint-eslint-rules/dist/rules"
 	],
 	"rules": {
+		"adjacent-overload-signatures": true,
 		"align": [
 			true,
 			"parameters",
@@ -57,10 +58,15 @@
 		"no-debugger": true,
 		"no-duplicate-key": true,
 		"no-duplicate-variable": true,
-		"no-empty": false,
+		"no-empty": true,
 		"no-eval": true,
+		"no-for-in-array": false,
 		"no-inferrable-types": true,
 		"no-internal-module": true,
+		"no-invalid-this": true,
+		"no-namespace": true,
+		"no-null-keyword": false,
+		"no-reference": true,
 		"no-shadowed-variable": true,
 		"no-string-literal": false,
 		"no-switch-case-fall-through": true,
@@ -81,6 +87,7 @@
 			"check-else",
 			"check-whitespace"
 		],
+		"only-arrow-functions": false,
 		"quotemark": [
 			true,
 			"single",
@@ -103,7 +110,9 @@
 		"typedef": [
 			false,
 			"call-signature",
+			"arrow-call-signature",
 			"parameter",
+			"arrow-parameter",
 			"property-declaration",
 			"variable-declaration",
 			"member-variable-declaration"
@@ -116,6 +125,13 @@
 				"parameter": "nospace",
 				"property-declaration": "nospace",
 				"variable-declaration": "nospace"
+			},
+			{
+				"call-signature": "onespace",
+				"index-signature": "onespace",
+				"parameter": "onespace",
+				"property-declaration": "onespace",
+				"variable-declaration": "onespace"
 			}
 		],
 		"use-strict": [
