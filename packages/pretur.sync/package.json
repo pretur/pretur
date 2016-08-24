@@ -1,6 +1,6 @@
 {
   "name": "pretur.sync",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Front-end back-end communication infrastructure",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
