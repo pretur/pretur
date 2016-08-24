@@ -1,0 +1,38 @@
+{
+  "name": "pretur.fetch",
+  "version": "0.4.0",
+  "description": "es6 style github fetch",
+  "main": "lib/main.js",
+  "typings": "lib/main.d.ts",
+  "files": [
+    "lib",
+    "typings.json"
+  ],
+  "scripts": {
+    "build": "tsc -d ../../typings/index.d.ts src/main.ts --rootDir src --outDir lib --module commonjs --removeComments",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "pretur",
+    "fetch",
+    "remote"
+  ],
+  "author": "Ali Taheri Moghaddar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pretur/pretur"
+  },
+  "bugs": {
+    "url": "https://github.com/pretur/pretur/issues"
+  },
+  "homepage": "https://github.com/pretur/fetch#readme",
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "node-fetch": "^1.6.0",
+    "whatwg-fetch": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^2.1.0-dev.20160823"
+  }
+}
