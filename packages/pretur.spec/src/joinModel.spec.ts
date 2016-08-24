@@ -30,11 +30,20 @@ describe('joinModel', () => {
 
   describe('joinee', () => {
 
+    it('should fail if provided invalid input', () => {
+      const model = mockUninitializedStateModel(mockModel('A'));
+
+      expect(() => joinee(null!, 'a', 'all_a')).to.throw();
+      expect(() => joinee(model, null!, 'all_a')).to.throw();
+      expect(() => joinee(model, 'a', null!)).to.throw();
+    });
+
     it('should return a joinee with valid defaults', () => {
       const model = mockUninitializedStateModel(mockModel('A'));
-      const joineeModel = joinee(model, 'a');
+      const joineeModel = joinee(model, 'a', 'all_a');
 
-      expect(joineeModel.alias).to.be.equals('a');
+      expect(joineeModel.aliasOnJoin).to.be.equals('a');
+      expect(joineeModel.aliasOnTarget).to.be.equals('all_a');
       expect(joineeModel.key).to.be.equals('aId');
       expect(joineeModel.model).to.be.equals(model);
       expect(joineeModel.onDelete).to.be.equals('CASCADE');
@@ -44,14 +53,15 @@ describe('joinModel', () => {
 
     it('should return a joinee with overriden defaults', () => {
       const model = mockUninitializedStateModel(mockModel('A'));
-      const joineeModel = joinee(model, 'a', {
+      const joineeModel = joinee(model, 'a', 'all_a', {
         key: 'someId',
         onDelete: 'SET NULL',
         onUpdate: 'NO ACTION',
         type: DataTypes.STRING(),
       });
 
-      expect(joineeModel.alias).to.be.equals('a');
+      expect(joineeModel.aliasOnJoin).to.be.equals('a');
+      expect(joineeModel.aliasOnTarget).to.be.equals('all_a');
       expect(joineeModel.key).to.be.equals('someId');
       expect(joineeModel.model).to.be.equals(model);
       expect(joineeModel.onDelete).to.be.equals('SET NULL');
@@ -68,10 +78,10 @@ describe('joinModel', () => {
       const modelB = mockModel('B');
 
       const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
         name: 'a',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
         virtual: true,
       });
 
@@ -87,10 +97,10 @@ describe('joinModel', () => {
       const modelB = mockModel('B');
 
       const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
         name: 'a',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
         virtual: true,
       });
 
@@ -102,10 +112,10 @@ describe('joinModel', () => {
       const modelB = mockModel('B');
 
       const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
         name: 'a',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
         virtual: true,
       });
 
@@ -143,16 +153,16 @@ describe('joinModel', () => {
       const modelB = mockModel('B');
 
       createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
         name: 'J',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
         virtual: true,
       });
 
       expect(modelA.relations[0].type).to.be.equals('MANY_TO_MANY');
       expect(modelA.relations[0].owner).to.deep.equal(['b', 'c']);
-      expect(modelA.relations[0].alias).to.be.equals('b');
+      expect(modelA.relations[0].alias).to.be.equals('all_b');
       expect(modelA.relations[0].key).to.be.equals('aId');
       expect(modelA.relations[0].model).to.be.equals('B');
       expect(modelA.relations[0].through).to.be.equals('J');
@@ -163,7 +173,7 @@ describe('joinModel', () => {
 
       expect(modelB.relations[0].type).to.be.equals('MANY_TO_MANY');
       expect(modelB.relations[0].owner).to.deep.equal(['b', 'c']);
-      expect(modelB.relations[0].alias).to.be.equals('a');
+      expect(modelB.relations[0].alias).to.be.equals('all_a');
       expect(modelB.relations[0].key).to.be.equals('bId');
       expect(modelB.relations[0].model).to.be.equals('A');
       expect(modelB.relations[0].through).to.be.equals('J');
@@ -179,10 +189,10 @@ describe('joinModel', () => {
 
       const joinModel = createJoinModel(
         {
-          firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a'),
+          firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
           name: 'a',
           owner: ['b', 'c'],
-          secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b'),
+          secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
           virtual: true,
         },
         ({attribute}) => {

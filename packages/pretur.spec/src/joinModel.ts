@@ -23,7 +23,8 @@ export interface JoineeOptions {
 
 export interface Joinee {
   model: UninitializedStateModel<any>;
-  alias: string;
+  aliasOnJoin: string;
+  aliasOnTarget: string;
   key: string;
   type: IntegerType | StringType;
   onDelete: ModificationActions;
@@ -32,7 +33,8 @@ export interface Joinee {
 
 export function joinee(
   model: UninitializedStateModel<any>,
-  alias: string,
+  aliasOnJoin: string,
+  aliasOnTarget: string,
   options?: JoineeOptions
 ): Joinee {
   if (process.env.NODE_ENV !== 'production') {
@@ -40,15 +42,20 @@ export function joinee(
       throw new Error('model is not provided');
     }
 
-    if (typeof alias !== 'string') {
-      throw new Error(`alias ${alias} is not valid`);
+    if (typeof aliasOnJoin !== 'string') {
+      throw new Error(`alias ${aliasOnJoin} is not valid`);
+    }
+
+    if (typeof aliasOnTarget !== 'string') {
+      throw new Error(`alias ${aliasOnTarget} is not valid`);
     }
   }
 
   return {
     model,
-    alias,
-    key: (options && options.key) || `${alias}Id`,
+    aliasOnJoin,
+    aliasOnTarget,
+    key: (options && options.key) || `${aliasOnJoin}Id`,
     onDelete: (options && options.onDelete) || 'CASCADE',
     onUpdate: (options && options.onUpdate) || 'CASCADE',
     type: (options && options.type) || DataTypes.INTEGER(),
@@ -110,7 +117,7 @@ export function createJoinModel<T>(
   });
 
   appendRelation(model, {
-    alias: firstJoinee.alias,
+    alias: firstJoinee.aliasOnJoin,
     key: firstJoinee.key,
     model: firstJoinee.model.name,
     onDelete: firstJoinee.onDelete,
@@ -122,7 +129,7 @@ export function createJoinModel<T>(
   });
 
   appendRelation(model, {
-    alias: secondJoinee.alias,
+    alias: secondJoinee.aliasOnJoin,
     key: secondJoinee.key,
     model: secondJoinee.model.name,
     onDelete: secondJoinee.onDelete,
@@ -134,7 +141,7 @@ export function createJoinModel<T>(
   });
 
   appendRelation(firstJoinee.model.model, {
-    alias: secondJoinee.alias,
+    alias: secondJoinee.aliasOnTarget,
     key: firstJoinee.key,
     model: secondJoinee.model.name,
     onDelete: firstJoinee.onDelete,
@@ -147,7 +154,7 @@ export function createJoinModel<T>(
   });
 
   appendRelation(secondJoinee.model.model, {
-    alias: firstJoinee.alias,
+    alias: firstJoinee.aliasOnTarget,
     key: secondJoinee.key,
     model: firstJoinee.model.name,
     onDelete: secondJoinee.onDelete,
