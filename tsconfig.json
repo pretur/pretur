@@ -6,7 +6,7 @@
     "strictNullChecks": true,
     "pretty": true,
     "noUnusedParameters": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "newLine": "LF",
     "noImplicitAny": true,
     "noFallthroughCasesInSwitch": true,
