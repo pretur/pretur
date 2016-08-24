@@ -1,0 +1,39 @@
+{
+  "name": "pretur.redux",
+  "version": "0.4.0",
+  "description": "Redux bindings",
+  "main": "lib/main.js",
+  "typings": "lib/main.d.ts",
+  "files": [
+    "lib",
+    "typings.json"
+  ],
+  "scripts": {
+    "build": "tsc -d ../../typings/index.d.ts src/main.ts --rootDir src --outDir lib --target es5 --module commonjs --removeComments",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "pretur",
+    "redux",
+    "flux"
+  ],
+  "author": "Ali Taheri Moghaddar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pretur/pretur"
+  },
+  "bugs": {
+    "url": "https://github.com/pretur/pretur/issues"
+  },
+  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.redux",
+  "dependencies": {
+    "lodash": "^4.15.0",
+    "redux": "^3.5.2",
+    "redux-logger": "^2.6.1",
+    "redux-thunk": "^2.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^2.1.0-dev.20160823"
+  }
+}
