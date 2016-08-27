@@ -1,7 +1,8 @@
 {
   "globalDevDependencies": {
     "mocha": "registry:env/mocha#2.2.5+20160723033700",
-    "node": "registry:env/node#6.0.0+20160813135048"
+    "node": "registry:env/node#6.0.0+20160825160117",
+    "react-addons-test-utils": "registry:dt/react-addons-test-utils#0.14.0+20160427035638"
   },
   "devDependencies": {
     "chai": "registry:npm/chai#3.5.0+20160723033700"
@@ -11,6 +12,7 @@
     "lodash": "registry:npm/lodash#4.0.0+20160723033700"
   },
   "globalDependencies": {
-    "http-status-codes": "registry:lib/http-status-codes#1.0.0+20160723033700"
+    "http-status-codes": "registry:lib/http-status-codes#1.0.0+20160723033700",
+    "react": "registry:dt/react#0.14.0+20160817201227"
   }
 }

@@ -119,10 +119,7 @@
 		],
 		"no-use-before-declare": true,
 		"no-var-keyword": true,
-		"object-literal-key-quotes": [
-			true,
-			"as-needed"
-		],
+		"object-literal-key-quotes": false,
 		"object-literal-shorthand": true,
 		"object-literal-sort-keys": true,
 		"one-line": [
@@ -146,7 +143,7 @@
 			"avoid-escape"
 		],
 		"radix": true,
-		"react-unused-props-and-state": true,
+		"react-unused-props-and-state": false,
 		"restrict-plus-operands": false,
 		"semicolon": [
 			true,
