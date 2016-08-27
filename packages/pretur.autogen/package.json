@@ -1,7 +1,7 @@
 {
-  "name": "pretur.fetch",
-  "version": "0.4.0",
-  "description": "es6 style github fetch",
+  "name": "pretur.autogen",
+  "version": "0.2.0",
+  "description": "Handlebars based code generation helper",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
   "files": [
@@ -14,8 +14,11 @@
   },
   "keywords": [
     "pretur",
-    "fetch",
-    "remote"
+    "template",
+    "handlebars",
+    "code",
+    "auto",
+    "generation"
   ],
   "author": "Ali Taheri Moghaddar",
   "license": "MIT",
@@ -26,11 +29,13 @@
   "bugs": {
     "url": "https://github.com/pretur/pretur/issues"
   },
-  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.fetch",
+  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.autogen",
   "dependencies": {
-    "bluebird": "^3.4.3",
-    "node-fetch": "^1.6.0",
-    "whatwg-fetch": "^1.0.0"
+    "fs-extra": "^0.30.0",
+    "handlebars": "^4.0.5",
+    "inflection": "^1.10.0",
+    "lodash": "^4.15.0",
+    "watchr": "^2.6.0"
   },
   "devDependencies": {
     "typescript": "^2.1.0-dev.20160823"
