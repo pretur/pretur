@@ -2,19 +2,19 @@ import * as Bluebird from 'bluebird';
 import { I18nBundle } from 'pretur.i18n';
 import { fetch } from './fetch';
 
-export interface SynchronizerInsert {
+export interface SynchronizerInsert<T> {
   action: 'INSERT';
   itemId?: number;
   model: string;
-  data: any;
+  data: T;
 }
 
-export interface SynchronizerUpdate {
+export interface SynchronizerUpdate<T> {
   action: 'UPDATE';
   itemId?: number;
   model: string;
   attributes: string[];
-  data: any;
+  data: T;
 }
 
 export interface SynchronizerRemove {
@@ -24,7 +24,8 @@ export interface SynchronizerRemove {
   targetId: number | string;
 }
 
-export type SynchronizerItem = SynchronizerInsert | SynchronizerUpdate | SynchronizerRemove;
+export type SynchronizerItem<T>
+  = SynchronizerInsert<T> | SynchronizerUpdate<T> | SynchronizerRemove;
 
 export interface SynchronizerResult {
   warning?: I18nBundle;
@@ -40,7 +41,7 @@ export interface SynchronizerResponseItem {
   error?: I18nBundle;
 }
 
-export type SynchronizerRequest = SynchronizerItem[];
+export type SynchronizerRequest = SynchronizerItem<any>[];
 export type SynchronizerResponse = SynchronizerResponseItem[];
 
 export interface SynchronizeListenerData {
@@ -53,8 +54,8 @@ export interface SynchronizeListenerData {
 
 export interface Synchronizer {
   listen(): Bluebird<SynchronizeListenerData>;
-  addInsert(insert: SynchronizerInsert): Bluebird<SynchronizerResult>;
-  addUpdate(update: SynchronizerUpdate): Bluebird<SynchronizerResult>;
+  addInsert(insert: SynchronizerInsert<any>): Bluebird<SynchronizerResult>;
+  addUpdate(update: SynchronizerUpdate<any>): Bluebird<SynchronizerResult>;
   addRemove(remove: SynchronizerRemove): Bluebird<SynchronizerResult>;
   sync(): Bluebird<boolean>;
 }
@@ -67,7 +68,7 @@ export interface SynchronizerCreator {
 export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreator {
 
   interface SyncRequestItem {
-    item: SynchronizerItem;
+    item: SynchronizerItem<any>;
     resolve: (result: SynchronizerResult) => any;
     reject: (error: any) => any;
   }
@@ -84,9 +85,9 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
     const listeners: SyncListener[] = [];
 
     function addIdAction(
-      item: SynchronizerItem,
+      item: SynchronizerItem<any>,
       action: 'UPDATE' | 'INSERT' | 'REMOVE'
-    ): SynchronizerItem {
+    ): SynchronizerItem<any> {
       id += 1;
       item.itemId = id;
       item.action = action;
@@ -99,14 +100,14 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
       });
     }
 
-    function addInsert(insert: SynchronizerInsert): Bluebird<SynchronizerResult> {
+    function addInsert(insert: SynchronizerInsert<any>): Bluebird<SynchronizerResult> {
       const item = addIdAction(insert, 'INSERT');
       return new Bluebird<SynchronizerResult>((resolve, reject) => {
         items.push({ item, resolve, reject });
       });
     }
 
-    function addUpdate(update: SynchronizerUpdate): Bluebird<SynchronizerResult> {
+    function addUpdate(update: SynchronizerUpdate<any>): Bluebird<SynchronizerResult> {
       const item = addIdAction(update, 'UPDATE');
       return new Bluebird<SynchronizerResult>((resolve, reject) => {
         items.push({ item, resolve, reject });

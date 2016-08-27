@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "bluebird": "registry:npm/bluebird#3.4.1+20160811213708",
-    "lodash": "registry:npm/lodash#4.0.0+20160723033700"
+    "lodash": "registry:npm/lodash#4.0.0+20160723033700",
+    "sequelize": "registry:npm/sequelize#3.0.0+20160825163932"
   },
   "globalDependencies": {
     "http-status-codes": "registry:lib/http-status-codes#1.0.0+20160723033700",
