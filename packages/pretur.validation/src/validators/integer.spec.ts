@@ -1,5 +1,6 @@
-import { expect } from 'chai';
+/// <reference types="mocha" />
 
+import { expect } from 'chai';
 import { integer } from './integer';
 
 describe('validator:integer', () => {

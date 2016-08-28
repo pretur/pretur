@@ -1,6 +1,6 @@
 {
   "name": "pretur.autogen",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Handlebars based code generation helper",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -9,7 +9,7 @@
     "typings.json"
   ],
   "scripts": {
-    "build": "tsc -d ../../typings/index.d.ts src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
+    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -31,6 +31,11 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.autogen",
   "dependencies": {
+    "@types/fs-extra": "0.0.31",
+    "@types/handlebars": "^4.0.30",
+    "@types/inflection": "^1.5.27",
+    "@types/lodash": "^4.14.34",
+    "@types/node": "^6.0.38",
     "fs-extra": "^0.30.0",
     "handlebars": "^4.0.5",
     "inflection": "^1.10.0",

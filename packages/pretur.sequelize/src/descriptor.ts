@@ -7,8 +7,8 @@ import { UninitializedSequelizeModel } from './sequelizeModel';
 import { Pool } from './pool';
 
 export type FieldWhereClause = string | number |
-  Sequelize.WhereOperators | Sequelize.WhereOptions |
-  Sequelize.col | Sequelize.AndOperator | Sequelize.OrOperator |
+  Sequelize.WhereOptions | Sequelize.WhereOptions |
+  Sequelize.col | Sequelize.and | Sequelize.or |
   Sequelize.WhereGeometryOptions | (string | number)[] | Object;
 
 export interface AliasModelMap {

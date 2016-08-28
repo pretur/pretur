@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import { save, load, saveActivePage, loadActivePage, clear } from '../src/persist';
 

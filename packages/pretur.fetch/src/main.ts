@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import * as Bluebird from 'bluebird';
 
 export interface Headers {

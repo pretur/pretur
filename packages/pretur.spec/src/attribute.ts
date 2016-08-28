@@ -40,7 +40,7 @@ export interface PrimaryKeyOptions<T> {
 }
 
 function getPrimaryKeyDefaults(owner: Owner): Attribute<any> {
-  return assign<Attribute<any>, Attribute<any>>(getCommonDefaults(owner), {
+  return assign(getCommonDefaults(owner), {
     autoIncrement: true,
     mutable: false,
     primary: true,
@@ -87,7 +87,7 @@ export function validateAttribute(attribute: Attribute<any>) {
 }
 
 export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>[]): void {
-  const attribute = assign<{}, Attribute<any>>({}, ...attributes);
+  const attribute = assign<Attribute<any>>({}, ...attributes);
 
   if (process.env.NODE_ENV !== 'production') {
     if (!model) {
@@ -105,7 +105,7 @@ export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>
     }
 
     if (attribute.primary) {
-      const previousPrimary = find(model.attributes, a => a.primary);
+      const previousPrimary = find(model.attributes, (a: Attribute<any>) => a.primary);
       if (previousPrimary) {
         throw new Error(
           `Model ${model.name} already has a primaryKey attribute of ${previousPrimary.name}.`

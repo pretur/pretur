@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import { Pages, PageTreeRoot } from '../src/pages';
 import { Navigator, deisolate } from '../src/navigator';

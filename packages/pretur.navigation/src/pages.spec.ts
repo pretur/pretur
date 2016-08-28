@@ -1,7 +1,10 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
+import { StatelessComponent } from 'react';
 import { Pages, PageTreeRoot, PageReducerBuilder, buildPage } from '../src/pages';
 
-const component: __React.StatelessComponent<void> = () => null!;
+const component: StatelessComponent<void> = () => null!;
 const reducerBuilder: PageReducerBuilder<void, string> = () => () => 'state!';
 
 const tree: PageTreeRoot = {

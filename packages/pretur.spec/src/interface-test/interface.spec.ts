@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import Permission from './fixture/Permission';
 import Role from './fixture/Role';

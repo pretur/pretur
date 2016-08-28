@@ -1,54 +1,50 @@
 import { basename as pathBasename, dirname as pathDirname } from 'path';
 import { uniq, uniqBy, get } from 'lodash';
-const inflection = require('inflection');
-const Handlebars = require('handlebars');
+import { SafeString } from 'handlebars';
+import { camelize, pluralize, singularize, underscore as inflectionUnderscore } from 'inflection';
 
-export interface SafeString {
-  new (str: string): SafeString;
+export function safe(str: string) {
+  return new SafeString(String(str));
 }
 
-export function safe(str: string): SafeString {
-  return new Handlebars.SafeString(String(str));
-}
-
-export function toLower(str: string): SafeString {
+export function toLower(str: string) {
   return safe((String(str)).toLowerCase());
 }
 
-export function toUpper(str: string): SafeString {
+export function toUpper(str: string) {
   return safe((String(str)).toUpperCase());
 }
 
-export function camel(str: string): SafeString {
-  return safe(inflection.camelize(String(str), true));
+export function camel(str: string) {
+  return safe(camelize(String(str), true));
 }
 
-export function pascal(str: string): SafeString {
-  return safe(inflection.camelize(String(str), false));
+export function pascal(str: string) {
+  return safe(camelize(String(str), false));
 }
 
-export function underscore(str: string): SafeString {
-  return safe(inflection.underscore(String(str), true));
+export function underscore(str: string) {
+  return safe(inflectionUnderscore(String(str), true));
 }
 
-export function plural(str: string): SafeString {
-  return safe(inflection.pluralize(String(str)));
+export function plural(str: string) {
+  return safe(pluralize(String(str)));
 }
 
-export function singular(str: string): SafeString {
-  return safe(inflection.singularize(String(str)));
+export function singular(str: string) {
+  return safe(singularize(String(str)));
 }
 
-export function basename(str: string): SafeString {
+export function basename(str: string) {
   return safe(pathBasename(String(str)));
 }
 
-export function dirname(str: string): SafeString {
+export function dirname(str: string) {
   return safe(pathDirname(String(str)));
 }
 
-export function literal(value: any): SafeString {
-  if (value instanceof Handlebars.SafeString) {
+export function literal(value: any) {
+  if (value instanceof SafeString) {
     value = value.toString();
   }
 

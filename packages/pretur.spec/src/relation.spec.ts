@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import { Model, UninitializedStateModel } from './model';
 import { EnumType, IntegerType, DataTypes, StringType } from './attribute';

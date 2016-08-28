@@ -8,7 +8,7 @@ export interface FetcherResult<T> {
   count?: number;
   error?: I18nBundle;
   ok: boolean;
-  status: HTTPStatusCodes;
+  status: number;
   statusText: string;
 }
 
@@ -25,7 +25,7 @@ export type FetcherResponse = FetcherResponseItem[];
 export interface FetchListenerData {
   errors: I18nBundle[];
   ok: boolean;
-  status: HTTPStatusCodes;
+  status: number;
   statusText: string;
 }
 

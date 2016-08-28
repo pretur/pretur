@@ -99,7 +99,7 @@ export function createMutatorReducer<TState, TProps extends string>(
       return reset;
     }
 
-    const next = assign<{}, TState>({}, state, set);
+    const next = assign({}, state, set);
 
     if (unset) {
       unset!.forEach(prop => delete (<any>next)[prop]);

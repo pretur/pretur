@@ -10,7 +10,7 @@ export interface FetchOptions {
 export interface FetchResponse<TBody> {
   body: TBody;
   ok: boolean;
-  status: HTTPStatusCodes;
+  status: number;
   statusText: string;
 }
 

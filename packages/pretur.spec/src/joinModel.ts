@@ -83,7 +83,7 @@ export function createJoinModel<T>(
   initializer?: (modelBuilder: JoinModelBuilder) => void
 ): UninitializedStateModel<T> {
   const normalizedOptions
-    = assign<{}, CreateJoinModelOptions>({}, defaultCreateJoinModelOptions, options);
+    = assign({}, defaultCreateJoinModelOptions, options);
 
   const firstJoinee = normalizedOptions.firstJoinee;
   const secondJoinee = normalizedOptions.secondJoinee;

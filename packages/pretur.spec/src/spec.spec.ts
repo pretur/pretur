@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import { Spec } from './spec';
 import { Model } from './model';

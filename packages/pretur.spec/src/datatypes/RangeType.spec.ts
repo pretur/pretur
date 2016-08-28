@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import RangeType from './RangeType';
 import { DataTypes } from './index';

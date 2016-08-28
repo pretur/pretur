@@ -22,7 +22,7 @@ export function emit<T>(action: Action<any, any>, sideEffect: EmissionSideEffect
 
 export const emissionMiddleware: Middleware = ({dispatch, getState}: MiddlewareAPI<any>) =>
   (next: Dispatch) =>
-    (action: Action<any, any>) => {
+    (action: any) => {
       (<any>action)[EMISSION_DISPATCH] = dispatch;
       (<any>action)[EMISSION_GET_STATE] = getState;
       return next(action);

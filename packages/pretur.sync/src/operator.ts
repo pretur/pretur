@@ -18,7 +18,7 @@ export interface OperationResult<T> {
   data?: T;
   errors?: I18nBundle[];
   ok: boolean;
-  status: HTTPStatusCodes;
+  status: number;
   statusText: string;
 }
 

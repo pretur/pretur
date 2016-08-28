@@ -31,7 +31,7 @@ export interface SynchronizerResult {
   warning?: I18nBundle;
   error?: I18nBundle;
   ok: boolean;
-  status: HTTPStatusCodes;
+  status: number;
   statusText: string;
 }
 
@@ -48,7 +48,7 @@ export interface SynchronizeListenerData {
   errors: I18nBundle[];
   warnings: I18nBundle[];
   ok: boolean;
-  status: HTTPStatusCodes;
+  status: number;
   statusText: string;
 }
 

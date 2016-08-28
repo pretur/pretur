@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import * as React from 'react';
 import { createRenderer } from 'react-addons-test-utils';

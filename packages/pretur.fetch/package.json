@@ -1,6 +1,6 @@
 {
   "name": "pretur.fetch",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "es6 style github fetch",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -9,7 +9,7 @@
     "typings.json"
   ],
   "scripts": {
-    "build": "tsc -d ../../typings/index.d.ts src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
+    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -28,6 +28,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.fetch",
   "dependencies": {
+    "@types/bluebird": "^3.0.32",
+    "@types/node": "^6.0.38",
     "bluebird": "^3.4.3",
     "node-fetch": "^1.6.0",
     "whatwg-fetch": "^1.0.0"

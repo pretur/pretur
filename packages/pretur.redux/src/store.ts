@@ -2,8 +2,8 @@ import { createStore as reduxCreateStore, applyMiddleware } from 'redux';
 import { Reducer } from './reducer';
 import { Dispatch } from './action';
 import { emissionMiddleware } from './emission';
-const thunkMiddleware = require('redux-thunk')['default'];
-const createLoggerMiddleware = require('redux-logger');
+import thunkMiddleware from 'redux-thunk';
+import * as createLoggerMiddleware from 'redux-logger';
 
 export interface Store<TState> {
   dispatch: Dispatch;

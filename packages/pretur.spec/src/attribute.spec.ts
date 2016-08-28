@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import { Model } from './model';
 import { appendAttribute, createAttributeBuilder, DataTypes } from './attribute';

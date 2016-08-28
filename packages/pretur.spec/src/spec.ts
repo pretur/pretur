@@ -167,7 +167,7 @@ export class Spec<T> {
       return null;
     }
 
-    const newModel = assign<{}, Model<T>>({}, this.model, {
+    const newModel = assign({}, this.model, {
       attributes: this.model.attributes.filter(a => !a.owner || ownersIntersect(owner, a.owner)),
       relations: this.model.relations.filter(r => !r.owner || ownersIntersect(owner, r.owner)),
     });

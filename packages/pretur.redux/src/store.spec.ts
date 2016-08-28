@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import * as Bluebird from 'bluebird';
 import { EMISSION_DISPATCH, EMISSION_GET_STATE, emit } from './emission';

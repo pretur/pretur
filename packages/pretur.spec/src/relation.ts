@@ -86,7 +86,7 @@ export interface RecursiveOptions<T> {
 }
 
 export function appendRelation(model: Model<any>, ...relations: Relation[]): void {
-  const relation = assign<{}, Relation>({}, ...relations);
+  const relation = assign<Relation>({}, ...relations);
 
   if (process.env.NODE_ENV !== 'production') {
     if (!model) {

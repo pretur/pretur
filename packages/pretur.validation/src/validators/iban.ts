@@ -1,5 +1,5 @@
 import { Validator } from '../validator';
-const IBANValidator = require('iban');
+import * as IBANValidator from 'iban';
 
 export function iban(key: string): Validator<string> {
   return function ibanValidator(str: string) {

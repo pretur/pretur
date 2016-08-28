@@ -1,3 +1,5 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
 import { emissionMiddleware, emit, EMISSION_DISPATCH, EMISSION_GET_STATE } from './emission';
 

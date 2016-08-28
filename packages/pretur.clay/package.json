@@ -1,6 +1,6 @@
 {
   "name": "pretur.clay",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Client-side immutability helper",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -9,7 +9,7 @@
     "typings.json"
   ],
   "scripts": {
-    "build": "tsc -d ../../typings/index.d.ts src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
+    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -30,14 +30,15 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.clay",
   "dependencies": {
+    "@types/bluebird": "^3.0.32",
     "bluebird": "^3.4.3",
     "immutable": "^3.8.1",
     "lodash": "^4.15.0",
-    "pretur.fetch": "^0.4.0",
-    "pretur.i18n": "^0.4.0",
-    "pretur.redux": "^0.4.0",
-    "pretur.sync": "0.5.1",
-    "pretur.validation": "0.2.0"
+    "pretur.fetch": "^0.4.1",
+    "pretur.i18n": "^0.4.1",
+    "pretur.redux": "^0.4.1",
+    "pretur.sync": "^0.5.2",
+    "pretur.validation": "^0.2.1"
   },
   "devDependencies": {
     "typescript": "^2.1.0-dev.20160823"

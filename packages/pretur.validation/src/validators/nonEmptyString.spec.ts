@@ -1,5 +1,6 @@
-import { expect } from 'chai';
+/// <reference types="mocha" />
 
+import { expect } from 'chai';
 import { nonEmptyString } from './nonEmptyString';
 
 describe('validator:nonEmptyString', () => {
