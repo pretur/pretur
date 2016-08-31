@@ -34,16 +34,16 @@ export function buildSequelizeModel<TInstance, TAttributes>(
   spec.attributeArray.forEach(attrib =>
     attributes[attrib.name] = {
       allowNull: !attrib.required,
-      autoIncrement: attrib.primary && attrib.autoIncrement,
+      autoIncrement: attrib.primary && !!attrib.autoIncrement,
       defaultValue: attrib.defaultValue,
       field: (
         options &&
         options.attributeToFieldMap &&
         options.attributeToFieldMap[attrib.name]
       ) || undefined,
-      primaryKey: attrib.primary,
+      primaryKey: !!attrib.primary,
       type: datatypeToSequelizeType(attrib.type),
-      unique: !attrib.primary && attrib.unique,
+      unique: !attrib.primary && !!attrib.unique,
       values: EnumType.is(attrib.type) ? attrib.type.values.map(v => v.name) : undefined,
     });
 
