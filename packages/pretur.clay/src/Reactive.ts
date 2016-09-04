@@ -3,6 +3,7 @@ import { Action, Dispatch, emit } from 'pretur.redux';
 import { Query, Synchronizer, Fetcher } from 'pretur.sync';
 import Querier from './query/Querier';
 import Set from './data/Set';
+import Record from './data/Record';
 import UniqueReducible from './UniqueReducible';
 import {
   CLAY_DATA_DECAY,
@@ -11,8 +12,9 @@ import {
   CLAY_REACTIVE_SET_COUNT,
 } from './actions';
 
-export default class Reactive<T extends Set<any, any, any>> extends UniqueReducible {
-  private reactiveSet: T;
+export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Record<T>, T>
+  extends UniqueReducible {
+  private reactiveSet: TSet;
   private reactiveQuerier: Querier;
   private reactviceInitialized: boolean;
   private reactiveCount: number;
@@ -21,7 +23,7 @@ export default class Reactive<T extends Set<any, any, any>> extends UniqueReduci
   private autoRefreshTimerId: number;
 
   constructor(
-    set: T,
+    set: TSet,
     query: Query,
     buildFetcher: (() => Fetcher) | null = null,
     autoRefreshDebounceTime = 300
@@ -180,6 +182,6 @@ export default class Reactive<T extends Set<any, any, any>> extends UniqueReduci
   }
 
   protected createInstance(): this {
-    return <this>new Reactive<T>(null!, null!);
+    return <this>new Reactive<TSet, TRecord, T>(null!, null!);
   }
 }

@@ -11,21 +11,21 @@ import {
   CLAY_DATA_REMOVE_ITEM,
 } from './actions';
 
-abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusReporter {
+abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
   private originalSet: this;
-  protected setItems: OrderedMap<number, T>;
+  protected setItems: OrderedMap<number, TRecord>;
 
-  constructor(items?: TModel[], synchronized = true) {
+  constructor(items?: T[], synchronized = true) {
     super(synchronized);
     this.originalSet = this;
 
     if (items) {
-      this.setItems = OrderedMap<number, T>(items.map(values => {
+      this.setItems = OrderedMap<number, TRecord>(items.map(values => {
         const newItem = this.constructItem(true, values);
         return [newItem.uniqueId, newItem];
       }));
     } else {
-      this.setItems = OrderedMap<number, T>();
+      this.setItems = OrderedMap<number, TRecord>();
     }
   }
 
@@ -33,7 +33,7 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
     return this.originalSet;
   }
 
-  public get items(): OrderedMap<number, T> {
+  public get items(): OrderedMap<number, TRecord> {
     return this.setItems;
   }
 
@@ -45,7 +45,7 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
     if (CLAY_DATA_RESET.is(this.uniqueId, action)) {
       const clone = this.clone();
       clone.statusInstance = this.statusInstance.setUnmodified();
-      clone.setItems = OrderedMap<number, T>(action.payload!.map(values => {
+      clone.setItems = OrderedMap<number, TRecord>(action.payload!.map(values => {
         const newItem = this.constructItem(true, values);
         return [newItem.uniqueId, newItem];
       }));
@@ -64,13 +64,13 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
     }
 
     if (CLAY_DATA_REMOVE_ITEM.is(this.uniqueId, action)) {
-      let newItems: OrderedMap<number, T>;
+      let newItems: OrderedMap<number, TRecord>;
 
       const target = this.setItems.get(action.payload!);
       if (target.status.added) {
         newItems = this.setItems.remove(action.payload!);
       } else {
-        newItems = this.setItems.set(action.payload!, <T>target.setRemoved());
+        newItems = this.setItems.set(action.payload!, <TRecord>target.setRemoved());
       }
 
       if (is(this.originalSet.setItems, newItems)) {
@@ -94,7 +94,7 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
           return;
         }
 
-        const newItem = <T>item!.reduce(action);
+        const newItem = <TRecord>item!.reduce(action);
         if (newItem !== item) {
           updated = true;
           i.set(newItem.uniqueId, newItem);
@@ -124,7 +124,7 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
     dispatch(CLAY_DATA_CLEAR.create.unicast(this.uniqueId));
   }
 
-  public add(dispatch: Dispatch, values?: TModel): void {
+  public add(dispatch: Dispatch, values?: T): void {
     dispatch(CLAY_DATA_ADD_ITEM.create.unicast(this.uniqueId, values));
   }
 
@@ -148,7 +148,7 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
     this.setItems.forEach(item => item!.appendSynchronizationModels(synchronizer));
   }
 
-  public buildInsertModel(): TInsert[] {
+  public buildInsertModel(): T[] {
     return this.setItems
       .filter(item => item!.status.added)
       .map(item => item!.buildInsertModel())
@@ -168,7 +168,7 @@ abstract class Set<T extends Record<TInsert>, TModel, TInsert> extends StatusRep
     clone.setItems = this.setItems;
   }
 
-  protected abstract constructItem(synchronized?: boolean, values?: TModel): T;
+  protected abstract constructItem(synchronized?: boolean, values?: T): TRecord;
 }
 
 export default Set;

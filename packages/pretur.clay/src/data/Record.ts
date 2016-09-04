@@ -4,7 +4,7 @@ import { Synchronizer } from 'pretur.sync';
 import { CLAY_DATA_CLEAR } from './actions';
 import StatusReporter from './StatusReporter';
 
-abstract class Record<TInsert> extends StatusReporter {
+abstract class Record<T> extends StatusReporter {
   private originalRecord: this;
 
   constructor(synchronized?: boolean) {
@@ -44,7 +44,7 @@ abstract class Record<TInsert> extends StatusReporter {
   }
 
   public abstract appendSynchronizationModels(synchronizer: Synchronizer): void;
-  public abstract buildInsertModel(): TInsert;
+  public abstract buildInsertModel(): T;
 
   protected abstract validate(): I18nBundle;
   protected abstract validateFields(): boolean;
