@@ -2,7 +2,7 @@ import { Validator } from 'pretur.validation';
 import { Indexes, Model, Owner } from './model';
 import { Attribute } from './attribute';
 import { Relation } from './relation';
-import { uniq, find, assign, castArray, intersection } from 'lodash';
+import { uniq, find, assign, castArray, intersection, trim } from 'lodash';
 
 export interface AttributeMap {
   [name: string]: Attribute<any>;
@@ -19,11 +19,19 @@ export interface Relations {
   byAlias(alias: string): Relation;
 }
 
-function ownersIntersect(first: Owner, second: Owner): boolean {
-  const f = castArray(first!);
-  const s = castArray(second!);
+function validateOwnder(owner: Owner): boolean {
+  if (typeof owner !== 'string') {
+    return false;
+  }
 
-  return intersection(f, s).filter(i => i).length > 0;
+  return trim(owner) !== '';
+}
+
+export function ownersIntersect(first: Owner, second: Owner): boolean {
+  const firstAsArray = castArray(first);
+  const secondAsArray = castArray(second);
+
+  return intersection(firstAsArray, secondAsArray).filter(validateOwnder).length > 0;
 }
 
 function populateRelations(relationsObj: Relations, relationsArray: Relation[]) {

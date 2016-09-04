@@ -1,7 +1,7 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { Spec } from './spec';
+import { Spec, ownersIntersect } from './spec';
 import { Model } from './model';
 import { Relation } from './relation';
 
@@ -17,6 +17,27 @@ function mockModel(name: string): Model<any> {
     virtual: false,
   };
 }
+
+describe('ownersIntersect', () => {
+
+  it('should properly check if the two owner definitions intersect', () => {
+    expect(ownersIntersect(['', '', 'o'], 'o')).to.be.true;
+    expect(ownersIntersect(['', 's', 'o'], 's')).to.be.true;
+    expect(ownersIntersect(['', 's', 'o'], ['s', '', 'o'])).to.be.true;
+    expect(ownersIntersect('s', ['s', '', 'o'])).to.be.true;
+    expect(ownersIntersect('o', ['s', 'o', 'o'])).to.be.true;
+
+    expect(ownersIntersect(['', '  \t \n\n\n ', 'o'], '  \t \n\n\n ')).to.be.false;
+    expect(ownersIntersect([' ', '  \t \n\n\n ', 'o'], ' ')).to.be.false;
+    expect(ownersIntersect(['', '', 'o'], null)).to.be.false;
+    expect(ownersIntersect(['', null!, 'o'], null)).to.be.false;
+    expect(ownersIntersect(['', null!, 'o'], null)).to.be.false;
+    expect(ownersIntersect(['', undefined!, 'o'], undefined!)).to.be.false;
+    expect(ownersIntersect(['', '', 'o'], undefined!)).to.be.false;
+    expect(ownersIntersect(['', 's', 'o'], ['t', '', 'i'])).to.be.false;
+  });
+
+});
 
 describe('spec', () => {
 
