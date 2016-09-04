@@ -97,7 +97,7 @@ describe('format', () => {
   });
 
   it('should not fail if bundle is null', () => {
-    expect(() => format({}, {}, null!)).not.to.throw();
+    expect(() => format({}, {}, null)).not.to.throw();
   });
 
 });

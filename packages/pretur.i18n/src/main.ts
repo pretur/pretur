@@ -1,4 +1,5 @@
 export interface I18nFormatter {
+  (nothing: null): null;
   (bundle: I18nBundle): string;
   <K extends string>(key: string): I18nStringBuilder<K, any>;
 }
@@ -31,26 +32,33 @@ export function format(
 export function format(
   language: Language,
   fallback: Language | null,
-  bundleOrKey: string | I18nBundle
-): any {
+  nothing: null
+): null;
+export function format(
+  language: Language,
+  fallback: Language | null,
+  bundleOrKeyOrNothing: I18nBundle | string | null
+): string | I18nStringBuilder<string, any> | null {
   if (process.env.NODE_ENV !== 'production' && !language) {
     throw new TypeError('language must be provided');
   }
 
-  if (bundleOrKey === null) {
+  if (bundleOrKeyOrNothing === null) {
     return null;
   }
 
-  if (typeof bundleOrKey === 'object') {
-    const targetKey = language[bundleOrKey.key] || (fallback && fallback[bundleOrKey.key]);
+  if (typeof bundleOrKeyOrNothing === 'object') {
+    const targetKey
+      = language[bundleOrKeyOrNothing.key] || (fallback && fallback[bundleOrKeyOrNothing.key]);
     if (process.env.NODE_ENV !== 'production' && !targetKey) {
       throw new TypeError('provided bundle key does not exist in lanugage or the fallback');
     }
-    return targetKey(bundleOrKey.data);
+    return targetKey(bundleOrKeyOrNothing.data);
   }
 
-  if (typeof bundleOrKey === 'string') {
-    const targetKey = language[bundleOrKey] || (fallback && fallback[bundleOrKey]);
+  if (typeof bundleOrKeyOrNothing === 'string') {
+    const targetKey
+      = language[bundleOrKeyOrNothing] || (fallback && fallback[bundleOrKeyOrNothing]);
     if (process.env.NODE_ENV !== 'production' && !targetKey) {
       throw new TypeError('provided key does not exist in lanugage or the fallback');
     }
@@ -60,13 +68,15 @@ export function format(
   if (process.env.NODE_ENV !== 'production') {
     throw new TypeError('key or bundle object expected');
   }
+
+  return null;
 }
 
 export function buildFormatter<F extends I18nFormatter>(
   language: Language,
   fallback: Language | null = null
 ): F {
-  return <F>((bundle: I18nBundle) => format(language, fallback, bundle));
+  return <F>((input: I18nBundle | string | null) => format(language, fallback, <any>input));
 }
 
 export interface MessageFormatParameters {
