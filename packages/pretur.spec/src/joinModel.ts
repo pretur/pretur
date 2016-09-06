@@ -1,4 +1,3 @@
-import { assign } from 'lodash';
 import { ModificationActions, appendRelation } from './relation';
 import { Model, UninitializedStateModel, Owner } from './model';
 import { Spec } from './spec';

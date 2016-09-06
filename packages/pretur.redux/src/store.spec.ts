@@ -31,7 +31,7 @@ describe('createStore', () => {
   it('should properly create store with emission support', () => {
     const obj = {};
     let emitIsWorking = false;
-    let promise: Bluebird<void> | null = null;
+    let promise: Bluebird<void> = <any>null;
     let store: Store<any>;
     const reducer = (state = obj, action: any) => {
       if (action.type === 'A') {
