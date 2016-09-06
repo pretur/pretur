@@ -41,6 +41,6 @@
     "pretur.validation": "^0.3.0"
   },
   "devDependencies": {
-    "typescript": "^2.1.0-dev.20160823"
+    "typescript": "next"
   }
 }
