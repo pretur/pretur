@@ -158,6 +158,7 @@ describe('relation', () => {
         typeEnumName: string,
         enumValueNames: string[],
       ) {
+        expect(main.attributes[index].mutable).to.be.true;
         expect(main.attributes[index].name).to.be.equals(typeName);
         expect(main.attributes[index].type).to.be.instanceof(EnumType);
         expect((<EnumType<string>>main.attributes[index].type).name)
@@ -307,6 +308,7 @@ describe('relation', () => {
         expect(detail.relations[0].alias).to.be.equals('master');
         expect(detail.relations[0].type).to.be.equals('MASTER');
 
+        expect(detail.attributes[0].mutable).to.be.true;
         expect(detail.attributes[0].name).to.be.equals('masterId');
         expect(detail.attributes[0].type).to.be.instanceof(IntegerType);
       });
@@ -352,6 +354,7 @@ describe('relation', () => {
         expect(detail.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(detail.relations[0].onUpdate).to.be.equals('NO ACTION');
 
+        expect(detail.attributes[0].mutable).to.be.true;
         expect(detail.attributes[0].name).to.be.equals('someId');
         expect(detail.attributes[0].type).to.be.instanceof(StringType);
         expect(detail.attributes[0].required).to.be.equals(true);
@@ -385,6 +388,7 @@ describe('relation', () => {
         expect(injected.relations[0].alias).to.be.equals('master');
         expect(injected.relations[0].type).to.be.equals('MASTER');
 
+        expect(injected.attributes[0].mutable).to.be.false;
         expect(injected.attributes[0].name).to.be.equals('masterId');
         expect(injected.attributes[0].type).to.be.instanceof(IntegerType);
       });
@@ -430,6 +434,7 @@ describe('relation', () => {
         expect(injected.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(injected.relations[0].onUpdate).to.be.equals('NO ACTION');
 
+        expect(injected.attributes[0].mutable).to.be.false;
         expect(injected.attributes[0].name).to.be.equals('someId');
         expect(injected.attributes[0].type).to.be.instanceof(StringType);
         expect(injected.attributes[0].required).to.be.equals(true);
@@ -457,6 +462,7 @@ describe('relation', () => {
         expect(master.relations[0].alias).to.be.equals('parent');
         expect(master.relations[0].type).to.be.equals('RECURSIVE');
 
+        expect(master.attributes[0].mutable).to.be.true;
         expect(master.attributes[0].name).to.be.equals('parentId');
         expect(master.attributes[0].type).to.be.instanceof(IntegerType);
       });

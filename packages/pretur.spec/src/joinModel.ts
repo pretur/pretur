@@ -94,12 +94,14 @@ export function createJoinModel<T>(
   };
 
   builder.attribute({
+    mutable: false,
     name: firstJoinee.key,
     required: true,
     type: firstJoinee.type,
   });
 
   builder.attribute({
+    mutable: false,
     name: secondJoinee.key,
     required: true,
     type: secondJoinee.type,

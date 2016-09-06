@@ -237,6 +237,7 @@ function master<T>(model: Model<any>, options: MasterOptions<T>) {
   });
 
   appendAttribute(model, {
+    mutable: true,
     name: options.foreignKey || `${options.alias}Id`,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
@@ -270,6 +271,7 @@ function injective<T>(model: Model<any>, options: InjectiveOptions<T>) {
   });
 
   appendAttribute(model, {
+    mutable: false,
     name: options.foreignKey || `${options.alias}Id`,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
@@ -291,6 +293,7 @@ function recursive<T>(model: Model<any>, options: RecursiveOptions<T>) {
   });
 
   appendAttribute(model, {
+    mutable: true,
     name: options.key || `${options.alias}Id`,
     required: false,
     type: options.keyType || DataTypes.INTEGER(),

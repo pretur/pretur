@@ -124,10 +124,12 @@ describe('joinModel', () => {
       expect(joinModel.model.attributes[0].name).to.be.equals('aId');
       expect(joinModel.model.attributes[0].type).to.be.instanceof(IntegerType);
       expect(joinModel.model.attributes[0].required).to.be.true;
+      expect(joinModel.model.attributes[0].mutable).to.be.false;
 
       expect(joinModel.model.attributes[1].name).to.be.equals('bId');
       expect(joinModel.model.attributes[1].type).to.be.instanceof(IntegerType);
       expect(joinModel.model.attributes[1].required).to.be.true;
+      expect(joinModel.model.attributes[1].mutable).to.be.false;
 
       expect(joinModel.model.relations[0].type).to.be.equals('MASTER');
       expect(joinModel.model.relations[0].owner).to.deep.equal(['b', 'c']);
