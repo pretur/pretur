@@ -33,7 +33,7 @@ export default class Querier extends UniqueReducible {
     this.queryAttributor = new Attributor(query.attributes);
     this.queryPaginator = new Paginator(query.pagination);
     this.queryOrderer = new Orderer(query.order);
-    this.queryExtra = new Value(null, false, query.extra);
+    this.queryExtra = new Value(null, true, query.extra);
     this.shouldExtraCausePaginationReset = shouldExtraCausePaginationReset;
   }
 

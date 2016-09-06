@@ -52,6 +52,11 @@ class Value<T> extends StatusReporter {
 
       const clone = this.clone();
       clone.statusInstance = this.statusInstance.setDecayed();
+
+      if (clone.valueValidator) {
+        clone.errorBundle = clone.valueValidator(clone.value);
+      }
+
       return clone;
     }
 
