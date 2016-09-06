@@ -32,7 +32,7 @@
   "dependencies": {
     "@types/bluebird": "^3.0.32",
     "@types/node": "^6.0.38",
-    "bluebird": "^3.4.3",
+    "bluebird": "^3.4.6",
     "pretur.fetch": "^0.4.1",
     "pretur.i18n": "^0.4.1"
   },

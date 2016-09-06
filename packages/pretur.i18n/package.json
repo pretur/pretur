@@ -32,7 +32,7 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.i18n",
   "dependencies": {
     "@types/node": "^6.0.38",
-    "messageformat": "^0.3.1"
+    "messageformat": "^1.0.0"
   },
   "devDependencies": {
     "typescript": "^2.1.0-dev.20160823"

@@ -31,7 +31,7 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.clay",
   "dependencies": {
     "@types/bluebird": "^3.0.32",
-    "bluebird": "^3.4.3",
+    "bluebird": "^3.4.6",
     "immutable": "^3.8.1",
     "lodash": "^4.15.0",
     "pretur.fetch": "^0.4.1",

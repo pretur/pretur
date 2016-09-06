@@ -32,9 +32,9 @@
     "@types/lodash": "^4.14.34",
     "@types/redux-logger": "^2.6.31",
     "@types/redux-thunk": "^2.1.30",
-    "bluebird": "^3.4.3",
+    "bluebird": "^3.4.6",
     "lodash": "^4.15.0",
-    "redux": "^3.5.2",
+    "redux": "^3.6.0",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0"
   },
