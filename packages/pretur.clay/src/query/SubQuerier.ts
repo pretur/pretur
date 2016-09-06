@@ -10,7 +10,7 @@ export default class SubQuerier extends UniqueReducible {
   private subQueryFilterer: Filterer;
   private subQueryAttributor: Attributor;
 
-  constructor(subquery: SubQuery) {
+  constructor(subquery: SubQuery | null) {
     super();
     if (subquery === null) {
       return;
@@ -81,6 +81,6 @@ export default class SubQuerier extends UniqueReducible {
   }
 
   protected createInstance(): this {
-    return <this>new SubQuerier(null!);
+    return <this>new SubQuerier(null);
   }
 }

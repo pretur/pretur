@@ -15,12 +15,12 @@ export default class Paginator extends UniqueReducible {
     }
   }
 
-  public get skip(): number | null {
-    return this.skipItems || null;
+  public get skip(): number | undefined {
+    return this.skipItems || undefined;
   }
 
-  public get take(): number | null {
-    return this.takeItems || null;
+  public get take(): number | undefined {
+    return this.takeItems || undefined;
   }
 
   public get plain(): QueryPagination | null {
@@ -38,10 +38,17 @@ export default class Paginator extends UniqueReducible {
   }
 
   public reduce(action: Action<any, any>): this {
-    if (CLAY_QUERY_SET_PAGINATION.is(this.uniqueId, action)) {
+    if (CLAY_QUERY_SET_PAGINATION.is(this.uniqueId, action) && action.payload) {
+      if (
+        this.skipItems === action.payload.skip &&
+        this.takeItems === action.payload.take
+      ) {
+        return this;
+      }
+
       const clone = this.clone();
-      clone.skipItems = action.payload!.skip;
-      clone.takeItems = action.payload!.take;
+      clone.skipItems = action.payload.skip;
+      clone.takeItems = action.payload.take;
       return clone;
     }
 

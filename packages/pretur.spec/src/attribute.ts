@@ -23,10 +23,10 @@ function getCommonDefaults(owner: Owner): Attribute<any> {
     owner,
     autoIncrement: false,
     mutable: true,
-    name: null!,
+    name: undefined!,
     primary: false,
     required: false,
-    type: null!,
+    type: undefined!,
     unique: false,
   };
 }

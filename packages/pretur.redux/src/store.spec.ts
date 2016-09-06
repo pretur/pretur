@@ -54,7 +54,7 @@ describe('createStore', () => {
     store = createStore(reducer);
     store.dispatch({ type: 'A' });
     store.dispatch({ type: 'B' });
-    return promise!.then(() => {
+    return promise.then(() => {
       expect(emitIsWorking).to.be.true;
     });
   });

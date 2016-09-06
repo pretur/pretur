@@ -23,8 +23,8 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
   private autoRefreshTimerId: number;
 
   constructor(
-    set: TSet,
-    query: Query,
+    set: TSet | null,
+    query: Query | null,
     buildFetcher: (() => Fetcher) | null = null,
     autoRefreshDebounceTime = 300
   ) {
@@ -66,7 +66,10 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
       }
 
       emit(action, dispatch => {
-        const fetcher = this.buildFetcher!();
+        if (!this.buildFetcher) {
+          throw new Error('buildFetcher must be provided');
+        }
+        const fetcher = this.buildFetcher();
         this.refresh(dispatch, fetcher);
         fetcher.fetch();
       });
@@ -75,14 +78,20 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
     }
 
     if (CLAY_REACTIVE_SET_INITIALIZED.is(this.uniqueId, action)) {
+      if (this.reactviceInitialized) {
+        return this;
+      }
       const clone = this.clone();
       clone.reactviceInitialized = true;
       return clone;
     }
 
     if (CLAY_REACTIVE_SET_COUNT.is(this.uniqueId, action)) {
+      if (this.reactiveCount === action.payload) {
+        return this;
+      }
       const clone = this.clone();
-      clone.reactiveCount = action.payload!;
+      clone.reactiveCount = +action.payload;
       return clone;
     }
 
@@ -96,16 +105,20 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
 
       if (this.buildFetcher && newQuerier !== this.reactiveQuerier) {
         clearTimeout(clone.autoRefreshTimerId);
-        clone.autoRefreshTimerId = <any>setTimeout(
-          () => {
-            emit(action, dispatch => {
-              const fetcher = clone.buildFetcher!();
-              clone.refresh(dispatch, fetcher);
-              fetcher.fetch();
-            });
-          },
-          clone.autoRefreshDebounceTime
-        );
+
+        const refresh = function refresh() {
+          emit(action, dispatch => {
+            if (!clone.buildFetcher) {
+              throw new Error('buildFetcher must be provided');
+            }
+
+            const fetcher = clone.buildFetcher();
+            clone.refresh(dispatch, fetcher);
+            fetcher.fetch();
+          });
+        };
+
+        clone.autoRefreshTimerId = <any>setTimeout(refresh, clone.autoRefreshDebounceTime);
       }
 
       return clone;
@@ -182,6 +195,6 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
   }
 
   protected createInstance(): this {
-    return <this>new Reactive<TSet, TRecord, T>(null!, null!);
+    return <this>new Reactive<TSet, TRecord, T>(null, null);
   }
 }

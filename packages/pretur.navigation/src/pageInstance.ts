@@ -14,10 +14,10 @@ export class PageInstance<TProps, TState, TReducerBuilderData> implements Reduci
   private currentState: TState;
 
   constructor(
-    descriptor: PageDescriptor<TProps, TState, TReducerBuilderData>,
-    instantiationData: PageInstantiationData<TReducerBuilderData>
+    descriptor: PageDescriptor<TProps, TState, TReducerBuilderData> | null,
+    instantiationData: PageInstantiationData<TReducerBuilderData> | null
   ) {
-    if (descriptor === null && instantiationData === null) {
+    if (descriptor === null || instantiationData === null) {
       return;
     }
 
@@ -66,7 +66,7 @@ export class PageInstance<TProps, TState, TReducerBuilderData> implements Reduci
       return this;
     }
 
-    const clone = <this>new PageInstance(null!, null!);
+    const clone = <this>new PageInstance(null, null);
     clone.params = this.params;
     clone.currentState = newState;
     return clone;

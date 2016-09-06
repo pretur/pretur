@@ -21,7 +21,7 @@ export default class Includer extends UniqueReducible {
         }
 
         return null;
-      }).filter(s => !!s));
+      }).filter(Boolean));
 
     } else {
       this.includedSubQueriers = Map<string, SubQuerier | boolean>();
@@ -39,10 +39,12 @@ export default class Includer extends UniqueReducible {
     const include: QueryInclude = {};
 
     this.includedSubQueriers.forEach((subQuerier, alias) => {
-      if (subQuerier instanceof SubQuerier) {
-        include[alias!] = subQuerier.plain;
-      } else if (subQuerier === true) {
-        include[alias!] = true;
+      if (typeof alias === 'string') {
+        if (subQuerier instanceof SubQuerier) {
+          include[alias] = subQuerier.plain;
+        } else if (subQuerier === true) {
+          include[alias] = true;
+        }
       }
     });
 
@@ -54,11 +56,13 @@ export default class Includer extends UniqueReducible {
     const newSubQueriers = this.includedSubQueriers.withMutations(s => {
 
       this.includedSubQueriers.forEach((subQuerier, alias) => {
-        if (subQuerier instanceof SubQuerier) {
-          const newSubQuerier = subQuerier.reduce(action);
-          if (newSubQuerier !== subQuerier) {
-            modified = true;
-            s.set(alias!, newSubQuerier);
+        if (typeof alias === 'string') {
+          if (subQuerier instanceof SubQuerier) {
+            const newSubQuerier = subQuerier.reduce(action);
+            if (newSubQuerier !== subQuerier) {
+              modified = true;
+              s.set(alias, newSubQuerier);
+            }
           }
         }
       });

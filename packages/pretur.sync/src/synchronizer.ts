@@ -134,6 +134,7 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
 
       return fetch<SynchronizerResponse>({
         body: items.map(i => i.item),
+        json: true,
         method: 'POST',
         url: endPointUrl,
       }).then(response => {
@@ -150,8 +151,8 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
             });
           });
 
-          const errors = response.body.filter(item => item.error).map(item => item.error!);
-          const warnings = response.body.filter(item => item.warning).map(item => item.warning!);
+          const errors = <I18nBundle[]>response.body.map(item => item.error).filter(Boolean);
+          const warnings = <I18nBundle[]>response.body.map(item => item.warning).filter(Boolean);
 
           listeners.forEach(listener => listener.resolve({
             errors,

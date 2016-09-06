@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { Action, Dispatch } from 'pretur.redux';
 import { QueryOrder, Ordering } from 'pretur.sync';
 import UniqueReducible from '../UniqueReducible';
@@ -6,14 +7,14 @@ import { CLAY_QUERY_SET_ORDER } from './actions';
 export default class Orderer extends UniqueReducible {
   private queryOrderField: string;
   private queryOrderOrdering: Ordering = 'NONE';
-  private queryOrderChain?: string[];
+  private queryOrderChain: string[] | undefined;
 
   constructor(order?: QueryOrder) {
     super();
     if (order) {
       this.queryOrderField = order.field;
       this.queryOrderOrdering = order.ordering;
-      this.queryOrderChain = order.chain;
+      this.queryOrderChain = order.chain || undefined;
     }
   }
 
@@ -25,8 +26,8 @@ export default class Orderer extends UniqueReducible {
     return this.queryOrderOrdering;
   }
 
-  public get chain(): string[] | null {
-    return this.queryOrderChain || null;
+  public get chain(): string[] | undefined {
+    return this.queryOrderChain;
   }
 
   public get plain(): QueryOrder | null {
@@ -44,11 +45,19 @@ export default class Orderer extends UniqueReducible {
   }
 
   public reduce(action: Action<any, any>): this {
-    if (CLAY_QUERY_SET_ORDER.is(this.uniqueId, action)) {
+    if (CLAY_QUERY_SET_ORDER.is(this.uniqueId, action) && action.payload) {
+      if (
+        this.queryOrderField === action.payload.field &&
+        this.queryOrderOrdering === action.payload.ordering &&
+        isEqual(this.queryOrderChain, action.payload.chain)
+      ) {
+        return this;
+      }
+
       const clone = this.clone();
-      clone.queryOrderField = action.payload!.field;
-      clone.queryOrderOrdering = action.payload!.ordering;
-      clone.queryOrderChain = action.payload!.chain;
+      clone.queryOrderField = action.payload.field;
+      clone.queryOrderOrdering = action.payload.ordering;
+      clone.queryOrderChain = action.payload.chain || undefined;
       return clone;
     }
 

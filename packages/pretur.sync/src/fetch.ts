@@ -5,6 +5,7 @@ export interface FetchOptions {
   url: string;
   method?: Method;
   body?: any;
+  json?: boolean;
 }
 
 export interface FetchResponse<TBody> {
@@ -23,7 +24,15 @@ export function fetch<TBody>(options: FetchOptions): Bluebird<FetchResponse<TBod
     },
     method: options.method || 'GET',
   }).then(response => {
-    return response.json<TBody>().then(responseBody => {
+    let dataPromise: Bluebird<any>;
+
+    if (options.json) {
+      dataPromise = response.json<TBody>();
+    } else {
+      dataPromise = response.text();
+    }
+
+    return dataPromise.then(responseBody => {
       return <FetchResponse<TBody>>{
         body: responseBody,
         ok: response.ok,

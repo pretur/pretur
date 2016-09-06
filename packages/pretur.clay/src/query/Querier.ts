@@ -20,13 +20,13 @@ export default class Querier extends UniqueReducible {
   private queryExtra: Value<any>;
   private shouldExtraCausePaginationReset: boolean;
 
-  constructor(query: Query, shouldExtraCausePaginationReset = false) {
+  constructor(query: Query | null, shouldExtraCausePaginationReset = false) {
     super();
     if (query === null) {
       return;
     }
-    this.queryModel = query.model!;
-    this.queryById = query.byId!;
+    this.queryModel = '' + query.model;
+    this.queryById = +query.byId;
     this.queryCount = !!query.count;
     this.queryIncluder = new Includer(query.include);
     this.queryFilterer = new Filterer(query.filters);
@@ -154,7 +154,7 @@ export default class Querier extends UniqueReducible {
       clone.queryAttributor = attributor;
 
       if (shouldResetPagination) {
-        clone.queryPaginator = new Paginator({ take: paginator.take! });
+        clone.queryPaginator = new Paginator({ take: paginator.take });
       } else {
         clone.queryPaginator = paginator;
       }
@@ -182,6 +182,6 @@ export default class Querier extends UniqueReducible {
   }
 
   protected createInstance(): this {
-    return <this>new Querier(null!);
+    return <this>new Querier(null);
   }
 }

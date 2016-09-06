@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { Action, Dispatch } from 'pretur.redux';
 import { CLAY_QUERY_SET_ATTRIBUTES } from './actions';
 import UniqueReducible from '../UniqueReducible';
@@ -9,11 +10,13 @@ export default class Attributor extends UniqueReducible {
     super();
     if (Array.isArray(attributes)) {
       this.queryAttributes = attributes.slice();
+    } else {
+      this.queryAttributes = [];
     }
   }
 
   public get attributes(): string[] {
-    return this.queryAttributes || [];
+    return this.queryAttributes;
   }
 
   public get plain(): string[] | null {
@@ -24,9 +27,12 @@ export default class Attributor extends UniqueReducible {
   }
 
   public reduce(action: Action<any, any>): this {
-    if (CLAY_QUERY_SET_ATTRIBUTES.is(this.uniqueId, action)) {
+    if (CLAY_QUERY_SET_ATTRIBUTES.is(this.uniqueId, action) && action.payload) {
+      if (isEqual(this.queryAttributes, action.payload)) {
+        return this;
+      }
       const clone = this.clone();
-      clone.queryAttributes = action.payload!;
+      clone.queryAttributes = action.payload;
       return clone;
     }
 
@@ -37,7 +43,7 @@ export default class Attributor extends UniqueReducible {
     if (Array.isArray(attributes)) {
       dispatch(CLAY_QUERY_SET_ATTRIBUTES.create.unicast(this.uniqueId, attributes.slice()));
     } else {
-      dispatch(CLAY_QUERY_SET_ATTRIBUTES.create.unicast(this.uniqueId));
+      dispatch(CLAY_QUERY_SET_ATTRIBUTES.create.unicast(this.uniqueId, []));
     }
   }
 

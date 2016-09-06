@@ -19,6 +19,10 @@ export interface Relations {
   byAlias(alias: string): Relation;
 }
 
+function nonVirtual(relation: Relation) {
+  return !relation.virtual;
+}
+
 function validateOwnder(owner: Owner): boolean {
   if (typeof owner !== 'string') {
     return false;
@@ -66,7 +70,7 @@ export class Spec<T> {
   private model: Model<T>;
   private byAlias = (alias: string) => find(this.model.relations, { alias });
   private nonVirtualByAlias = (alias: string) =>
-    find(this.model.relations.filter(r => !r.virtual), { alias });
+    find(this.model.relations.filter(nonVirtual), { alias });
 
   public get name(): string {
     return this.model.name;
@@ -135,7 +139,7 @@ export class Spec<T> {
       superclass: [],
     };
 
-    const nonVirtualRelations = this.model.relations.filter(r => !r.virtual);
+    const nonVirtualRelations = this.model.relations.filter(nonVirtual);
 
     populateRelations(rels, nonVirtualRelations);
 
@@ -143,7 +147,7 @@ export class Spec<T> {
   }
 
   public get nonVirtualRelationArray(): Relation[] {
-    return this.model.relations.filter(r => !r.virtual);
+    return this.model.relations.filter(nonVirtual);
   }
 
   public get dependencies(): string[] {
@@ -155,7 +159,7 @@ export class Spec<T> {
   }
 
   public get nonVirtualDependencies(): string[] {
-    const allRelations = this.model.relations.filter(r => !r.virtual);
+    const allRelations = this.model.relations.filter(nonVirtual);
     return uniq([
       ...allRelations.map(r => r.model),
       ...allRelations.filter(r => r.type === 'MANY_TO_MANY').map(r => r.through!),

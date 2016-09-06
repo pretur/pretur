@@ -35,11 +35,17 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
       return Bluebird.reject(new Error('query or query.model was not specified.'));
     }
 
-    if (!pool.models[query.model]) {
+    const model = pool.models[query.model];
+
+    if (!model) {
       return Bluebird.reject(new Error(`${query.model} is not a valid model`));
     }
 
-    return pool.models[query.model].resolver!(query);
+    if (!model.resolver) {
+      return Bluebird.reject(new Error(`${query.model} has no resolver`));
+    }
+
+    return model.resolver(query);
   };
 
   pool.sync = function sync(
@@ -51,11 +57,17 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
       return Bluebird.reject(new Error('item.model was not specified.'));
     }
 
-    if (!pool.models[item.model]) {
+    const model = pool.models[item.model];
+
+    if (!model) {
       return Bluebird.reject(new Error(`${item.model} is not a valid model`));
     }
 
-    return pool.models[item.model].synchronizer!(transaction, item, rip);
+    if (!model.synchronizer) {
+      return Bluebird.reject(new Error(`${item.model} has no synchronizer`));
+    }
+
+    return model.synchronizer(transaction, item, rip);
   };
 
   descriptors.forEach(d => d.initialize(pool));

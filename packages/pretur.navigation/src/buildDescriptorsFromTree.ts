@@ -1,5 +1,5 @@
-import { PageDescriptor } from './pages';
 import {
+  PageDescriptor,
   PageFolderDescriptor,
   PathTree,
   FolderContents,
@@ -17,6 +17,14 @@ export interface Descriptors {
   filteredFolderContents: FolderContents;
 }
 
+function byPath(descriptor: PageFolderDescriptor | PageDescriptor<any, any, any>) {
+  return descriptor.path;
+}
+
+function visible(descriptor: PageFolderDescriptor | PageDescriptor<any, any, any>) {
+  return !descriptor.hidden;
+}
+
 export function buildDescriptorsFromTree(root: PageTreeRoot): Descriptors {
   const pages: PageDescriptor<any, any, any>[] = [];
   const folders: PageFolderDescriptor[] = [];
@@ -25,10 +33,10 @@ export function buildDescriptorsFromTree(root: PageTreeRoot): Descriptors {
 
   buildPageFolderTree(root, pages, folders, pathTree, filteredPathTree, [], false);
 
-  const folderContents = buildFolderContents(folders.map(f => f.path), pages.map(p => p.path));
+  const folderContents = buildFolderContents(folders.map(byPath), pages.map(byPath));
   const filteredFolderContents = buildFolderContents(
-    folders.filter(f => !f.hidden).map(f => f.path),
-    pages.filter(p => !p.hidden).map(p => p.path)
+    folders.filter(visible).map(byPath),
+    pages.filter(visible).map(byPath)
   );
 
   return { pages, folders, pathTree, folderContents, filteredPathTree, filteredFolderContents };

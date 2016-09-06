@@ -101,8 +101,8 @@ export function createMutatorReducer<TState, TProps extends string>(
 
     const next = assign({}, state, set);
 
-    if (unset) {
-      unset!.forEach(prop => delete (<any>next)[prop]);
+    if (Array.isArray(unset)) {
+      unset.forEach(prop => delete (<any>next)[prop]);
     }
 
     return next;
@@ -152,7 +152,7 @@ export function createAutoReducer<TState extends AutoReducibleState>(
 }
 
 export function createReducibleReducer<T extends Reducible>(reducible: T): Reducer<T> {
-  return (state = reducible, action) => state!.reduce(action);
+  return (state, action) => (state || reducible).reduce(action);
 }
 
 export interface Constant<T> extends Reducible {

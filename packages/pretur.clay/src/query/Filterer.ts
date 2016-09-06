@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { Action, Dispatch } from 'pretur.redux';
 import { QueryFilters } from 'pretur.sync';
 import { CLAY_QUERY_SET_FILTERS } from './actions';
@@ -48,9 +49,12 @@ export default class Filterer extends UniqueReducible {
   }
 
   public reduce(action: Action<any, any>): this {
-    if (CLAY_QUERY_SET_FILTERS.is(this.uniqueId, action)) {
+    if (CLAY_QUERY_SET_FILTERS.is(this.uniqueId, action) && action.payload) {
+      if (isEqual(this.queryFilters, action.payload)) {
+        return this;
+      }
       const clone = this.clone();
-      clone.queryFilters = <QueryFilters>action.payload;
+      clone.queryFilters = action.payload;
       return clone;
     }
 

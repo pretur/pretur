@@ -37,6 +37,7 @@ export function buildOperator(endPointUrl: string): Operator {
   return function operator(payload: OperationPayload<any>): Bluebird<OperationResult<any>> {
     return fetch<OperationResponse<any>>({
       body: payload,
+      json: true,
       method: 'POST',
       url: endPointUrl,
     }).then(response => {

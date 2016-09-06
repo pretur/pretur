@@ -43,9 +43,12 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
     }
 
     if (CLAY_DATA_RESET.is(this.uniqueId, action)) {
+      if (!action.payload) {
+        return this.original;
+      }
       const clone = this.clone();
       clone.statusInstance = this.statusInstance.setUnmodified();
-      clone.setItems = OrderedMap<number, TRecord>(action.payload!.map(values => {
+      clone.setItems = OrderedMap<number, TRecord>(action.payload.map(values => {
         const newItem = this.constructItem(true, values);
         return [newItem.uniqueId, newItem];
       }));
@@ -63,14 +66,14 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
       return clone;
     }
 
-    if (CLAY_DATA_REMOVE_ITEM.is(this.uniqueId, action)) {
+    if (CLAY_DATA_REMOVE_ITEM.is(this.uniqueId, action) && action.payload) {
       let newItems: OrderedMap<number, TRecord>;
 
-      const target = this.setItems.get(action.payload!);
+      const target = this.setItems.get(action.payload);
       if (target.status.added) {
-        newItems = this.setItems.remove(action.payload!);
+        newItems = this.setItems.remove(action.payload);
       } else {
-        newItems = this.setItems.set(action.payload!, <TRecord>target.setRemoved());
+        newItems = this.setItems.set(action.payload, <TRecord>target.setRemoved());
       }
 
       if (is(this.originalSet.setItems, newItems)) {
@@ -89,12 +92,12 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
 
     const newItems = this.setItems.withMutations(i => {
 
-      this.setItems.forEach(item => {
-        if (item!.status.removed) {
+      this.setItems.forEach((item: TRecord) => {
+        if (item.status.removed) {
           return;
         }
 
-        const newItem = <TRecord>item!.reduce(action);
+        const newItem = <TRecord>item.reduce(action);
         if (newItem !== item) {
           updated = true;
           i.set(newItem.uniqueId, newItem);
@@ -145,18 +148,18 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
   }
 
   public appendSynchronizationModels(synchronizer: Synchronizer): void {
-    this.setItems.forEach(item => item!.appendSynchronizationModels(synchronizer));
+    this.setItems.forEach((item: TRecord) => item.appendSynchronizationModels(synchronizer));
   }
 
   public buildInsertModel(): T[] {
     return this.setItems
-      .filter(item => item!.status.added)
-      .map(item => item!.buildInsertModel())
+      .filter((item: TRecord) => item.status.added)
+      .map((item: TRecord) => item.buildInsertModel())
       .toArray();
   }
 
   protected checkValidity(): boolean {
-    if (this.setItems.some(r => !r!.valid)) {
+    if (this.setItems.some((item: TRecord) => !item.valid)) {
       return false;
     }
     return true;

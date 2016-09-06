@@ -90,15 +90,20 @@ export function buildFetcherCreator(endPointUrl: string): FetcherCreator {
 
       return remoteFetch<FetcherResponse>({
         body: requests.map(r => r.query),
+        json: true,
         method: 'POST',
         url: endPointUrl,
       }).then(response => {
 
         const requestsByQueryId: { [id: number]: FetchRequest } = {};
-        requests.forEach(req => requestsByQueryId[req.query.queryId!] = req);
+        requests.forEach(req => {
+          if (typeof req.query.queryId === 'number') {
+            requestsByQueryId[req.query.queryId] = req;
+          }
+        });
 
         response.body.forEach(item => {
-          const request = requestsByQueryId[item.queryId!];
+          const request = requestsByQueryId[item.queryId];
           request.resolve({
             count: item.count,
             data: item.data,
@@ -109,7 +114,7 @@ export function buildFetcherCreator(endPointUrl: string): FetcherCreator {
           });
         });
 
-        const errors = response.body.filter(item => item.error).map(item => item.error!);
+        const errors = <I18nBundle[]>response.body.map(item => item.error).filter(Boolean);
 
         listeners.forEach(listener => listener.resolve({
           errors,

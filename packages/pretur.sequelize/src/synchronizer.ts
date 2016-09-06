@@ -1,6 +1,6 @@
 import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
-import { intersection, assign } from 'lodash';
+import { intersection, assign, noop } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
 import { Spec } from 'pretur.spec';
 import { Pool } from './pool';
@@ -79,7 +79,7 @@ export function buildSynchronizer<T>(
   spec: Spec<T>,
   options?: BuildSynchronizerOptions<T>
 ): UnitializedSynchronizer<T> {
-  let pool: Pool | null = null;
+  let pool: Pool = <any>null;
 
   function synchronizer(
     transaction: Sequelize.Transaction,
@@ -89,7 +89,7 @@ export function buildSynchronizer<T>(
 
     if (item.action === 'INSERT') {
       return insert(
-        pool!,
+        pool,
         spec.name,
         (options && options.insertErrorHandler) || undefined,
         (options && options.insertInterceptor) || undefined,
@@ -101,7 +101,7 @@ export function buildSynchronizer<T>(
 
     if (item.action === 'UPDATE') {
       return update(
-        pool!,
+        pool,
         spec.name,
         (options && options.updateErrorHandler) || undefined,
         (options && options.updateInterceptor) || undefined,
@@ -113,7 +113,7 @@ export function buildSynchronizer<T>(
 
     if (item.action === 'REMOVE') {
       return remove(
-        pool!,
+        pool,
         spec.name,
         (options && options.removeErrorHandler) || undefined,
         (options && options.removeInterceptor) || undefined,
@@ -137,23 +137,33 @@ const INJECTED_MASTER_RESOLUTION_KEY = '__INJECTED_MASTER_RESOLUTION_KEY';
 
 function insert<T>(
   pool: Pool,
-  model: string,
+  modelName: string,
   errorHandler: ErrorHandler<SynchronizerInsert<T>> | undefined,
   interceptor: SynchronizationInterceptor<SynchronizerInsert<T>> | undefined,
   transaction: Sequelize.Transaction,
   item: SynchronizerInsert<T>,
   rip: ResultItemAppender
 ): Bluebird<void> {
-  function defaultInsertBehavior() {
-    const data: T = assign<{}, T>({}, item.data);
+  const model = pool.models[modelName];
+
+  if (!model) {
+    throw new Error(`model ${modelName} does not exist`);
+  }
+
+  function defaultInsertBehavior(): Bluebird<void> {
+    const data: T = assign({}, item.data);
     const masters: Bluebird<any>[] = [];
 
-    pool.models[model].spec.relations.master.forEach(master => {
+    model.spec.relations.master.forEach(master => {
       const masterData = (<any>data)[master.alias];
       if (masterData) {
         const masterModel = pool.models[master.model];
 
-        masters.push(masterModel.synchronizer!(
+        if (!masterModel.synchronizer) {
+          throw new Error(`model ${masterModel.name} must have a synchronizer`);
+        }
+
+        masters.push(masterModel.synchronizer(
           transaction,
           <SynchronizerInsert<any>>{
             action: 'INSERT',
@@ -169,37 +179,58 @@ function insert<T>(
       }
     });
 
-    const modelCreationPromise = Bluebird.all(masters).then(() =>
-      pool.models[model].sequelizeModel!.create(data, {
+    const modelCreationPromise = Bluebird.all(masters).then(() => {
+      if (!model.sequelizeModel) {
+        throw new Error(`model ${model.name} must have a sequelize model`);
+      }
+
+      return model.sequelizeModel.create(data, {
         transaction,
-        fields: pool.models[model].allowedAttributes,
-      })
-    );
+        fields: model.allowedAttributes,
+      });
+    });
 
     const promise = modelCreationPromise.then(instance => {
+      if (!model.primaryKey) {
+        throw new Error(`model ${model.name} must have a primaryKey`);
+      }
 
       if ((<any>item)[INJECTED_MASTER_RESOLUTION_KEY]) {
-        (<any>item)[INJECTED_MASTER_RESOLUTION_KEY](instance[pool.models[model].primaryKey!]);
+        (<any>item)[INJECTED_MASTER_RESOLUTION_KEY](instance[model.primaryKey]);
       }
 
       const details: Bluebird<any>[] = [];
-      const aliasModelMap = pool.models[model].aliasModelMap;
-      const aliasKeyMap = pool.models[model].aliasKeyMap;
+      const aliasModelMap = model.aliasModelMap;
+      const aliasKeyMap = model.aliasKeyMap;
 
       Object.keys(aliasModelMap).forEach(alias => {
         const nested = (<any>data)[alias];
+        const targetModel = pool.models[aliasModelMap[alias]];
+
+        if (!targetModel) {
+          throw new Error(`model ${aliasModelMap[alias]} does not exist`);
+        }
+
         if (nested) {
 
           if (Array.isArray(nested)) {
             nested.forEach(nestedItem => {
 
+              if (!targetModel.synchronizer) {
+                throw new Error(`model ${targetModel.name} must have a synchronizer`);
+              }
+
+              if (!model.primaryKey) {
+                throw new Error(`model ${model.name} must have a primaryKey`);
+              }
+
               const nestedInsertData = assign(
                 {},
                 nestedItem,
-                { [aliasKeyMap[alias]]: instance[pool.models[model].primaryKey!] }
+                { [aliasKeyMap[alias]]: instance[model.primaryKey] }
               );
 
-              details.push(pool.models[aliasModelMap[alias]].synchronizer!(
+              details.push(targetModel.synchronizer(
                 transaction,
                 <SynchronizerInsert<any>>{
                   action: 'INSERT',
@@ -213,13 +244,21 @@ function insert<T>(
 
           } else {
 
+            if (!targetModel.synchronizer) {
+              throw new Error(`model ${targetModel.name} must have a synchronizer`);
+            }
+
+            if (!model.primaryKey) {
+              throw new Error(`model ${model.name} must have a primaryKey`);
+            }
+
             const nestedInsertData = assign(
               {},
               nested,
-              { [aliasKeyMap[alias]]: instance[pool.models[model].primaryKey!] }
+              { [aliasKeyMap[alias]]: instance[model.primaryKey] }
             );
 
-            details.push(pool.models[aliasModelMap[alias]].synchronizer!(
+            details.push(targetModel.synchronizer(
               transaction,
               <SynchronizerInsert<any>>{
                 action: 'INSERT',
@@ -233,8 +272,8 @@ function insert<T>(
         }
       });
 
-      return details.length > 0 ? Bluebird.all(details) : undefined!;
-    });
+      return details.length > 0 ? Bluebird.all(details) : Bluebird.resolve(undefined);
+    }).then(noop);
 
     if (typeof errorHandler === 'function') {
       return promise.catch(error => errorHandler(item, error, rip));
@@ -244,32 +283,46 @@ function insert<T>(
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool).then<void>(resume => {
+    return interceptor(transaction, item, rip, pool).then(resume => {
       if (resume) {
-        return <any>defaultInsertBehavior();
+        return defaultInsertBehavior();
       }
+      return;
     });
   }
-  return <any>defaultInsertBehavior();
+  return defaultInsertBehavior();
 }
 
 function update<T>(
   pool: Pool,
-  model: string,
+  modelName: string,
   errorHandler: ErrorHandler<SynchronizerUpdate<T>> | undefined,
   interceptor: SynchronizationInterceptor<SynchronizerUpdate<T>> | undefined,
   transaction: Sequelize.Transaction,
   item: SynchronizerUpdate<T>,
   rip: ResultItemAppender
 ): Bluebird<void> {
-  function defaultUpdateBehavior() {
-    const primaryKey = pool.models[model].primaryKey!;
-    const promise = pool.models[model].sequelizeModel!.update(item.data, {
+  const model = pool.models[modelName];
+
+  if (!model) {
+    throw new Error(`model ${modelName} does not exist`);
+  }
+
+  function defaultUpdateBehavior(): Bluebird<void> {
+    if (!model.sequelizeModel) {
+      throw new Error(`model ${model.name} must have a sequelize model`);
+    }
+
+    if (!model.primaryKey) {
+      throw new Error(`model ${model.name} must have a primaryKey`);
+    }
+
+    const promise = model.sequelizeModel.update(item.data, {
       transaction,
-      fields: buildUpdateAttributes(pool.models[model].mutableAttributes, item.attributes),
+      fields: buildUpdateAttributes(model.mutableAttributes, item.attributes),
       validate: true,
-      where: { [primaryKey]: (<any>item.data)[primaryKey] },
-    });
+      where: { [model.primaryKey]: (<any>item.data)[model.primaryKey] },
+    }).then(noop);
 
     if (typeof errorHandler === 'function') {
       return promise.catch(error => errorHandler(item, error, rip));
@@ -281,27 +334,38 @@ function update<T>(
   if (typeof interceptor === 'function') {
     return interceptor(transaction, item, rip, pool).then(resume => {
       if (resume) {
-        return <any>defaultUpdateBehavior();
+        return defaultUpdateBehavior();
       }
+      return;
     });
   }
-  return <any>defaultUpdateBehavior();
+  return defaultUpdateBehavior();
 }
 
 function remove(
   pool: Pool,
-  model: string,
+  modelName: string,
   errorHandler: ErrorHandler<SynchronizerRemove> | undefined,
   interceptor: SynchronizationInterceptor<SynchronizerRemove> | undefined,
   transaction: Sequelize.Transaction,
   item: SynchronizerRemove,
   rip: ResultItemAppender
 ): Bluebird<void> {
-  function defaultRemoveBehavior() {
-    const promise = pool.models[model].sequelizeModel!.destroy({
+  const model = pool.models[modelName];
+
+  if (!model) {
+    throw new Error(`model ${modelName} does not exist`);
+  }
+
+  function defaultRemoveBehavior(): Bluebird<void> {
+    if (!model.sequelizeModel) {
+      throw new Error(`model ${model.name} must have a sequelize model`);
+    }
+
+    const promise = model.sequelizeModel.destroy({
       transaction,
       where: { id: item.targetId },
-    });
+    }).then(noop);
 
     if (typeof errorHandler === 'function') {
       return promise.catch(error => errorHandler(item, error, rip));
@@ -313,11 +377,12 @@ function remove(
   if (typeof interceptor === 'function') {
     return interceptor(transaction, item, rip, pool).then(resume => {
       if (resume) {
-        return <any>defaultRemoveBehavior();
+        return defaultRemoveBehavior();
       }
+      return;
     });
   }
-  return <any>defaultRemoveBehavior();
+  return defaultRemoveBehavior();
 }
 
 function buildUpdateAttributes(allowedAttributes: string[], updateAttributes: string[]): string[] {

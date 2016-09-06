@@ -36,10 +36,10 @@ export function buildCustomResolver<T>(
   _: Spec<T>,
   resolver: CustomResolver<T>
 ): UnitializedResolver<T> {
-  let pool: Pool | null = null;
+  let pool: Pool = <any>null;
 
   function wrappedResolver(query: Query): Bluebird<ResolveResult<T>> {
-    return resolver(query, pool!);
+    return resolver(query, pool);
   }
 
   function initialize(p: Pool) {
@@ -47,14 +47,13 @@ export function buildCustomResolver<T>(
   }
 
   return { resolver: wrappedResolver, initialize };
-
 }
 
 export function buildResolver<T>(
   spec: Spec<T>,
   options?: BuildResolverOptions<T>
 ): UnitializedResolver<T> {
-  let pool: Pool | null = null;
+  let pool: Pool = <any>null;
 
   function resolver(rawQuery: Query): Bluebird<ResolveResult<T>> {
     let query = rawQuery;
@@ -63,33 +62,39 @@ export function buildResolver<T>(
       query = options.queryTransformer(rawQuery);
     }
 
-    const Model = pool!.models[spec.name].sequelizeModel!;
+    const model = pool.models[spec.name].sequelizeModel;
+
+    if (!model) {
+      return Bluebird.reject(new Error(`${model} is not a valid model`));
+    }
+
     const findOptions: Sequelize.FindOptions = {};
 
-    const attributes = pool!.models[spec.name].sanitizeAttributes(query && query.attributes);
+    const attributes = pool.models[spec.name].sanitizeAttributes(query && query.attributes);
     if (attributes) {
       findOptions.attributes = attributes;
     }
 
-    const include = buildInclude(query, pool!, spec.name);
+    const include = buildInclude(query, pool, spec.name);
     if (include && include.length > 0) {
       findOptions.include = include;
     }
 
     if (query && (typeof query.byId === 'number' || typeof query.byId === 'string')) {
-      const promise = Model.findById(query.byId, findOptions).then(data => ({ data: [data] }));
+      const promise = model.findById(query.byId, findOptions).then(data => ({ data: [data] }));
       if (options && options.intercept) {
-        return <any>promise.then(r => options.intercept!(query, r));
+        const intercept = options.intercept;
+        return promise.then(r => intercept(query, r));
       }
-      return <any>promise;
+      return promise;
     }
 
-    const order = buildOrder(query, pool!, spec.name);
+    const order = buildOrder(query, pool, spec.name);
     if (order) {
       findOptions.order = order;
     }
 
-    const where = buildWhere(query, pool!, spec.name);
+    const where = buildWhere(query, pool, spec.name);
     if (where) {
       findOptions.where = where;
     }
@@ -105,20 +110,22 @@ export function buildResolver<T>(
     }
 
     if (query && query.count) {
-      const promise = Model.findAndCount(findOptions)
+      const promise = model.findAndCount(findOptions)
         .then(({rows, count}) => ({ count, data: rows }));
 
       if (options && options.intercept) {
-        return <any>promise.then(r => options.intercept!(query, r));
+        const intercept = options.intercept;
+        return promise.then(r => intercept(query, r));
       }
-      return <any>promise;
+      return promise;
     }
 
-    const promise = Model.findAll(findOptions).then(data => ({ data }));
+    const promise = model.findAll(findOptions).then(data => ({ data }));
     if (options && options.intercept) {
-      return <any>promise.then(r => options.intercept!(query, r));
+      const intercept = options.intercept;
+      return promise.then(r => intercept(query, r));
     }
-    return <any>promise;
+    return promise;
   }
 
   function initialize(p: Pool) {
@@ -157,24 +164,26 @@ function buildOrder(query: Query, pool: Pool, model: string): any[] | null {
   return [parameters];
 }
 
-function buildWhere(query: Query, pool: Pool, model: string): Sequelize.WhereOptions | null {
+function buildWhere(query: Query, pool: Pool, modelName: string): Sequelize.WhereOptions | null {
   const where: Sequelize.WhereOptions = {};
+  const model = pool.models[modelName];
 
   if (query && typeof query.filters === 'object' && query.filters !== null) {
+    const filters = query.filters;
     let filtersKeys = Object.keys(query.filters);
 
-    if (pool.models[model].allowedAttributes) {
-      filtersKeys = intersection(filtersKeys, pool.models[model].allowedAttributes);
+    if (model.allowedAttributes) {
+      filtersKeys = intersection(filtersKeys, model.allowedAttributes);
     }
 
     filtersKeys.map(field => {
-      const value = query.filters![field];
+      const value = filters[field];
 
       if (
-        pool.models[model].fieldWhereBuilders &&
-        typeof pool.models[model].fieldWhereBuilders![field] === 'function'
+        model.fieldWhereBuilders &&
+        typeof model.fieldWhereBuilders[field] === 'function'
       ) {
-        where[field] = pool.models[model].fieldWhereBuilders![field](value);
+        where[field] = model.fieldWhereBuilders[field](value);
       } else if (value === null) {
         where[field] = null!;
       } else if (Array.isArray(value)) {
@@ -216,8 +225,8 @@ function buildNestedInclude(
     const include: Sequelize.IncludeOptions[] = [];
 
     Object.keys(aliasModelMap).forEach(alias => {
-      if (queryInclude![alias] || (orderChain && orderChain[0] === alias)) {
-        const subQuery = queryInclude![alias];
+      if ((queryInclude && queryInclude[alias]) || (orderChain && orderChain[0] === alias)) {
+        const subQuery = !!queryInclude && queryInclude[alias];
         const targetModel = pool.models[aliasModelMap[alias]];
 
         if (!targetModel.sequelizeModel) {

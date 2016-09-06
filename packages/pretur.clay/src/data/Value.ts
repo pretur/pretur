@@ -16,12 +16,12 @@ class Value<T> extends StatusReporter {
   private rawValue: T;
   private errorBundle: I18nBundle | null;
 
-  constructor(validator?: Validator<T> | null, synchronized = false, value?: T) {
+  constructor(validator: Validator<T> | null, synchronized: boolean, value: T) {
     super(synchronized);
     this.originalValue = synchronized ? this : null;
     this.valueValidator = validator || null;
-    this.rawValue = value!;
-    this.errorBundle = validator ? validator(value!) : null;
+    this.rawValue = value;
+    this.errorBundle = validator ? validator(value) : null;
   }
 
   public get value(): T {
@@ -86,7 +86,7 @@ class Value<T> extends StatusReporter {
 
     if (CLAY_DATA_SET_ERROR.is(this.uniqueId, action)) {
       const clone = this.clone();
-      clone.errorBundle = action.payload!;
+      clone.errorBundle = action.payload || null;
       return clone;
     }
 
@@ -125,7 +125,7 @@ class Value<T> extends StatusReporter {
   }
 
   protected createInstance(): this {
-    return <this>new Value();
+    return <this>new Value(null, false, <any>undefined);
   }
 }
 

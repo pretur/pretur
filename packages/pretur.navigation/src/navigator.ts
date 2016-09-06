@@ -33,7 +33,10 @@ export class Navigator implements Reducible {
   }
 
   public get active(): PageInstance<any, any, any> | null {
-    return this.instances.get(this.activePageMutex!, null!);
+    if (!this.activePageMutex) {
+      return null;
+    }
+    return this.instances.get(this.activePageMutex) || null;
   }
 
   public get activeMutex(): string | null {
@@ -87,8 +90,8 @@ export class Navigator implements Reducible {
 
         if (this.pages.getPage(action.payload.path).persistent !== false) {
           save(this.prefix, newInstances
-            .filter(i => i!.descriptor.persistent !== false)
-            .map(i => i!.instantiationData)
+            .filter((i: PageInstance<any, any, any>) => i.descriptor.persistent !== false)
+            .map((i: PageInstance<any, any, any>) => i.instantiationData)
             .toArray());
           saveActivePage(this.prefix, action.payload.mutex);
         }
@@ -117,9 +120,10 @@ export class Navigator implements Reducible {
           } else {
             targetIndex = 1;
           }
-          const targetMutex: string | null = ordering.get(targetIndex, null!);
+          const targetMutex: string | null = ordering.get(targetIndex) || null;
 
           if (
+            targetMutex &&
             this.instances.has(targetMutex) &&
             this.instances.get(targetMutex).descriptor.persistent !== false
           ) {
@@ -133,10 +137,10 @@ export class Navigator implements Reducible {
 
         newNav.instances = this.instances.remove(mutex);
 
-        if (this.instances.get(action.payload!).descriptor.persistent !== false) {
+        if (this.instances.get(mutex).descriptor.persistent !== false) {
           save(this.prefix, newNav.instances
-            .filter(i => i!.descriptor.persistent !== false)
-            .map(i => i!.instantiationData)
+            .filter((i: PageInstance<any, any, any>) => i.descriptor.persistent !== false)
+            .map((i: PageInstance<any, any, any>) => i.instantiationData)
             .toArray());
         }
 
@@ -167,7 +171,7 @@ export class Navigator implements Reducible {
             }
 
             return null;
-          }).filter(i => !!i)
+          }).filter(Boolean)
         );
       }
 
@@ -189,11 +193,11 @@ export class Navigator implements Reducible {
       let modified = false;
 
       const newInstances = this.instances.withMutations(i => {
-        this.instances.forEach(pageInstance => {
-          const newInstance = pageInstance!.reduce(action);
+        this.instances.forEach((pageInstance: PageInstance<any, any, any>) => {
+          const newInstance = pageInstance.reduce(action);
           if (newInstance !== pageInstance) {
             modified = true;
-            i.set(pageInstance!.mutex, newInstance);
+            i.set(pageInstance.mutex, newInstance);
           }
         });
       });

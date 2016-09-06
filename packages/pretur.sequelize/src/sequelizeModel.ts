@@ -161,6 +161,6 @@ function datatypeToSequelizeType(datatype: AbstractType): any {
     case DateType.is(datatype):
       return Sequelize.DATE;
     case RangeType.is(datatype):
-      return (<any>Sequelize.RANGE)(datatypeToSequelizeType((<RangeType>datatype).subType));
+      return Sequelize.RANGE(datatypeToSequelizeType((<RangeType>datatype).subType));
   }
 }

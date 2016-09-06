@@ -17,9 +17,9 @@ export interface NagivateProps {
 
 export function Navigate(
   {navigator}: NagivateProps
-): React.ReactElement<NavigatePassedProps<any>> {
+): React.ReactElement<NavigatePassedProps<any>> | null {
   if (!navigator.active) {
-    return null!;
+    return null;
   }
   const Component
     = navigator.active.descriptor.component as React.ComponentClass<NavigatePassedProps<any>>;
