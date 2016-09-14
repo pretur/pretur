@@ -10,12 +10,14 @@ export interface OperationPayload<T> {
 export interface OperationResponse<T> {
   name: string;
   data?: T;
+  warnings?: I18nBundle[];
   errors?: I18nBundle[];
 }
 
 export interface OperationResult<T> {
   name: string;
   data?: T;
+  warnings?: I18nBundle[];
   errors?: I18nBundle[];
   ok: boolean;
   status: number;
@@ -48,6 +50,7 @@ export function buildOperator(endPointUrl: string): Operator {
         ok: response.ok,
         status: response.status,
         statusText: response.statusText,
+        warnings: response.body.warnings,
       };
     });
   };
