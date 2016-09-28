@@ -94,21 +94,6 @@ describe('joinModel', () => {
       expect(joinModel.initialize).to.be.a('function');
     });
 
-    it('should properly add a unique constraint on the join model', () => {
-      const modelA = mockModel('A');
-      const modelB = mockModel('B');
-
-      const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
-        name: 'a',
-        owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
-        virtual: true,
-      });
-
-      expect(joinModel.model.indexes.unique[0]).to.deep.equal(['aId', 'bId']);
-    });
-
     it('should properly append relations and attributes to the join model', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
@@ -123,12 +108,12 @@ describe('joinModel', () => {
 
       expect(joinModel.model.attributes[0].name).to.be.equals('aId');
       expect(joinModel.model.attributes[0].type).to.be.instanceof(IntegerType);
-      expect(joinModel.model.attributes[0].required).to.be.true;
+      expect(joinModel.model.attributes[0].primary).to.be.true;
       expect(joinModel.model.attributes[0].mutable).to.be.false;
 
       expect(joinModel.model.attributes[1].name).to.be.equals('bId');
       expect(joinModel.model.attributes[1].type).to.be.instanceof(IntegerType);
-      expect(joinModel.model.attributes[1].required).to.be.true;
+      expect(joinModel.model.attributes[1].primary).to.be.true;
       expect(joinModel.model.attributes[1].mutable).to.be.false;
 
       expect(joinModel.model.relations[0].type).to.be.equals('MASTER');

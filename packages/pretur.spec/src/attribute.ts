@@ -1,7 +1,7 @@
 /// <reference types="node" />
 
 import { Validator } from 'pretur.validation';
-import { assign, chain, find } from 'lodash';
+import { assign, chain } from 'lodash';
 import { Model, Owner } from './model';
 import { DataTypes, AbstractType, IntegerType, StringType } from './datatypes';
 
@@ -104,15 +104,6 @@ export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>
       throw new Error(
         `Attribute ${attribute.name} of type ${attribute.type.typeName} was added twice.`
       );
-    }
-
-    if (attribute.primary) {
-      const previousPrimary = find(model.attributes, (a: Attribute<any>) => a.primary);
-      if (previousPrimary) {
-        throw new Error(
-          `Model ${model.name} already has a primaryKey attribute of ${previousPrimary.name}.`
-        );
-      }
     }
 
     validateAttribute(attribute);

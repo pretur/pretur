@@ -79,9 +79,7 @@ export function createJoinModel<T>(
 
   const model: Model<any> = {
     attributes: [],
-    indexes: {
-      unique: [[firstJoinee.key, secondJoinee.key]],
-    },
+    indexes: { unique: [] },
     join: true,
     name: options.name,
     owner: options.owner,
@@ -96,14 +94,14 @@ export function createJoinModel<T>(
   builder.attribute({
     mutable: false,
     name: firstJoinee.key,
-    required: true,
+    primary: true,
     type: firstJoinee.type,
   });
 
   builder.attribute({
     mutable: false,
     name: secondJoinee.key,
-    required: true,
+    primary: true,
     type: secondJoinee.type,
   });
 

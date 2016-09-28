@@ -46,8 +46,6 @@ describe('pretur.spec interface testing fixture', () => {
 
     expect(UserPermission.attributeArray.map(a => a.name)).to.include('userId');
     expect(UserPermission.attributeArray.map(a => a.name)).to.include('permissionId');
-
-    expect(UserPermission.indexes.unique[0]).to.deep.equal(['userId', 'permissionId']);
   });
 
 });

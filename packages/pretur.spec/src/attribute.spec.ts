@@ -165,15 +165,6 @@ describe('attribute', () => {
       expect(() => appendAttribute(model, { name: 'a', type })).to.throw();
     });
 
-    it('should fail if 2 or more attributes are marked primary', () => {
-      const model = mockModel('A');
-      const type = DataTypes.INTEGER();
-
-      expect(() => appendAttribute(model, { name: 'a', type, primary: true })).not.to.throw();
-      expect(() => appendAttribute(model, { name: 'b', type, primary: true })).to.throw();
-      expect(() => appendAttribute(model, { name: 'c', type, primary: true })).to.throw();
-    });
-
   });
 
   describe('createAttributeBuilder', () => {
