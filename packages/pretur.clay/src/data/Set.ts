@@ -9,6 +9,7 @@ import {
   CLAY_DATA_RESET,
   CLAY_DATA_ADD_ITEM,
   CLAY_DATA_REMOVE_ITEM,
+  CLAY_DATA_UNREMOVE_ITEM,
 } from './actions';
 
 abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
@@ -88,6 +89,19 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
       return clone;
     }
 
+    if (CLAY_DATA_UNREMOVE_ITEM.is(this.uniqueId, action) && action.payload) {
+      const target = this.setItems.get(action.payload);
+      const newItems = this.setItems.set(action.payload, <TRecord>target.setUnremoved());
+
+      if (is(this.originalSet.setItems, newItems)) {
+        return this.originalSet;
+      }
+
+      const clone = this.clone();
+      clone.setItems = newItems;
+      return clone;
+    }
+
     let updated = false;
 
     const newItems = this.setItems.withMutations(i => {
@@ -133,6 +147,10 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
 
   public remove(dispatch: Dispatch, target: number): void {
     dispatch(CLAY_DATA_REMOVE_ITEM.create.unicast(this.uniqueId, target));
+  }
+
+  public unremove(dispatch: Dispatch, target: number): void {
+    dispatch(CLAY_DATA_UNREMOVE_ITEM.create.unicast(this.uniqueId, target));
   }
 
   public refresh(dispatch: Dispatch, query: Query, fetcher: Fetcher): Bluebird<number | null> {

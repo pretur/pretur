@@ -28,5 +28,8 @@ export const CLAY_DATA_ADD_ITEM: TargetedActionDescriptor<any, void>
 export const CLAY_DATA_REMOVE_ITEM: TargetedActionDescriptor<number, void>
   = createTargetedActionDescriptor<number, void>('CLAY_DATA_REMOVE_ITEM');
 
+export const CLAY_DATA_UNREMOVE_ITEM: TargetedActionDescriptor<number, void>
+  = createTargetedActionDescriptor<number, void>('CLAY_DATA_UNREMOVE_ITEM');
+
 export const CLAY_DATA_INJECT_RELATION: TargetedActionDescriptor<RelationInjectrionPayload, void>
   = createTargetedActionDescriptor<RelationInjectrionPayload, void>('CLAY_DATA_INJECT_RELATION');

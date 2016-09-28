@@ -77,6 +77,16 @@ export default class Status {
     return clone;
   }
 
+  public setUnremoved(): Status {
+    if (!this.isRremoved) {
+      return this;
+    }
+
+    const clone = this.clone();
+    clone.isRremoved = false;
+    return clone;
+  }
+
   public setPending(): Status {
     if (this.isPending) {
       return this;

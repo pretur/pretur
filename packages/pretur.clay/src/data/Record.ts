@@ -34,6 +34,16 @@ abstract class Record<T> extends StatusReporter {
     return clone;
   }
 
+  public setUnremoved(): this {
+    if (!this.statusInstance.removed) {
+      return this;
+    }
+
+    const clone = this.originalRecord.clone();
+    clone.statusInstance = this.statusInstance.setUnremoved();
+    return clone;
+  }
+
   protected checkValidity(): boolean {
     return !this.validate() && this.validateFields();
   }
