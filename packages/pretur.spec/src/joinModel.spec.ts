@@ -51,6 +51,7 @@ describe('joinModel', () => {
       expect(joineeModel.onDelete).to.be.equals('CASCADE');
       expect(joineeModel.onUpdate).to.be.equals('CASCADE');
       expect(joineeModel.type).to.be.instanceof(IntegerType);
+      expect(joineeModel.primary).to.be.true;
     });
 
     it('should return a joinee with overriden defaults', () => {
@@ -59,6 +60,7 @@ describe('joinModel', () => {
         key: 'someId',
         onDelete: 'SET NULL',
         onUpdate: 'NO ACTION',
+        primary: false,
         type: DataTypes.STRING(),
       });
 
@@ -69,6 +71,7 @@ describe('joinModel', () => {
       expect(joineeModel.onDelete).to.be.equals('SET NULL');
       expect(joineeModel.onUpdate).to.be.equals('NO ACTION');
       expect(joineeModel.type).to.be.instanceof(StringType);
+      expect(joineeModel.primary).to.be.false;
     });
 
   });
@@ -99,10 +102,14 @@ describe('joinModel', () => {
       const modelB = mockModel('B');
 
       const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
+        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a', {
+          primary: true,
+        }),
         name: 'a',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
+        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b', {
+          primary: false,
+        }),
         virtual: true,
       });
 
@@ -113,7 +120,7 @@ describe('joinModel', () => {
 
       expect(joinModel.model.attributes[1].name).to.be.equals('bId');
       expect(joinModel.model.attributes[1].type).to.be.instanceof(IntegerType);
-      expect(joinModel.model.attributes[1].primary).to.be.true;
+      expect(joinModel.model.attributes[1].primary).to.be.false;
       expect(joinModel.model.attributes[1].mutable).to.be.false;
 
       expect(joinModel.model.relations[0].type).to.be.equals('MASTER');

@@ -18,6 +18,7 @@ export interface JoineeOptions {
   type?: IntegerType | StringType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
+  primary?: boolean;
 }
 
 export interface Joinee {
@@ -25,6 +26,7 @@ export interface Joinee {
   aliasOnJoin: string;
   aliasOnTarget: string;
   key: string;
+  primary: boolean;
   type: IntegerType | StringType;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
@@ -57,6 +59,7 @@ export function joinee(
     key: (options && options.key) || `${aliasOnJoin}Id`,
     onDelete: (options && options.onDelete) || 'CASCADE',
     onUpdate: (options && options.onUpdate) || 'CASCADE',
+    primary: !(options && options.primary === false),
     type: (options && options.type) || DataTypes.INTEGER(),
   };
 }
@@ -94,14 +97,14 @@ export function createJoinModel<T>(
   builder.attribute({
     mutable: false,
     name: firstJoinee.key,
-    primary: true,
+    primary: firstJoinee.primary,
     type: firstJoinee.type,
   });
 
   builder.attribute({
     mutable: false,
     name: secondJoinee.key,
-    primary: true,
+    primary: secondJoinee.primary,
     type: secondJoinee.type,
   });
 
