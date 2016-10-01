@@ -206,6 +206,31 @@ describe('joinModel', () => {
       expect(joinModel.model.attributes[2].name).to.be.equals('count');
     });
 
+    it('should properly call the builder with valid multicolumnUniqueIndex builder', () => {
+      const modelA = mockModel('A');
+      const modelB = mockModel('B');
+      const model = createJoinModel(
+        {
+          firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
+          name: 'a',
+          owner: null,
+          secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
+        },
+        ({multicolumnUniqueIndex}) => {
+          expect(multicolumnUniqueIndex).to.be.a('function');
+          multicolumnUniqueIndex('a', 'b');
+          multicolumnUniqueIndex('c', 'd');
+          multicolumnUniqueIndex('e', 'f', 'g');
+        }
+      );
+
+      model.initialize();
+
+      expect(model.model.indexes.unique[0]).to.deep.equal(['a', 'b']);
+      expect(model.model.indexes.unique[1]).to.deep.equal(['c', 'd']);
+      expect(model.model.indexes.unique[2]).to.deep.equal(['e', 'f', 'g']);
+    });
+
   });
 
 });

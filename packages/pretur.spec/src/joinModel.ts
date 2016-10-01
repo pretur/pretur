@@ -11,6 +11,7 @@ import {
 
 export interface JoinModelBuilder {
   attribute: AttributeBuilder;
+  multicolumnUniqueIndex(...fields: string[]): void;
 }
 
 export interface JoineeOptions {
@@ -92,6 +93,9 @@ export function createJoinModel<T>(
 
   const builder = <JoinModelBuilder>{
     attribute: createAttributeBuilder(model),
+    multicolumnUniqueIndex(...fields: string[]) {
+      model.indexes.unique.push(fields);
+    },
   };
 
   builder.attribute({
