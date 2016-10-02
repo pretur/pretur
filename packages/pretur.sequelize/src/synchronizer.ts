@@ -36,10 +36,10 @@ export interface Update<T> {
   ): Bluebird<void>;
 }
 
-export interface Remove {
+export interface Remove<T> {
   (
     transaction: Sequelize.Transaction,
-    item: SynchronizerRemove,
+    item: SynchronizerRemove<T>,
     rip: ResultItemAppender
   ): Bluebird<void>;
 }
@@ -69,10 +69,10 @@ export interface SynchronizationInterceptor<T> {
 export interface BuildSynchronizerOptions<T> {
   insertErrorHandler?: ErrorHandler<SynchronizerInsert<T>>;
   updateErrorHandler?: ErrorHandler<SynchronizerUpdate<T>>;
-  removeErrorHandler?: ErrorHandler<SynchronizerRemove>;
+  removeErrorHandler?: ErrorHandler<SynchronizerRemove<T>>;
   insertInterceptor?: SynchronizationInterceptor<SynchronizerInsert<T>>;
   updateInterceptor?: SynchronizationInterceptor<SynchronizerUpdate<T>>;
-  removeInterceptor?: SynchronizationInterceptor<SynchronizerRemove>;
+  removeInterceptor?: SynchronizationInterceptor<SynchronizerRemove<T>>;
 }
 
 export function buildSynchronizer<T>(
@@ -342,13 +342,13 @@ function update<T>(
   return defaultUpdateBehavior();
 }
 
-function remove(
+function remove<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<SynchronizerRemove> | undefined,
-  interceptor: SynchronizationInterceptor<SynchronizerRemove> | undefined,
+  errorHandler: ErrorHandler<SynchronizerRemove<T>> | undefined,
+  interceptor: SynchronizationInterceptor<SynchronizerRemove<T>> | undefined,
   transaction: Sequelize.Transaction,
-  item: SynchronizerRemove,
+  item: SynchronizerRemove<T>,
   rip: ResultItemAppender
 ): Bluebird<void> {
   const model = pool.models[modelName];
@@ -361,10 +361,16 @@ function remove(
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
     }
+    const attributes = intersection(Object.keys(item.identifiers), model.allowedAttributes);
+    const filteredIdentifiers: Sequelize.WhereOptions = {};
+
+    attributes.forEach(identifier => {
+      filteredIdentifiers[identifier] = (<any>item.identifiers)[identifier];
+    });
 
     const promise = model.sequelizeModel.destroy({
       transaction,
-      where: { id: item.targetId },
+      where: filteredIdentifiers,
     }).then(noop);
 
     if (typeof errorHandler === 'function') {

@@ -19,10 +19,6 @@ export interface AliasKeyMap {
   [alias: string]: string;
 }
 
-export interface AliasRequiredMap {
-  [alias: string]: boolean;
-}
-
 export interface FieldWhereBuilders {
   [field: string]: (filter: any) => FieldWhereClause;
 }
@@ -36,7 +32,6 @@ export interface ModelDescriptor<T> {
   synchronizer?: Synchronizer<any>;
   aliasModelMap: AliasModelMap;
   aliasKeyMap: AliasKeyMap;
-  aliasRequiredMap: AliasRequiredMap;
   allowedAttributes: string[];
   mutableAttributes: string[];
   defaultOrder: [string, 'ASC' | 'DESC'];
@@ -85,14 +80,6 @@ export function buildModelDescriptor<T>(
     <AliasKeyMap>{}
   );
 
-  const aliasRequiredMap = spec.relationArray.reduce(
-    (m, r) => {
-      m[r.alias] = !!r.required;
-      return m;
-    },
-    <AliasRequiredMap>{}
-  );
-
   const allowedAttributes
     = (options && options.allowedAttributes) || spec.attributeArray.map(a => a.name);
 
@@ -131,7 +118,6 @@ export function buildModelDescriptor<T>(
     synchronizer,
     aliasModelMap,
     aliasKeyMap,
-    aliasRequiredMap,
     allowedAttributes,
     mutableAttributes,
     defaultOrder,

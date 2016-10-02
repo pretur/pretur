@@ -219,7 +219,6 @@ function buildNestedInclude(
   model: string
 ): Sequelize.IncludeOptions[] | null {
   const aliasModelMap = pool.models[model].aliasModelMap;
-  const aliasRequiredMap = pool.models[model].aliasRequiredMap;
 
   if (queryInclude || orderChain) {
     const include: Sequelize.IncludeOptions[] = [];
@@ -237,7 +236,7 @@ function buildNestedInclude(
           as: alias,
           attributes: targetModel.allowedAttributes,
           model: targetModel.sequelizeModel,
-          required: aliasRequiredMap[alias],
+          required: typeof subQuery === 'object' ? !!subQuery.required : false,
         };
 
         if (typeof subQuery === 'object' && subQuery) {
