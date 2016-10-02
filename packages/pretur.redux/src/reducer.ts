@@ -165,4 +165,41 @@ export function createConstantReducer<T>(value: T): Constant<T> {
   return constantReducer;
 }
 
+export interface ReducibleMap {
+  [name: string]: Reducible;
+}
+
+export interface EnhancedReducible<T> {
+  reduce(action: Action<any, any>): EnhancedReducible<T> & T;
+}
+
+export function createReducibleMap<T extends ReducibleMap>(map: T): EnhancedReducible<T> & T {
+  const properties = Object.keys(map);
+
+  let previousReducibleMap = assign<EnhancedReducible<T> & T>({}, map);
+  const reduce = function reduce(action: Action<any, any>): EnhancedReducible<T> & T {
+    let modified = false;
+    const newReducibleMap = <EnhancedReducible<T> & T>{};
+
+    properties.forEach(property => {
+      const newReducible = previousReducibleMap[property].reduce(action);
+      if (newReducible !== previousReducibleMap[property]) {
+        modified = true;
+      }
+      newReducibleMap[property] = newReducible;
+    });
+
+    if (modified) {
+      newReducibleMap.reduce = reduce;
+      previousReducibleMap = newReducibleMap;
+    }
+
+    return previousReducibleMap;
+  };
+
+  previousReducibleMap.reduce = reduce;
+
+  return previousReducibleMap;
+}
+
 export const combineReducers: <TState>(map: ReducerMap) => Reducer<TState> = reduxCombineReducers;

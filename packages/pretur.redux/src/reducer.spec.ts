@@ -7,6 +7,7 @@ import {
   createMutatorReducer,
   createReducibleReducer,
   createConstantReducer,
+  createReducibleMap,
   Reducible,
 } from './reducer';
 
@@ -15,7 +16,7 @@ class ReduceMe implements Reducible {
   public initialized: boolean;
   public payload: any;
 
-  constructor(initialized = false, changing = false, payload = null) {
+  constructor(initialized = false, changing = false, payload: any = null) {
     this.changing = changing;
     this.initialized = initialized;
     this.payload = payload;
@@ -259,6 +260,46 @@ describe('createConstantReducer', () => {
     const initial = reducer(undefined, { type: 'TYPE' });
 
     expect(initial.constant.value).to.be.equals(1);
+  });
+
+});
+
+describe('createReducibleMap', () => {
+
+  it('should create a createReducibleMap that properly initializes state', () => {
+    const reducer = createReducibleMap({
+      bar: new ReduceMe(false, false, 'hello'),
+      foo: new ReduceMe(false),
+    });
+
+    expect(reducer.bar.payload).to.be.equals('hello');
+    expect(reducer.foo.payload).to.be.equals(null);
+
+    const initialized = reducer.reduce({ type: 'INIT' });
+
+    expect(initialized.bar.initialized).to.be.true;
+    expect(initialized.foo.initialized).to.be.true;
+
+    const reduced = initialized.reduce({ payload: 'world', type: ' ' });
+
+    expect(reduced.bar.payload).to.be.equals('world');
+    expect(reduced.foo.payload).to.be.equals('world');
+  });
+
+  it('should create a createReducibleMap that can act as auto reducer', () => {
+    const reducer = createAutoReducer({
+      bar: createReducibleMap({
+        foo: new ReduceMe(),
+      }),
+    });
+
+    const initialized = reducer(undefined, { type: 'INIT' });
+
+    expect(initialized.bar.foo.initialized).to.be.true;
+
+    const reduced = reducer(initialized, { payload: 'YOLO', type: 'Blah!' });
+
+    expect(reduced.bar.foo.payload).to.be.equals('YOLO');
   });
 
 });
