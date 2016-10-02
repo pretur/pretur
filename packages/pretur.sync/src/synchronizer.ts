@@ -17,15 +17,15 @@ export interface SynchronizerUpdate<T> {
   data: T;
 }
 
-export interface SynchronizerRemove {
+export interface SynchronizerRemove<T> {
   action: 'REMOVE';
   itemId?: number;
   model: string;
-  targetId: number | string;
+  identifiers: T;
 }
 
 export type SynchronizerItem<T>
-  = SynchronizerInsert<T> | SynchronizerUpdate<T> | SynchronizerRemove;
+  = SynchronizerInsert<T> | SynchronizerUpdate<T> | SynchronizerRemove<T>;
 
 export interface SynchronizerResult {
   warning?: I18nBundle;
@@ -56,7 +56,7 @@ export interface Synchronizer {
   listen(): Bluebird<SynchronizeListenerData>;
   addInsert(insert: SynchronizerInsert<any>): Bluebird<SynchronizerResult>;
   addUpdate(update: SynchronizerUpdate<any>): Bluebird<SynchronizerResult>;
-  addRemove(remove: SynchronizerRemove): Bluebird<SynchronizerResult>;
+  addRemove(remove: SynchronizerRemove<any>): Bluebird<SynchronizerResult>;
   sync(): Bluebird<boolean>;
 }
 
@@ -114,7 +114,7 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
       });
     }
 
-    function addRemove(remove: SynchronizerRemove): Bluebird<SynchronizerResult> {
+    function addRemove(remove: SynchronizerRemove<any>): Bluebird<SynchronizerResult> {
       const item = addIdAction(remove, 'REMOVE');
       return new Bluebird<SynchronizerResult>((resolve, reject) => {
         items.push({ item, resolve, reject });
