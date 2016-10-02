@@ -1,6 +1,6 @@
 {
   "name": "pretur.redux",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Redux bindings",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -28,12 +28,12 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.redux",
   "dependencies": {
-    "@types/bluebird": "^3.0.32",
-    "@types/lodash": "^4.14.34",
-    "@types/redux-logger": "^2.6.31",
-    "@types/redux-thunk": "^2.1.30",
+    "@types/bluebird": "^3.0.33",
+    "@types/lodash": "^4.14.36",
+    "@types/redux-logger": "^2.6.32",
+    "@types/redux-thunk": "^2.1.31",
     "bluebird": "^3.4.6",
-    "lodash": "^4.15.0",
+    "lodash": "^4.16.2",
     "redux": "^3.6.0",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0"
