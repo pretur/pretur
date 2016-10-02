@@ -19,7 +19,7 @@ export function Navigate(
   {navigator}: NagivateProps
 ): React.ReactElement<NavigatePassedProps<any>> {
   if (!navigator.active) {
-    return null as any;
+    return null!;
   }
   const Component
     = navigator.active.descriptor.component as React.ComponentClass<NavigatePassedProps<any>>;
