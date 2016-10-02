@@ -1,5 +1,3 @@
-/// <reference types="node" />
-
 export interface I18nFormatter {
   (nothing: null): null;
   (bundle: I18nBundle): string;
