@@ -1,6 +1,7 @@
 import { Action } from 'pretur.redux';
 import { SubQuery } from 'pretur.sync';
 import UniqueReducible from '../UniqueReducible';
+import Value from '../data/Value';
 import Includer from './Includer';
 import Filterer from './Filterer';
 import Attributor from './Attributor';
@@ -9,6 +10,7 @@ export default class SubQuerier extends UniqueReducible {
   private subQueryIncluder: Includer;
   private subQueryFilterer: Filterer;
   private subQueryAttributor: Attributor;
+  private subQueryRequired: Value<boolean>;
 
   constructor(subquery: SubQuery | null) {
     super();
@@ -18,6 +20,7 @@ export default class SubQuerier extends UniqueReducible {
     this.subQueryIncluder = new Includer(subquery.include);
     this.subQueryFilterer = new Filterer(subquery.filters);
     this.subQueryAttributor = new Attributor(subquery.attributes);
+    this.subQueryRequired = new Value(null, true, !!subquery.required);
   }
 
   public get includer(): Includer {
@@ -50,6 +53,11 @@ export default class SubQuerier extends UniqueReducible {
       subquery.attributes = attributes;
     }
 
+    const required = this.subQueryRequired.value;
+    if (required) {
+      subquery.required = true;
+    }
+
     return subquery;
   }
 
@@ -57,16 +65,19 @@ export default class SubQuerier extends UniqueReducible {
     const includer = this.subQueryIncluder.reduce(action);
     const filterer = this.subQueryFilterer.reduce(action);
     const attributor = this.subQueryAttributor.reduce(action);
+    const required = this.subQueryRequired.reduce(action);
 
     if (
       includer !== this.subQueryIncluder ||
       filterer !== this.subQueryFilterer ||
-      attributor !== this.subQueryAttributor
+      attributor !== this.subQueryAttributor ||
+      required !== this.subQueryRequired
     ) {
       const clone = this.clone();
       clone.subQueryIncluder = includer;
       clone.subQueryFilterer = filterer;
       clone.subQueryAttributor = attributor;
+      clone.subQueryRequired = required;
       return clone;
     }
 
@@ -78,6 +89,7 @@ export default class SubQuerier extends UniqueReducible {
     clone.subQueryIncluder = this.subQueryIncluder;
     clone.subQueryFilterer = this.subQueryFilterer;
     clone.subQueryAttributor = this.subQueryAttributor;
+    clone.subQueryRequired = this.subQueryRequired;
   }
 
   protected createInstance(): this {
