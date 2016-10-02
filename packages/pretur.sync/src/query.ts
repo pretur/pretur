@@ -23,6 +23,7 @@ export interface SubQuery {
   include?: QueryInclude;
   filters?: QueryFilters;
   attributes?: string[];
+  required?: boolean;
 }
 
 export interface Query {
