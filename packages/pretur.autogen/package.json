@@ -1,6 +1,6 @@
 {
   "name": "pretur.autogen",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Handlebars based code generation helper",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -31,15 +31,15 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.autogen",
   "dependencies": {
-    "@types/fs-extra": "0.0.31",
-    "@types/handlebars": "^4.0.30",
-    "@types/inflection": "^1.5.27",
-    "@types/lodash": "^4.14.34",
-    "@types/node": "^6.0.38",
+    "@types/fs-extra": "0.0.32",
+    "@types/handlebars": "^4.0.31",
+    "@types/inflection": "^1.5.28",
+    "@types/lodash": "^4.14.36",
+    "@types/node": "^6.0.41",
     "fs-extra": "^0.30.0",
     "handlebars": "^4.0.5",
     "inflection": "^1.10.0",
-    "lodash": "^4.15.0",
+    "lodash": "^4.16.2",
     "watchr": "^2.6.0"
   },
   "devDependencies": {
