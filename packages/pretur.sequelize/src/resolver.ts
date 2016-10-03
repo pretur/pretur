@@ -70,10 +70,7 @@ export function buildResolver<T>(
 
     const findOptions: Sequelize.FindOptions = {};
 
-    const attributes = pool.models[spec.name].sanitizeAttributes(query && query.attributes);
-    if (attributes) {
-      findOptions.attributes = attributes;
-    }
+    findOptions.attributes = pool.models[spec.name].sanitizeAttributes(query && query.attributes);
 
     const include = buildInclude(query, pool, spec.name);
     if (include && include.length > 0) {
@@ -110,7 +107,7 @@ export function buildResolver<T>(
     }
 
     if (query && query.count) {
-      const promise = model.findAndCount(findOptions)
+      const promise = model.findAndCountAll(findOptions)
         .then(({rows, count}) => ({ count, data: rows }));
 
       if (options && options.intercept) {

@@ -47,7 +47,7 @@ export interface BuildModelDescriptorOptions {
   defaultOrder?: [string, 'ASC' | 'DESC'];
   fieldWhereBuilders?: FieldWhereBuilders;
   allowedAttributes?: string[];
-  allowedInsertAttributes?: string[];
+  allowedMutableAttributes?: string[];
   allowedUpdateAttributes?: string[];
 }
 
@@ -83,7 +83,7 @@ export function buildModelDescriptor<T>(
   const allowedAttributes
     = (options && options.allowedAttributes) || spec.attributeArray.map(a => a.name);
 
-  const mutableAttributes = (options && options.allowedInsertAttributes)
+  const mutableAttributes = (options && options.allowedMutableAttributes)
     || spec.attributeArray.filter(a => a.mutable).map(a => a.name);
 
   const defaultOrder = (options && options.defaultOrder)
