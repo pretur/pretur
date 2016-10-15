@@ -8,6 +8,7 @@ import { load, clear, loadActivePage, save, saveActivePage } from './persist';
 import {
   NAVIGATION_TRANSIT_TO_PAGE,
   NAVIGATION_OPEN_PAGE,
+  NAVIGATION_REPLACE_PAGE,
   NAVIGATION_CLOSE_PAGE,
   NAVIGATION_LOAD_PAGES,
   NAVIGATION_CLEAR_PAGES,
@@ -18,6 +19,11 @@ const DEISOLATE_KEY = '@@navigator_deisolate';
 export function deisolate<A extends Action<any, any>>(action: A): A {
   (<any>action)[DEISOLATE_KEY] = true;
   return action;
+}
+
+export interface NavigatorPageReplaceOptions {
+  toRemoveMutex: string;
+  toInsertData: PageInstantiationData<any>;
 }
 
 export class Navigator implements Reducible {
@@ -99,6 +105,57 @@ export class Navigator implements Reducible {
         const newNav = <this>new Navigator(this.pages, this.prefix);
         newNav.instances = newInstances;
         newNav.activePageMutex = action.payload.mutex;
+        return newNav;
+      }
+      return this;
+    }
+
+    if (NAVIGATION_REPLACE_PAGE.is(this.prefix, action)) {
+      if (!action.payload) {
+        return this;
+      }
+
+      const {toRemoveMutex, toInsertData} = action.payload;
+
+      if (this.instances.has(toInsertData.mutex)) {
+
+        if (this.instances.get(toInsertData.mutex).descriptor.persistent !== false) {
+          saveActivePage(this.prefix, toInsertData.mutex);
+        }
+
+        const newNav = <this>new Navigator(this.pages, this.prefix);
+        newNav.instances = this.instances;
+        newNav.activePageMutex = toInsertData.mutex;
+        return newNav;
+      }
+
+      if (this.pages.hasPage(toInsertData.path)) {
+        const toRemoveIndex = this.instances.keySeq().findIndex(key => key === toRemoveMutex);
+
+        const newPage = this.pages.buildInstance(toInsertData);
+        let newInstances: OrderedMap<string, PageInstance<any, any, any>>;
+
+        if (toRemoveIndex === -1) {
+          newInstances = this.instances.set(toInsertData.mutex, newPage);
+        } else {
+          const instancesArray = this.instances.toArray();
+          instancesArray[toRemoveIndex] = newPage;
+          newInstances = OrderedMap<string, PageInstance<any, any, any>>(
+            instancesArray.map(i => [i.mutex, i])
+          );
+        }
+
+        if (this.pages.getPage(toInsertData.path).persistent !== false) {
+          save(this.prefix, newInstances
+            .filter((i: PageInstance<any, any, any>) => i.descriptor.persistent !== false)
+            .map((i: PageInstance<any, any, any>) => i.instantiationData)
+            .toArray());
+          saveActivePage(this.prefix, toInsertData.mutex);
+        }
+
+        const newNav = <this>new Navigator(this.pages, this.prefix);
+        newNav.instances = newInstances;
+        newNav.activePageMutex = toInsertData.mutex;
         return newNav;
       }
       return this;
@@ -232,6 +289,14 @@ export class Navigator implements Reducible {
 
   public open(dispatch: Dispatch, instantiationData: PageInstantiationData<any>) {
     dispatch(NAVIGATION_OPEN_PAGE.create.unicast(this.prefix, instantiationData));
+  }
+
+  public replace(
+    dispatch: Dispatch,
+    toRemoveMutex: string,
+    toInsertData: PageInstantiationData<any>
+  ) {
+    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this.prefix, { toRemoveMutex, toInsertData }));
   }
 
   public close(dispatch: Dispatch, mutex: string) {

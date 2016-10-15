@@ -134,6 +134,83 @@ describe('Navigator', () => {
 
     });
 
+    describe('replace', () => {
+
+      it('should behave like open when target mutex exists', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.replace(dispatch, '2', { mutex: '1', path: 'a/d/e' });
+
+        check(nav, ['a/d/e'], '1');
+      });
+
+      it('should transit to pages with already open mutex instead', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+
+        nav.replace(dispatch, 'blah', { mutex: '1', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '1');
+      });
+
+      it('should properly replace an already open page', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+
+        nav.replace(dispatch, '2', { mutex: '4', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'a/d/e', 'a/d/e'], '4');
+      });
+
+      it('should ignore pages with unknown path', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.replace(dispatch, 'blah', { mutex: '1', path: 'blah1' });
+        nav.replace(dispatch, 'blah', { mutex: '2', path: 'blah2' });
+        nav.replace(dispatch, 'blah', { mutex: '3', path: 'blah3' });
+        nav.replace(dispatch, 'blah', { mutex: '4', path: 'blah4' });
+
+        check(nav, [], null);
+        expect(nav).to.be.equals(navigator);
+      });
+
+      it('should leave store unchanged when replacing non persistent pages', () => { //
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+
+        nav.replace(dispatch, '2', { mutex: '4', path: 'a/g/e' });
+
+        check(nav, ['a/d/e', 'a/g/e', 'a/d/e'], '4', false);
+        checkStore(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+      });
+
+    });
+
     describe('close', () => {
 
       let nav: Navigator;
