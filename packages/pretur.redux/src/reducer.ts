@@ -169,17 +169,19 @@ export interface ReducibleMap {
   [name: string]: Reducible;
 }
 
+export type EnhancedReducibleState<T> = EnhancedReducible<T> & T;
+
 export interface EnhancedReducible<T> {
-  reduce(action: Action<any, any>): EnhancedReducible<T> & T;
+  reduce(action: Action<any, any>): EnhancedReducibleState<T>;
 }
 
-export function createReducibleMap<T extends ReducibleMap>(map: T): EnhancedReducible<T> & T {
+export function createReducibleMap<T extends ReducibleMap>(map: T): EnhancedReducibleState<T> {
   const properties = Object.keys(map);
 
-  let previousReducibleMap = assign<EnhancedReducible<T> & T>({}, map);
-  const reduce = function reduce(action: Action<any, any>): EnhancedReducible<T> & T {
+  let previousReducibleMap = assign<EnhancedReducibleState<T>>({}, map);
+  const reduce = function reduce(action: Action<any, any>): EnhancedReducibleState<T> {
     let modified = false;
-    const newReducibleMap = <EnhancedReducible<T> & T>{};
+    const newReducibleMap = <EnhancedReducibleState<T>>{};
 
     properties.forEach(property => {
       const newReducible = previousReducibleMap[property].reduce(action);
