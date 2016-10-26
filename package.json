@@ -19,12 +19,12 @@
     "@types/node": "^6.0.45",
     "@types/react-addons-test-utils": "^0.14.15",
     "chai": "^3.5.0",
-    "mocha": "^3.1.0",
+    "mocha": "^3.1.2",
     "react-addons-test-utils": "^15.3.2",
-    "ts-node": "^1.4.1",
+    "ts-node": "^1.6.0",
     "tslint": "^3.15.1",
     "tslint-eslint-rules": "^2.1.0",
-    "tslint-microsoft-contrib": "^2.0.12",
+    "tslint-microsoft-contrib": "^2.0.13",
     "typescript": "next",
     "typings": "^1.4.0"
   }
