@@ -1,6 +1,6 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
-export function positive(key: string): Validator<number> {
+export function positive(key: string): ValueValidator<number> {
   return function positiveValidator(num: number) {
     if (typeof num !== 'number' || isNaN(num) || num <= 0) {
       return {

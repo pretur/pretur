@@ -1,7 +1,7 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 import * as IBANValidator from 'iban';
 
-export function iban(key: string): Validator<string> {
+export function iban(key: string): ValueValidator<string> {
   return function ibanValidator(str: string) {
     if (!str) {
       return null;

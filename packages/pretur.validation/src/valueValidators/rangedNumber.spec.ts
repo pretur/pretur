@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { rangedNumber } from './rangedNumber';
 
-describe('validator:rangedNumber', () => {
+describe('value-validator:rangedNumber', () => {
 
   it('should return null for valid input', () => {
     const validator1 = rangedNumber('A', 1.5, 1.6);

@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { numeric } from './numeric';
 
-describe('validator:numeric', () => {
+describe('value-validator:numeric', () => {
 
   it('should return null for valid input', () => {
     const validator = numeric('A');

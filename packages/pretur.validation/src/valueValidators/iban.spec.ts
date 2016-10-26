@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { iban } from './iban';
 
-describe('validator:iban', () => {
+describe('value-validator:iban', () => {
 
   it('should return null for valid input', () => {
     const validator = iban('A');

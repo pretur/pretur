@@ -1,11 +1,11 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
 export function rangedNumber(
   key: string,
   from = Number.NEGATIVE_INFINITY,
   to = Number.POSITIVE_INFINITY,
   inclusiveFrom = true,
-  inclusiveTo = true): Validator<number> {
+  inclusiveTo = true): ValueValidator<number> {
   return function rangedNumberValidator(num: number) {
     if (
       typeof num !== 'number' ||

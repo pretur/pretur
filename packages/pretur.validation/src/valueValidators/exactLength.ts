@@ -1,6 +1,10 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
-export function exactLength(key: string, length: number, acceptEmpty = false): Validator<string> {
+export function exactLength(
+  key: string,
+  length: number,
+  acceptEmpty = false,
+): ValueValidator<string> {
   return function exactLengthValidator(str: string) {
 
     if (acceptEmpty && !str) {

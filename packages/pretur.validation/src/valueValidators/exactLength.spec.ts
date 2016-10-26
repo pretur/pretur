@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { exactLength } from './exactLength';
 
-describe('validator:exactLength', () => {
+describe('value-validator:exactLength', () => {
 
   it('should return null for valid input', () => {
     const validator1 = exactLength('A', 2, false);

@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { minimumLength } from './minimumLength';
 
-describe('validator:minimumLength', () => {
+describe('value-validator:minimumLength', () => {
 
   it('should return null for valid input', () => {
     const validator1 = minimumLength('A', 2, false);

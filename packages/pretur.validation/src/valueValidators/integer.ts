@@ -1,6 +1,6 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
-export function integer(key: string): Validator<number> {
+export function integer(key: string): ValueValidator<number> {
   return function integerValidator(num: number) {
 
     if (typeof num !== 'number' || !isFinite(num) || Math.floor(num) !== num) {

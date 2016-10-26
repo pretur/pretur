@@ -1,10 +1,10 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
 export function minimumLength(
   key: string,
   minimumLength: number,
   acceptEmpty = false
-): Validator<string> {
+): ValueValidator<string> {
   return function minimumLengthValidator(str: string) {
 
     if (acceptEmpty && !str) {

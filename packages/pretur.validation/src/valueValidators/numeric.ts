@@ -1,6 +1,6 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
-export function numeric(key: string): Validator<string> {
+export function numeric(key: string): ValueValidator<string> {
   return function numericValidator(str: string) {
     if (!str) {
       return null;

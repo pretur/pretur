@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { nonEmptyString } from './nonEmptyString';
 
-describe('validator:nonEmptyString', () => {
+describe('value-validator:nonEmptyString', () => {
 
   it('should return null for valid input', () => {
     const validator = nonEmptyString('A');

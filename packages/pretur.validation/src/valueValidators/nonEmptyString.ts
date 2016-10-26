@@ -1,6 +1,6 @@
-import { Validator } from '../validator';
+import { ValueValidator } from '../validator';
 
-export function nonEmptyString(key: string): Validator<string> {
+export function nonEmptyString(key: string): ValueValidator<string> {
   return function nonEmptyStringValidator(str: string) {
     if (!str || !/\S/.test(str)) {
       return {
