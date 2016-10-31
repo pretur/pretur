@@ -11,11 +11,12 @@ export interface ModelDescriptorMap {
 
 export interface Pool {
   models: ModelDescriptorMap;
-  resolve(query: Query): Bluebird<ResolveResult<any>>;
+  resolve(query: Query, context: any): Bluebird<ResolveResult<any>>;
   sync(
     transaction: Sequelize.Transaction,
     item: SynchronizerItem<any>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void>;
 }
 
@@ -30,7 +31,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     ),
   };
 
-  pool.resolve = function resolve(query: Query): Bluebird<ResolveResult<any>> {
+  pool.resolve = function resolve(query: Query, context: any): Bluebird<ResolveResult<any>> {
     if (!query || !query.model) {
       return Bluebird.reject(new Error('query or query.model was not specified.'));
     }
@@ -45,13 +46,14 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
       return Bluebird.reject(new Error(`${query.model} has no resolver`));
     }
 
-    return model.resolver(query);
+    return model.resolver(query, context);
   };
 
   pool.sync = function sync(
     transaction: Sequelize.Transaction,
     item: SynchronizerItem<any>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void> {
     if (!item.model) {
       return Bluebird.reject(new Error('item.model was not specified.'));
@@ -67,7 +69,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
       return Bluebird.reject(new Error(`${item.model} has no synchronizer`));
     }
 
-    return model.synchronizer(transaction, item, rip);
+    return model.synchronizer(transaction, item, rip, context);
   };
 
   descriptors.forEach(d => d.initialize(pool));

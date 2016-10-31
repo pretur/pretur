@@ -24,7 +24,8 @@ export interface Insert<T> {
   (
     transaction: Sequelize.Transaction,
     item: SynchronizerInsert<T>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void>;
 }
 
@@ -32,7 +33,8 @@ export interface Update<T> {
   (
     transaction: Sequelize.Transaction,
     item: SynchronizerUpdate<T>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void>;
 }
 
@@ -40,7 +42,8 @@ export interface Remove<T> {
   (
     transaction: Sequelize.Transaction,
     item: SynchronizerRemove<T>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void>;
 }
 
@@ -48,7 +51,8 @@ export interface Synchronizer<T> {
   (
     transaction: Sequelize.Transaction,
     item: SynchronizerItem<T>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void>;
 }
 
@@ -62,7 +66,8 @@ export interface SynchronizationInterceptor<T> {
     transaction: Sequelize.Transaction,
     item: T,
     rip: ResultItemAppender,
-    pool: Pool
+    pool: Pool,
+    context: any,
   ): Bluebird<boolean>;
 }
 
@@ -77,14 +82,15 @@ export interface BuildSynchronizerOptions<T> {
 
 export function buildSynchronizer<T>(
   spec: Spec<T>,
-  options?: BuildSynchronizerOptions<T>
+  options?: BuildSynchronizerOptions<T>,
 ): UnitializedSynchronizer<T> {
   let pool: Pool = <any>null;
 
   function synchronizer(
     transaction: Sequelize.Transaction,
     item: SynchronizerItem<T>,
-    rip: ResultItemAppender
+    rip: ResultItemAppender,
+    context: any,
   ): Bluebird<void> {
 
     if (item.action === 'INSERT') {
@@ -95,7 +101,8 @@ export function buildSynchronizer<T>(
         (options && options.insertInterceptor) || undefined,
         transaction,
         item,
-        rip
+        rip,
+        context,
       );
     }
 
@@ -107,7 +114,8 @@ export function buildSynchronizer<T>(
         (options && options.updateInterceptor) || undefined,
         transaction,
         item,
-        rip
+        rip,
+        context,
       );
     }
 
@@ -119,7 +127,8 @@ export function buildSynchronizer<T>(
         (options && options.removeInterceptor) || undefined,
         transaction,
         item,
-        rip
+        rip,
+        context,
       );
     }
 
@@ -142,7 +151,8 @@ function insert<T>(
   interceptor: SynchronizationInterceptor<SynchronizerInsert<T>> | undefined,
   transaction: Sequelize.Transaction,
   item: SynchronizerInsert<T>,
-  rip: ResultItemAppender
+  rip: ResultItemAppender,
+  context: any,
 ): Bluebird<void> {
   const model = pool.models[modelName];
 
@@ -172,7 +182,8 @@ function insert<T>(
             model: masterModel.name,
             [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => (<any>data)[master.key] = id,
           },
-          rip
+          rip,
+          context,
         ));
 
         (<any>data)[master.alias] = null;
@@ -238,7 +249,8 @@ function insert<T>(
                   itemId: item.itemId,
                   model: aliasModelMap[alias],
                 },
-                rip
+                rip,
+                context,
               ));
             });
 
@@ -266,7 +278,8 @@ function insert<T>(
                 itemId: item.itemId,
                 model: aliasModelMap[alias],
               },
-              rip
+              rip,
+              context,
             ));
           }
         }
@@ -283,7 +296,7 @@ function insert<T>(
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool).then(resume => {
+    return interceptor(transaction, item, rip, pool, context).then(resume => {
       if (resume) {
         return defaultInsertBehavior();
       }
@@ -300,7 +313,8 @@ function update<T>(
   interceptor: SynchronizationInterceptor<SynchronizerUpdate<T>> | undefined,
   transaction: Sequelize.Transaction,
   item: SynchronizerUpdate<T>,
-  rip: ResultItemAppender
+  rip: ResultItemAppender,
+  context: any,
 ): Bluebird<void> {
   const model = pool.models[modelName];
 
@@ -332,7 +346,7 @@ function update<T>(
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool).then(resume => {
+    return interceptor(transaction, item, rip, pool, context).then(resume => {
       if (resume) {
         return defaultUpdateBehavior();
       }
@@ -349,7 +363,8 @@ function remove<T>(
   interceptor: SynchronizationInterceptor<SynchronizerRemove<T>> | undefined,
   transaction: Sequelize.Transaction,
   item: SynchronizerRemove<T>,
-  rip: ResultItemAppender
+  rip: ResultItemAppender,
+  context: any,
 ): Bluebird<void> {
   const model = pool.models[modelName];
 
@@ -381,7 +396,7 @@ function remove<T>(
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool).then(resume => {
+    return interceptor(transaction, item, rip, pool, context).then(resume => {
       if (resume) {
         return defaultRemoveBehavior();
       }

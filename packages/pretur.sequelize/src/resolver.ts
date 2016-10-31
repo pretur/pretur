@@ -11,11 +11,11 @@ export interface ResolveResult<T> {
 }
 
 export interface Resolver<T> {
-  (query: Query): Bluebird<ResolveResult<T>>;
+  (query: Query, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface CustomResolver<T> {
-  (query: Query, pool: Pool): Bluebird<ResolveResult<T>>;
+  (query: Query, pool: Pool, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface UnitializedResolver<T> {
@@ -24,7 +24,7 @@ export interface UnitializedResolver<T> {
 }
 
 export interface ResolveInterceptor<T> {
-  (query: Query, result: ResolveResult<T>): Bluebird<ResolveResult<T>>;
+  (query: Query, result: ResolveResult<T>, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface BuildResolverOptions<T> {
@@ -38,8 +38,8 @@ export function buildCustomResolver<T>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>null;
 
-  function wrappedResolver(query: Query): Bluebird<ResolveResult<T>> {
-    return resolver(query, pool);
+  function wrappedResolver(query: Query, context: any): Bluebird<ResolveResult<T>> {
+    return resolver(query, pool, context);
   }
 
   function initialize(p: Pool) {
@@ -55,7 +55,7 @@ export function buildResolver<T>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>null;
 
-  function resolver(rawQuery: Query): Bluebird<ResolveResult<T>> {
+  function resolver(rawQuery: Query, context: any): Bluebird<ResolveResult<T>> {
     let query = rawQuery;
 
     if (options && typeof options.queryTransformer === 'function') {
@@ -81,7 +81,7 @@ export function buildResolver<T>(
       const promise = model.findById(query.byId, findOptions).then(data => ({ data: [data] }));
       if (options && options.intercept) {
         const intercept = options.intercept;
-        return promise.then(r => intercept(query, r));
+        return promise.then(r => intercept(query, r, context));
       }
       return promise;
     }
@@ -112,7 +112,7 @@ export function buildResolver<T>(
 
       if (options && options.intercept) {
         const intercept = options.intercept;
-        return promise.then(r => intercept(query, r));
+        return promise.then(r => intercept(query, r, context));
       }
       return promise;
     }
@@ -120,7 +120,7 @@ export function buildResolver<T>(
     const promise = model.findAll(findOptions).then(data => ({ data }));
     if (options && options.intercept) {
       const intercept = options.intercept;
-      return promise.then(r => intercept(query, r));
+      return promise.then(r => intercept(query, r, context));
     }
     return promise;
   }
