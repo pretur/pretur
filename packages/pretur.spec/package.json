@@ -30,8 +30,8 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.spec",
   "dependencies": {
     "@types/lodash": "^4.14.37",
-    "@types/node": "^6.0.45",
-    "lodash": "^4.16.4",
+    "@types/node": "^6.0.46",
+    "lodash": "^4.16.5",
     "pretur.i18n": "^0.5.1",
     "pretur.validation": "^0.3.1"
   },

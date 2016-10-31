@@ -31,7 +31,7 @@
     "@types/lodash": "^4.14.37",
     "@types/sequelize": "^4.0.38",
     "bluebird": "^3.4.6",
-    "lodash": "^4.16.4",
+    "lodash": "^4.16.5",
     "pretur.i18n": "^0.5.1",
     "pretur.spec": "^0.4.1",
     "pretur.sync": "^0.7.0",
