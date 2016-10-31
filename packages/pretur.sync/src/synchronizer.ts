@@ -30,6 +30,7 @@ export type SynchronizerItem<T>
 export interface SynchronizerResult {
   warning?: I18nBundle;
   error?: I18nBundle;
+  generatedId?: number;
   ok: boolean;
   status: number;
   statusText: string;
@@ -37,6 +38,7 @@ export interface SynchronizerResult {
 
 export interface SynchronizerResponseItem {
   itemId: number;
+  generatedId?: number;
   warning?: I18nBundle;
   error?: I18nBundle;
 }
@@ -144,6 +146,7 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
             const responseItem = response.body.filter(e => e.itemId === item.item.itemId)[0];
             item.resolve({
               error: responseItem.error,
+              generatedId: responseItem.generatedId,
               ok: response.ok,
               status: response.status,
               statusText: response.statusText,
