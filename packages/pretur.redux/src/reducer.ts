@@ -18,11 +18,11 @@ export interface AutoReducibleState {
   [substate: string]: Reducible;
 }
 
-export interface Setter<TProps> {
-  (prop: TProps, value: any): void;
+export interface Setter<TState, TProps extends keyof TState> {
+  (prop: TProps, value: TState[TProps]): void;
 }
 
-export interface Unsetter<TProps> {
+export interface Unsetter<TState, TProps extends keyof TState> {
   (prop: TProps): void;
 }
 
@@ -30,34 +30,34 @@ export interface Resetter<TState> {
   (state?: TState): void;
 }
 
-export interface Mutator<TState, TProps extends string> {
+export interface Mutator<TState, TProps extends keyof TState> {
   (
     state: TState,
     action: Action<any, any>,
-    set: Setter<TProps>,
-    unset: Unsetter<TProps>,
+    set: Setter<TState, TProps>,
+    unset: Unsetter<TState, TProps>,
     reset: Resetter<TState>
   ): void;
 }
 
-export function createMutatorReducer<TState, TProps extends string>(
+export function createMutatorReducer<TState, TProps extends keyof TState>(
   initialState: TState,
   mutator: Mutator<TState, TProps>
 ): Reducer<TState> {
   return function reducer(state = initialState, action: Action<any, any>) {
     let modified = false;
 
-    let set: { [prop: string]: any } | null = null;
-    let unset: string[] | null = null;
+    let set: { [prop: string]: TState[TProps] } | null = null;
+    let unset: TProps[] | null = null;
     let reset: TState | null = null;
 
-    function setter(prop: string, value: any) {
-      if (value !== (<any>state)[prop]) {
+    function setter(prop: TProps, value: TState[TProps]) {
+      if (value !== state![prop]) {
         modified = true;
         if (!set) {
           set = {};
         }
-        set[prop] = value;
+        set[<any>prop] = value;
 
         if (unset) {
           const unsetIndex = unset.indexOf(prop);
@@ -69,8 +69,8 @@ export function createMutatorReducer<TState, TProps extends string>(
       }
     }
 
-    function unsetter(prop: string) {
-      if (state.hasOwnProperty(prop)) {
+    function unsetter(prop: TProps) {
+      if (state!.hasOwnProperty(<any>prop)) {
         modified = true;
         if (!unset) {
           unset = [];
@@ -89,17 +89,17 @@ export function createMutatorReducer<TState, TProps extends string>(
       }
     }
 
-    mutator(state, action, setter, unsetter, resetter);
+    mutator(state!, action, setter, unsetter, resetter);
 
     if (!modified) {
-      return state;
+      return state!;
     }
 
     if (reset) {
       return reset;
     }
 
-    const next = assign({}, state, set);
+    const next = assign<TState>({}, state, set);
 
     if (Array.isArray(unset)) {
       unset.forEach(prop => delete (<any>next)[prop]);

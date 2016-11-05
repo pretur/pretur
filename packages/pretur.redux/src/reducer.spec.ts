@@ -81,20 +81,12 @@ describe('createAutoReducer', () => {
 
 });
 
-interface States {
-  a: string;
-  b: number;
-  c?: any;
-}
-
-type Props = 'a' | 'b' | 'c';
-
 describe('createMutatorReducer', () => {
 
   it('should create a mutatorReducer that properly initializes state', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(initialState, () => null);
+    const reducer = createMutatorReducer(initialState, () => null);
 
     const state = reducer(undefined, { type: 'INIT' });
     expect(state).to.be.equals(initialState);
@@ -103,7 +95,7 @@ describe('createMutatorReducer', () => {
   it('should create a mutatorReducer that returns the same object if unmodified', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(initialState, (_, __, set) => {
+    const reducer = createMutatorReducer(initialState, (_, __, set) => {
       set('a', ' ');
       set('b', 1);
     });
@@ -117,7 +109,7 @@ describe('createMutatorReducer', () => {
   it('should create a mutatorReducer that correctly sets the props', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(initialState, (_, __, set) => {
+    const reducer = createMutatorReducer(initialState, (_, __, set) => {
       set('a', 'foo');
       set('b', 2);
     });
@@ -131,9 +123,9 @@ describe('createMutatorReducer', () => {
   });
 
   it('should create a mutatorReducer that correctly sets the props when not defined', () => {
-    const initialState = { a: ' ', b: 1 };
+    const initialState: {a: string; b: number; c?: boolean} = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(initialState, (_, __, set) => {
+    const reducer = createMutatorReducer(initialState, (_, __, set) => {
       set('c', true);
     });
 
@@ -145,7 +137,7 @@ describe('createMutatorReducer', () => {
   it('should create a mutatorReducer that correctly unsets the props', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(initialState, (_, __, set, unset) => {
+    const reducer = createMutatorReducer(initialState, (_, __, set, unset) => {
       set('a', 1);
       unset('a');
     });
@@ -159,7 +151,7 @@ describe('createMutatorReducer', () => {
   it('should create a mutatorReducer that correctly resets a prop after it was unset', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(initialState, (_, __, set, unset) => {
+    const reducer = createMutatorReducer(initialState, (_, __, set, unset) => {
       unset('a');
       set('a', 'foo');
     });
@@ -173,7 +165,7 @@ describe('createMutatorReducer', () => {
   it('should create a mutatorReducer that correctly resets the state', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer<States, Props>(
+    const reducer = createMutatorReducer(
       initialState,
       (_, action, set, __, reset) => {
         set('a', 'foo');
@@ -194,7 +186,7 @@ describe('createMutatorReducer', () => {
     const initialState = { a: ' ', b: 1 };
     const otherState = { a: 'bar', b: 2 };
 
-    const reducer = createMutatorReducer<States, Props>(
+    const reducer = createMutatorReducer(
       initialState,
       (_, action, set, __, reset) => {
         set('a', 'foo');
