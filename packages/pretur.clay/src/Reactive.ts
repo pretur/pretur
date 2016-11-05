@@ -170,8 +170,7 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
       this.reactiveSet.appendSynchronizationModels(synchronizer);
 
       if (autoRefresh) {
-        synchronizer
-          .listen()
+        synchronizer.listen()
           .then(() => dispatch(CLAY_REACTIVE_REFRESH.create.unicast(this.uniqueId)));
       }
 
@@ -181,6 +180,19 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
       dispatch(CLAY_DATA_DECAY.create.broadcast());
     }
     return false;
+  }
+
+  public skipValidityAndSync(
+    dispatch: Dispatch,
+    synchronizer: Synchronizer,
+    autoRefresh = true
+  ): void {
+    this.reactiveSet.appendSynchronizationModels(synchronizer);
+
+    if (autoRefresh) {
+      synchronizer.listen()
+        .then(() => dispatch(CLAY_REACTIVE_REFRESH.create.unicast(this.uniqueId)));
+    }
   }
 
   protected cloneOverride(clone: this): void {
