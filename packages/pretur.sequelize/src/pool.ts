@@ -17,7 +17,7 @@ export interface Pool {
     item: SynchronizerItem<any>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<void>;
+  ): Bluebird<number | void>;
 }
 
 export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
@@ -54,7 +54,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     item: SynchronizerItem<any>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<void> {
+  ): Bluebird<number | void> {
     if (!item.model) {
       return Bluebird.reject(new Error('item.model was not specified.'));
     }

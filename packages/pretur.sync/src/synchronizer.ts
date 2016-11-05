@@ -47,8 +47,7 @@ export type SynchronizerRequest = SynchronizerItem<any>[];
 export type SynchronizerResponse = SynchronizerResponseItem[];
 
 export interface SynchronizeListenerData {
-  errors: I18nBundle[];
-  warnings: I18nBundle[];
+  items: SynchronizerResponseItem[];
   ok: boolean;
   status: number;
   statusText: string;
@@ -154,12 +153,8 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
             });
           });
 
-          const errors = <I18nBundle[]>response.body.map(item => item.error).filter(Boolean);
-          const warnings = <I18nBundle[]>response.body.map(item => item.warning).filter(Boolean);
-
           listeners.forEach(listener => listener.resolve({
-            errors,
-            warnings,
+            items: response.body,
             ok: response.ok,
             status: response.status,
             statusText: response.statusText,
