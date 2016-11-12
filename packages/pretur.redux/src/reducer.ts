@@ -40,6 +40,8 @@ export interface Mutator<TState, TProps extends keyof TState> {
   ): void;
 }
 
+const hasOwn = Object.prototype.hasOwnProperty;
+
 export function createMutatorReducer<TState, TProps extends keyof TState>(
   initialState: TState,
   mutator: Mutator<TState, TProps>
@@ -47,17 +49,17 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
   return function reducer(state = initialState, action: Action<any, any>) {
     let modified = false;
 
-    let set: { [prop: string]: TState[TProps] } | null = null;
-    let unset: TProps[] | null = null;
+    let set: TState | null = null!;
+    let unset: TProps[] | null = <any>null;
     let reset: TState | null = null;
 
     function setter(prop: TProps, value: TState[TProps]) {
       if (value !== state![prop]) {
         modified = true;
         if (!set) {
-          set = {};
+          set = <TState>{};
         }
-        set[<any>prop] = value;
+        set[prop] = value;
 
         if (unset) {
           const unsetIndex = unset.indexOf(prop);
@@ -70,7 +72,7 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
     }
 
     function unsetter(prop: TProps) {
-      if (state!.hasOwnProperty(<any>prop)) {
+      if (hasOwn.call(state, prop)) {
         modified = true;
         if (!unset) {
           unset = [];
@@ -102,7 +104,7 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
     const next = assign<TState>({}, state, set);
 
     if (Array.isArray(unset)) {
-      unset.forEach(prop => delete (<any>next)[prop]);
+      unset.forEach(prop => delete next[prop]);
     }
 
     return next;
