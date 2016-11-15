@@ -1,6 +1,6 @@
 {
   "name": "pretur.spec",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "MDA model specification builder for code generation",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -32,8 +32,8 @@
     "@types/lodash": "^4.14.39",
     "@types/node": "^6.0.47",
     "lodash": "^4.17.0",
-    "pretur.i18n": "^0.9.0",
-    "pretur.validation": "^0.9.0"
+    "pretur.i18n": "^0.9.3",
+    "pretur.validation": "^0.9.3"
   },
   "devDependencies": {
     "typescript": "next"

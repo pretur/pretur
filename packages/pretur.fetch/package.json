@@ -1,6 +1,6 @@
 {
   "name": "pretur.fetch",
-  "version": "0.9.0",
+  "version": "0.9.3",
   "description": "es6 style github fetch",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
