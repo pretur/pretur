@@ -32,8 +32,8 @@ function validateOwnder(owner: Owner): boolean {
 }
 
 export function ownersIntersect(first: Owner, second: Owner): boolean {
-  const firstAsArray = castArray(first);
-  const secondAsArray = castArray(second);
+  const firstAsArray = castArray(first || undefined);
+  const secondAsArray = castArray(second || undefined);
 
   return intersection(firstAsArray, secondAsArray).filter(validateOwnder).length > 0;
 }
