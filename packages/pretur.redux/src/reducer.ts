@@ -18,24 +18,24 @@ export interface AutoReducibleState {
   [substate: string]: Reducible;
 }
 
-export interface Setter<TState, TProps extends keyof TState> {
-  (prop: TProps, value: TState[TProps]): void;
+export interface Setter<TState> {
+  <K extends keyof TState>(prop: K, value: TState[K]): void;
 }
 
-export interface Unsetter<TState, TProps extends keyof TState> {
-  (prop: TProps): void;
+export interface Unsetter<TState> {
+  (prop: keyof TState): void;
 }
 
 export interface Resetter<TState> {
   (state?: TState): void;
 }
 
-export interface Mutator<TState, TProps extends keyof TState> {
+export interface Mutator<TState> {
   (
     state: TState,
     action: Action<any, any>,
-    set: Setter<TState, TProps>,
-    unset: Unsetter<TState, TProps>,
+    set: Setter<TState>,
+    unset: Unsetter<TState>,
     reset: Resetter<TState>
   ): void;
 }
@@ -44,7 +44,7 @@ const hasOwn = Object.prototype.hasOwnProperty;
 
 export function createMutatorReducer<TState, TProps extends keyof TState>(
   initialState: TState,
-  mutator: Mutator<TState, TProps>
+  mutator: Mutator<TState>
 ): Reducer<TState> {
   return function reducer(state = initialState, action: Action<any, any>) {
     let modified = false;

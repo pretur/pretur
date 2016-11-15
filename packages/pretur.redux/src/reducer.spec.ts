@@ -138,7 +138,7 @@ describe('createMutatorReducer', () => {
     const initialState = { a: ' ', b: 1 };
 
     const reducer = createMutatorReducer(initialState, (_, __, set, unset) => {
-      set('a', 1);
+      set('a', <any>1);
       unset('a');
     });
 

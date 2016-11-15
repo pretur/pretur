@@ -14,11 +14,7 @@ export interface OperationResponse<T> {
   errors?: I18nBundle[];
 }
 
-export interface OperationResult<T> {
-  name: string;
-  data?: T;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
+export interface OperationResult<T> extends OperationResponse<T> {
   ok: boolean;
   status: number;
   statusText: string;
