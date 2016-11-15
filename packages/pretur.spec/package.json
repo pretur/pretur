@@ -1,6 +1,6 @@
 {
   "name": "pretur.spec",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "MDA model specification builder for code generation",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
