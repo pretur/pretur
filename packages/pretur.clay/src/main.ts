@@ -2,7 +2,7 @@ import * as actions from './actions';
 export {actions};
 
 export {default as UniqueReducible} from './UniqueReducible';
-export {default as Reactive} from './Reactive';
+export {default as Reactive, autoRefreshTransparent} from './Reactive';
 
 export {default as Record} from './data/Record';
 export {default as Set} from './data/Set';
