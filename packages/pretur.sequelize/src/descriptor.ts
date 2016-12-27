@@ -19,8 +19,8 @@ export interface AliasKeyMap {
   [alias: string]: string;
 }
 
-export interface FieldWhereBuilders {
-  [field: string]: (filter: any) => FieldWhereClause;
+export type FieldWhereBuilders<T> = {
+  [P in keyof T]: (value: T[P]) => FieldWhereClause;
 }
 
 export interface ModelDescriptor<T> {
@@ -35,17 +35,17 @@ export interface ModelDescriptor<T> {
   allowedAttributes: string[];
   mutableAttributes: string[];
   defaultOrder: [string, 'ASC' | 'DESC'];
-  fieldWhereBuilders?: FieldWhereBuilders;
+  fieldWhereBuilders?: FieldWhereBuilders<T>;
   sanitizeAttributes(attributes?: string[] | string): string[];
   initialize(pool: Pool): void;
 }
 
-export interface BuildModelDescriptorOptions {
+export interface BuildModelDescriptorOptions<T> {
   sequelizeModel?: UninitializedSequelizeModel<any, any>;
   resolver?: UnitializedResolver<any>;
   synchronizer?: UnitializedSynchronizer<any>;
   defaultOrder?: [string, 'ASC' | 'DESC'];
-  fieldWhereBuilders?: FieldWhereBuilders;
+  fieldWhereBuilders?: FieldWhereBuilders<T>;
   allowedAttributes?: string[];
   allowedMutableAttributes?: string[];
   allowedUpdateAttributes?: string[];
@@ -53,7 +53,7 @@ export interface BuildModelDescriptorOptions {
 
 export function buildModelDescriptor<T>(
   spec: Spec<T>,
-  options?: BuildModelDescriptorOptions
+  options?: BuildModelDescriptorOptions<T>
 ): ModelDescriptor<T> {
   const primaryAttribute = spec.attributeArray.filter(a => a.primary)[0];
 
