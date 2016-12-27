@@ -12,6 +12,13 @@ import {
   CLAY_REACTIVE_SET_COUNT,
 } from './actions';
 
+const AUTO_REFRESH_TRANSPARENT_KEY = '@@auto_refresh_transparent';
+
+export function autoRefreshTransparent<A extends Action<any, any>>(action: A): A {
+  (<any>action)[AUTO_REFRESH_TRANSPARENT_KEY] = true;
+  return action;
+}
+
 export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Record<T>, T>
   extends UniqueReducible {
   private reactiveSet: TSet;
@@ -103,7 +110,11 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
       clone.reactiveSet = newSet;
       clone.reactiveQuerier = newQuerier;
 
-      if (this.buildFetcher && newQuerier !== this.reactiveQuerier) {
+      if (
+        !(<any>action)[AUTO_REFRESH_TRANSPARENT_KEY] &&
+        this.buildFetcher &&
+        newQuerier !== this.reactiveQuerier
+      ) {
         clearTimeout(clone.autoRefreshTimerId);
 
         const refresh = function refresh() {
