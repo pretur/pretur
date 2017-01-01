@@ -16,7 +16,7 @@ export interface Relations {
   recursive: Relation[];
   manyToMany: Relation[];
   injective: Relation[];
-  byAlias(alias: string): Relation;
+  byAlias(alias: string): Relation | undefined;
 }
 
 function nonVirtual(relation: Relation) {
