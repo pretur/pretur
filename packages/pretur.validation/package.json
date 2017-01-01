@@ -33,6 +33,6 @@
     "pretur.i18n": "^0.9.3"
   },
   "devDependencies": {
-    "typescript": "next"
+    "typescript": "^2.2.0-dev.20161231"
   }
 }

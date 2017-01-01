@@ -30,10 +30,10 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.i18n",
   "dependencies": {
-    "@types/node": "^6.0.47",
+    "@types/node": "^6.0.55",
     "messageformat": "^1.0.2"
   },
   "devDependencies": {
-    "typescript": "next"
+    "typescript": "^2.2.0-dev.20161231"
   }
 }
