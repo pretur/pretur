@@ -118,7 +118,7 @@ describe('spec', () => {
     expect(Object.keys(spec.relations.manyToMany).length).to.be.equals(1);
     expect(Object.keys(spec.relations.injective).length).to.be.equals(2);
 
-    expect(spec.relations.byAlias('hello').model).to.be.equals('H');
+    expect(spec.relations.byAlias('hello')!.model).to.be.equals('H');
   });
 
   it('should properly compute the non virtual relations object', () => {
@@ -154,7 +154,7 @@ describe('spec', () => {
     expect(Object.keys(spec.nonVirtualRelations.manyToMany).length).to.be.equals(0);
     expect(Object.keys(spec.nonVirtualRelations.injective).length).to.be.equals(2);
 
-    expect(spec.nonVirtualRelations.byAlias('hello').model).to.be.equals('H');
+    expect(spec.nonVirtualRelations.byAlias('hello')!.model).to.be.equals('H');
 
     model.relations.push(<any>{ alias: 'world', model: 'W', type: 'INJECTIVE', virtual: true });
 
