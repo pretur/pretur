@@ -3,6 +3,9 @@
     "target": "es5",
     "module": "commonjs",
     "jsx": "react",
+    "declaration": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "strictNullChecks": true,
     "pretty": true,
     "noUnusedParameters": true,
@@ -12,7 +15,9 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "alwaysStrict": true,
+    "importHelpers": true
   },
   "exclude": [
     "node_modules",

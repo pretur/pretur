@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -39,6 +39,7 @@
     "handlebars": "^4.0.6",
     "inflection": "^1.10.0",
     "lodash": "^4.17.4",
+    "tslib": "^1.4.0",
     "watchr": "^3.0.1"
   },
   "devDependencies": {

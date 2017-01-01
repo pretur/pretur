@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --module commonjs --removeComments",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -31,6 +31,7 @@
     "@types/node": "^6.0.55",
     "bluebird": "^3.4.7",
     "node-fetch": "^1.6.3",
+    "tslib": "^1.4.0",
     "whatwg-fetch": "^2.0.1"
   },
   "devDependencies": {

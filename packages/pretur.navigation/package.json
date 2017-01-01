@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --jsx react --target es5 --module commonjs --removeComments",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -33,7 +33,8 @@
     "immutable": "^3.8.1",
     "local-storage": "^1.4.2",
     "pretur.i18n": "^0.9.3",
-    "pretur.redux": "^0.9.3"
+    "pretur.redux": "^0.9.3",
+    "tslib": "^1.4.0"
   },
   "peerDependencies": {
     "react": "^15.0.0"

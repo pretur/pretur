@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --target es5 --module commonjs --removeComments",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -34,7 +34,8 @@
     "pretur.i18n": "^0.9.3",
     "pretur.spec": "^0.9.4",
     "pretur.sync": "^0.9.3",
-    "sequelize": "^4.0.0-2"
+    "sequelize": "^4.0.0-2",
+    "tslib": "^1.4.0"
   },
   "devDependencies": {
     "typescript": "^2.2.0-dev.20161231"

@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc -d src/main.ts --target es5 --rootDir src --outDir lib --target es5 --module commonjs --removeComments",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -32,7 +32,8 @@
     "@types/node": "^6.0.55",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.9.3",
-    "pretur.validation": "^0.9.3"
+    "pretur.validation": "^0.9.3",
+    "tslib": "^1.4.0"
   },
   "devDependencies": {
     "typescript": "^2.2.0-dev.20161231"
