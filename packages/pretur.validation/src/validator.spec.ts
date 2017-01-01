@@ -1,25 +1,33 @@
 /// <reference types="mocha" />
 
+import * as Bluebird from 'bluebird';
 import { expect } from 'chai';
-import { combine, getError, deepValidator } from './validator';
+import {
+  combineValueValidator,
+  getError,
+  deepValidator,
+  ValueValidationError,
+  ValidationError,
+} from './validator';
 
 const noop = () => null;
+const asyncNoop = () => Bluebird.resolve(null);
 
 describe('combine', () => {
 
-  it('should return always-valid validator if non provided', () => {
-    const validator = combine();
-    expect(validator({})).to.be.null;
+  it('should return always-valid validator if non provided', async (): Bluebird<void> => {
+    const validator = combineValueValidator();
+    expect(await validator({})).to.be.null;
   });
 
-  it('should return bail out with the first failed validation', () => {
-    const validator = combine(
-      (v: number) => v > 1 ? null : { key: 'A' },
-      (v: number) => v > 2 ? null : { key: 'B' },
-      (v: number) => v > 3 ? null : [{ key: 'C' }, { key: 'D' }],
-      (v: number) => v > 4 ? null : { key: 'E' }
+  it('should return bail out with the first failed validation', async (): Bluebird<void> => {
+    const validator = combineValueValidator(
+      async (v: number): Bluebird<ValueValidationError> => v > 1 ? null : { key: 'A' },
+      async (v: number): Bluebird<ValueValidationError> => v > 2 ? null : { key: 'B' },
+      async (v: number): Bluebird<ValueValidationError> => v > 3 ? null : [{ key: 'C' }, { key: 'D' }],
+      async (v: number): Bluebird<ValueValidationError> => v > 4 ? null : { key: 'E' }
     );
-    expect(validator(3)).to.deep.equal([{ key: 'C' }, { key: 'D' }, { key: 'E' }]);
+    expect(await validator(3)).to.deep.equal([{ key: 'C' }, { key: 'D' }, { key: 'E' }]);
   });
 
 });
@@ -63,77 +71,115 @@ describe('getError', () => {
 
 describe('deepValidator', () => {
 
-  it('should properly validate passing proper arguments when provided only a map', () => {
-    expect(
-      deepValidator<{ a: number }>(
-        { a: (v: number, k, o) => ({ data: { k, o, v }, key: 'A' }) }
-      )({ a: 1 })
-    ).to.deep.equal({ a: { data: { k: 'a', o: { a: 1 }, v: 1 }, key: 'A' } });
+  it(
+    'should properly validate passing proper arguments when provided only a map',
+    async (): Bluebird<void> => {
+      expect(
+        await deepValidator<{ a: number }>(
+          {
+            a: async (v, k, o): Bluebird<ValueValidationError> => ({
+              data: { k, o, v },
+              key: 'A',
+            }),
+          },
+        )({ a: 1 })
+      ).to.deep.equal({ a: { data: { k: 'a', o: { a: 1 }, v: 1 }, key: 'A' } });
 
-    expect(
-      deepValidator<{ a: number, b?: number }>(
-        { a: () => ({ key: 'A' }), b: v => v ? { key: 'B' } : null }
-      )({ a: 1 })
-    ).to.deep.equal({ a: { key: 'A' } });
+      expect(
+        await deepValidator<{ a: number, b?: number }>(
+          {
+            a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
+            b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : null,
+          }
+        )({ a: 1 })
+      ).to.deep.equal({ a: { key: 'A' } });
 
-    expect(
-      deepValidator<{ a: number, b: number }>(
-        { a: () => ({ key: 'A' }), b: v => v ? { key: 'B' } : null }
-      )({ a: 1, b: 2 })
-    ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
+      expect(
+        await deepValidator<{ a: number, b: number }>(
+          {
+            a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
+            b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : null,
+          }
+        )({ a: 1, b: 2 })
+      ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
+    },
+  );
 
-  });
+  it(
+    'should properly validate passing proper arguments to prop validator',
+    async (): Bluebird<void> => {
+      expect(await deepValidator((value, key, obj) => {
+        expect(value).to.be.oneOf([1, 2]);
+        expect(key).to.be.oneOf(['a', 'b']);
+        expect(obj).to.deep.equal({ a: 1, b: 2 });
+        return { data: value, key: 'E' };
+      })({ a: 1, b: 2 })).to.deep.equal({ a: { data: 1, key: 'E' }, b: { data: 2, key: 'E' } });
+    },
+  );
 
-  it('should properly validate passing proper arguments to prop validator', () => {
-    expect(deepValidator((value, key, obj) => {
-      expect(value).to.be.oneOf([1, 2]);
-      expect(key).to.be.oneOf(['a', 'b']);
-      expect(obj).to.deep.equal({ a: 1, b: 2 });
-      return { data: value, key: 'E' };
-    })({ a: 1, b: 2 })).to.deep.equal({ a: { data: 1, key: 'E' }, b: { data: 2, key: 'E' } });
-  });
-
-  it('should properly validate when provided a self and prop validator', () => {
-    expect(deepValidator(() => ({ key: 'A' }), noop)({ a: 1 })).to.deep.equal({ key: 'A' });
-    expect(deepValidator(({ a }) => ({ key: a }), noop)({ a: 'A' })).to.deep.equal({ key: 'A' });
-    expect(deepValidator(noop, noop)({ a: 1 })).to.be.null;
-    expect(
-      deepValidator(noop, (_, k) => ({ key: k }))({ a: 'A' })
-    ).to.deep.equal({ a: { key: 'a' } });
-  });
-
-  it('should properly validate when provided a self validator with a map', () => {
-    expect(deepValidator(({ a }) => ({ key: a }), {})({ a: 'A' })).to.deep.equal({ key: 'A' });
-    expect(
-      deepValidator<{ a: string, b: string }>(
+  it(
+    'should properly validate when provided a self and prop validator',
+    async (): Bluebird<void> => {
+      expect(await deepValidator(
+        async (): Bluebird<ValidationError> => ({ key: 'A' }),
         noop,
-        { a: v => ({ key: v }), b: v => ({ key: v }) },
-      )({ a: 'A', b: 'B' })
-    ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
-  });
-
-  it('should properly validate when provided a self and prop validator with a map', () => {
-    expect(deepValidator(({ a }) => ({ key: a }), noop, {})({ a: 'A' })).to.deep.equal({ key: 'A' });
-    expect(
-      deepValidator<{ a: string, b: string }>(
+      )({ a: 1 })).to.deep.equal({ key: 'A' });
+      expect(await deepValidator(
+        ({ a }) => Bluebird.resolve({ key: a }),
         noop,
-        () => ({ key: 'C' }),
-        { a: v => ({ key: v }) },
-      )({ a: 'A', b: 'B' })
-    ).to.deep.equal({ a: { key: 'A' }, b: { key: 'C' } });
-  });
+      )({ a: 'A' })).to.deep.equal({ key: 'A' });
+      expect(await deepValidator(asyncNoop, noop)({ a: 1 })).to.be.null;
+      expect(
+        await deepValidator(asyncNoop, (_, k) => ({ key: k }))({ a: 'A' })
+      ).to.deep.equal({ a: { key: 'a' } });
+    },
+  );
 
-  it('should be properly nested', () => {
-    deepValidator<{ a: any, b: { fail: boolean, c: any, d: any }, e: null }>({
-      a: () => ({ key: 'A' }),
+  it(
+    'should properly validate when provided a self validator with a map',
+    async (): Bluebird<void> => {
+      expect(await deepValidator(
+        ({ a }) => Bluebird.resolve({ key: a }),
+        {},
+      )({ a: 'A' })).to.deep.equal({ key: 'A' });
+      expect(
+        await deepValidator<{ a: string, b: string }>(asyncNoop, {
+          a: async (v): Bluebird<ValidationError> => ({ key: v }),
+          b: async (v): Bluebird<ValidationError> => ({ key: v }),
+        })({ a: 'A', b: 'B' })
+      ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
+    },
+  );
+
+  it(
+    'should properly validate when provided a self and prop validator with a map',
+    async (): Bluebird<void> => {
+      expect(await deepValidator(
+        ({ a }) => Bluebird.resolve({ key: a }),
+        asyncNoop,
+        {},
+      )({ a: 'A' })).to.deep.equal({ key: 'A' });
+      expect(
+        await deepValidator<{ a: string, b: string }>(
+          asyncNoop,
+          async (): Bluebird<ValidationError> => ({ key: 'C' }),
+          { a: async (v): Bluebird<ValidationError> => ({ key: v }) },
+        )({ a: 'A', b: 'B' })
+      ).to.deep.equal({ a: { key: 'A' }, b: { key: 'C' } });
+    },
+  );
+
+  it('should be properly nested', async (): Bluebird<void> => {
+    await deepValidator<{ a: any, b: { fail: boolean, c: any, d: any }, e: null }>({
+      a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
       b: deepValidator<{ fail: boolean, c: any, d: any }>(
-        ({ fail }) => fail ? { key: 'FAIL' } : null,
+        async ({ fail }): Bluebird<ValidationError> => fail ? { key: 'FAIL' } : null,
         {
-          c: () => ({ key: 'C' }),
-          d: (v, key, obj) => [{ key: v }, { key }, { data: obj, key: 'D' }],
+          c: async (): Bluebird<ValidationError> => ({ key: 'C' }),
+          d: async (v, key, obj): Bluebird<ValidationError> => [{ key: v }, { key }, { data: obj, key: 'D' }],
         },
       ),
-      e: deepValidator<null>(noop, v => ({ key: v }))
+      e: deepValidator<null>(asyncNoop, async (v): Bluebird<ValidationError> => ({ key: v }))
     });
   });
 

@@ -1,3 +1,4 @@
+import * as Bluebird from 'bluebird';
 import { I18nBundle } from 'pretur.i18n';
 
 export type PropertyPath = number | string | (number | string)[];
@@ -65,15 +66,15 @@ export function getError(error: ValidationError, path: PropertyPath): ValueValid
 }
 
 export interface Validator<T> {
-  (value: T): ValidationError;
+  (value: T): Bluebird<ValidationError>;
 }
 
 export interface ValueValidator<T> {
-  (value: T): ValueValidationError;
+  (value: T): Bluebird<ValueValidationError>;
 }
 
 export interface PropValidator<T, K extends keyof T> {
-  (value: T[K], key: K, obj: T): ValidationError;
+  (value: T[K], key: K, obj: T): Bluebird<ValidationError>;
 }
 
 export type DeepValidatorMap<T> = {
@@ -120,9 +121,9 @@ export function deepValidator<T>(
 
   }
 
-  return function deepValidator(value: T): ValidationError {
+  return async function deepValidator(value: T): Bluebird<ValidationError> {
     if (self) {
-      const error = self(value);
+      const error = await self(value);
       if (error) {
         return error;
       }
@@ -130,34 +131,42 @@ export function deepValidator<T>(
 
     if (value) {
       let result: ObjectValidationError | null = null;
-      const mapKeys = map ? Object.keys(map) : null;
 
-      if (mapKeys) {
-        mapKeys.forEach(key => {
-          const error = (<any>map)[key]((<any>value)[key], key, value);
-          if (error) {
-            if (!result) {
-              result = {};
+      if (map) {
+        for (const mapKey of Object.keys(map)) {
+          const key = <keyof T>mapKey;
+          const validator = map[key];
+
+          if (validator) {
+            const error = await validator(value[key], key, value);
+            if (error) {
+              if (!result) {
+                result = {};
+              }
+              result[key] = error;
             }
-            result[key] = error;
           }
-        });
+        }
       }
 
       if (prop) {
-        Object.keys(value).forEach((key: keyof T) => {
+        const mapKeys = map && Object.keys(map);
+
+        for (const valueKey of Object.keys(value)) {
+          const key = <keyof T>valueKey;
+
           if (mapKeys && mapKeys.indexOf(key) !== -1) {
-            return;
+            continue;
           }
 
-          const error = prop!(value[key], key, value);
+          const error = await prop(value[key], key, value);
           if (error) {
             if (!result) {
               result = {};
             }
             result[key] = error;
           }
-        });
+        }
       }
 
       return result;
@@ -168,12 +177,12 @@ export function deepValidator<T>(
 
 }
 
-export function combine<T>(...validators: ValueValidator<T>[]): ValueValidator<T> {
-  return function combinedValidator(value: T): ValueValidationError {
+export function combineValueValidator<T>(...validators: ValueValidator<T>[]): ValueValidator<T> {
+  return async function combinedValidator(value: T): Bluebird<ValueValidationError> {
     let result: I18nBundle[] | null = null;
-    for (let i = 0; i < validators.length; i++) {
-      if (typeof validators[i] === 'function') {
-        const error = validators[i](value);
+    for (const validator of validators) {
+      if (typeof validator === 'function') {
+        const error = await validator(value);
         if (error) {
           if (!result) {
             result = [];

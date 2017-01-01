@@ -1,7 +1,8 @@
-import { ValueValidator } from '../validator';
+import * as Bluebird from 'bluebird';
+import { ValueValidator, ValueValidationError } from '../validator';
 
 export function numeric(key: string): ValueValidator<string> {
-  return function numericValidator(str: string) {
+  return async function numericValidator(str: string): Bluebird<ValueValidationError> {
     if (!str) {
       return null;
     }
