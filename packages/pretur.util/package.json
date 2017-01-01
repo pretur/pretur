@@ -1,0 +1,37 @@
+{
+  "name": "pretur.util",
+  "version": "0.9.3",
+  "description": "Utility type-safe methods",
+  "main": "lib/main.js",
+  "typings": "lib/main.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "pretur",
+    "util",
+    "utility"
+  ],
+  "author": "Ali Taheri Moghaddar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pretur/pretur"
+  },
+  "bugs": {
+    "url": "https://github.com/pretur/pretur/issues"
+  },
+  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.util",
+  "dependencies": {
+    "@types/lodash": "^4.14.45",
+    "lodash": "^4.17.4",
+    "tslib": "^1.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^2.2.0-dev.20161231"
+  }
+}
