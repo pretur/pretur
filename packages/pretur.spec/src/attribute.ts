@@ -1,5 +1,3 @@
-/// <reference types="node" />
-
 import { Validator } from 'pretur.validation';
 import { assign, chain } from 'lodash';
 import { Model, Owner } from './model';
