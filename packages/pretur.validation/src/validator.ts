@@ -72,38 +72,41 @@ export interface ValueValidator<T> {
   (value: T): ValueValidationError;
 }
 
-export interface PropValidator<T> {
-  (value: T, prop: string, obj: any): ValidationError;
+export interface PropValidator<T, K extends keyof T> {
+  (value: T[K], key: K, obj: T): ValidationError;
 }
 
-export interface DeepValidatorMap {
-  [prop: string]: PropValidator<any>;
+export type DeepValidatorMap<T> = {
+  [P in keyof T]?: PropValidator<T, P>;
 }
 
-export function deepValidator<T>(map: DeepValidatorMap): Validator<T>;
-export function deepValidator<T, U>(props: PropValidator<U>): Validator<T>;
-export function deepValidator<T, U>(self: Validator<T>, props: PropValidator<U>): Validator<T>;
-export function deepValidator<T, U>(self: Validator<T>, map: DeepValidatorMap): Validator<T>;
-export function deepValidator<T, U>(
+export function deepValidator<T>(
   self: Validator<T>,
-  props: PropValidator<U>,
-  map: DeepValidatorMap,
+  props: PropValidator<T, keyof T>,
+  map: DeepValidatorMap<T>,
 ): Validator<T>;
-export function deepValidator<T, U>(
-  selfOrPropOrMap?: Validator<T> | PropValidator<U> | DeepValidatorMap,
-  propOrMap?: PropValidator<U> | DeepValidatorMap,
-  lastMap?: DeepValidatorMap,
+export function deepValidator<T>(
+  self: Validator<T>,
+  props: PropValidator<T, keyof T>,
+): Validator<T>;
+export function deepValidator<T>(self: Validator<T>, map: DeepValidatorMap<T>): Validator<T>;
+export function deepValidator<T>(props: PropValidator<T, keyof T>): Validator<T>;
+export function deepValidator<T>(map: DeepValidatorMap<T>): Validator<T>;
+export function deepValidator<T>(
+  selfOrPropOrMap?: Validator<T> | PropValidator<T, keyof T> | DeepValidatorMap<T>,
+  propOrMap?: PropValidator<T, keyof T> | DeepValidatorMap<T>,
+  lastMap?: DeepValidatorMap<T>,
 ): Validator<T> {
   let self: Validator<T> | null = null;
-  let prop: PropValidator<U> | null = null;
-  let map: DeepValidatorMap | null = null;
+  let prop: PropValidator<T, keyof T> | null = null;
+  let map: DeepValidatorMap<T> | null = null;
 
   if (selfOrPropOrMap && typeof selfOrPropOrMap === 'object') {
     map = selfOrPropOrMap;
   } else if (typeof selfOrPropOrMap === 'function') {
 
     if (propOrMap === undefined && lastMap === undefined) {
-      prop = <PropValidator<U>>selfOrPropOrMap;
+      prop = <PropValidator<T, keyof T>>selfOrPropOrMap;
     } else if (propOrMap && typeof propOrMap === 'object') {
       self = <Validator<T>>selfOrPropOrMap;
       map = propOrMap;
@@ -131,7 +134,7 @@ export function deepValidator<T, U>(
 
       if (mapKeys) {
         mapKeys.forEach(key => {
-          const error = map![key]((<any>value)[key], key, value);
+          const error = (<any>map)[key]((<any>value)[key], key, value);
           if (error) {
             if (!result) {
               result = {};
@@ -142,12 +145,12 @@ export function deepValidator<T, U>(
       }
 
       if (prop) {
-        Object.keys(value).forEach(key => {
+        Object.keys(value).forEach((key: keyof T) => {
           if (mapKeys && mapKeys.indexOf(key) !== -1) {
             return;
           }
 
-          const error = prop!((<any>value)[key], key, value);
+          const error = prop!(value[key], key, value);
           if (error) {
             if (!result) {
               result = {};

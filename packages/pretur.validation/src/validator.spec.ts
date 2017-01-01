@@ -65,15 +65,21 @@ describe('deepValidator', () => {
 
   it('should properly validate passing proper arguments when provided only a map', () => {
     expect(
-      deepValidator({ a: (v, k, o) => ({ data: { k, o, v }, key: 'A' }) })({ a: 1 })
+      deepValidator<{ a: number }>(
+        { a: (v: number, k, o) => ({ data: { k, o, v }, key: 'A' }) }
+      )({ a: 1 })
     ).to.deep.equal({ a: { data: { k: 'a', o: { a: 1 }, v: 1 }, key: 'A' } });
 
     expect(
-      deepValidator({ a: () => ({ key: 'A' }), b: v => v ? { key: 'B' } : null })({ a: 1 })
+      deepValidator<{ a: number, b?: number }>(
+        { a: () => ({ key: 'A' }), b: v => v ? { key: 'B' } : null }
+      )({ a: 1 })
     ).to.deep.equal({ a: { key: 'A' } });
 
     expect(
-      deepValidator({ a: () => ({ key: 'A' }), b: v => v ? { key: 'B' } : null })({ a: 1, b: 2 })
+      deepValidator<{ a: number, b: number }>(
+        { a: () => ({ key: 'A' }), b: v => v ? { key: 'B' } : null }
+      )({ a: 1, b: 2 })
     ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
 
   });
@@ -89,7 +95,7 @@ describe('deepValidator', () => {
 
   it('should properly validate when provided a self and prop validator', () => {
     expect(deepValidator(() => ({ key: 'A' }), noop)({ a: 1 })).to.deep.equal({ key: 'A' });
-    expect(deepValidator(({a}) => ({ key: a }), noop)({ a: 'A' })).to.deep.equal({ key: 'A' });
+    expect(deepValidator(({ a }) => ({ key: a }), noop)({ a: 'A' })).to.deep.equal({ key: 'A' });
     expect(deepValidator(noop, noop)({ a: 1 })).to.be.null;
     expect(
       deepValidator(noop, (_, k) => ({ key: k }))({ a: 'A' })
@@ -97,27 +103,37 @@ describe('deepValidator', () => {
   });
 
   it('should properly validate when provided a self validator with a map', () => {
-    expect(deepValidator(({a}) => ({ key: a }), {})({ a: 'A' })).to.deep.equal({ key: 'A' });
+    expect(deepValidator(({ a }) => ({ key: a }), {})({ a: 'A' })).to.deep.equal({ key: 'A' });
     expect(
-      deepValidator(noop, { a: v => ({ key: v }), b: v => ({ key: v }) })({ a: 'A', b: 'B' })
+      deepValidator<{ a: string, b: string }>(
+        noop,
+        { a: v => ({ key: v }), b: v => ({ key: v }) },
+      )({ a: 'A', b: 'B' })
     ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
   });
 
   it('should properly validate when provided a self and prop validator with a map', () => {
-    expect(deepValidator(({a}) => ({ key: a }), noop, {})({ a: 'A' })).to.deep.equal({ key: 'A' });
+    expect(deepValidator(({ a }) => ({ key: a }), noop, {})({ a: 'A' })).to.deep.equal({ key: 'A' });
     expect(
-      deepValidator(noop, () => ({ key: 'C' }), { a: v => ({ key: v }) })({ a: 'A', b: 'B' })
+      deepValidator<{ a: string, b: string }>(
+        noop,
+        () => ({ key: 'C' }),
+        { a: v => ({ key: v }) },
+      )({ a: 'A', b: 'B' })
     ).to.deep.equal({ a: { key: 'A' }, b: { key: 'C' } });
   });
 
   it('should be properly nested', () => {
-    const validator = deepValidator({
+    deepValidator<{ a: any, b: { fail: boolean, c: any, d: any }, e: null }>({
       a: () => ({ key: 'A' }),
-      b: deepValidator(({fail}) => fail ? { key: 'FAIL' } : null, {
-        c: () => ({ key: 'C' }),
-        d: (v, key, obj) => [{ key: v }, { key }, { data: obj, key: 'D' }],
-      }),
-      e: deepValidator(noop, v => ({ key: v }))
+      b: deepValidator<{ fail: boolean, c: any, d: any }>(
+        ({ fail }) => fail ? { key: 'FAIL' } : null,
+        {
+          c: () => ({ key: 'C' }),
+          d: (v, key, obj) => [{ key: v }, { key }, { data: obj, key: 'D' }],
+        },
+      ),
+      e: deepValidator<null>(noop, v => ({ key: v }))
     });
   });
 
