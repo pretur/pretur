@@ -31,7 +31,7 @@ describe('model', () => {
           expect(relation.injective).to.be.a('function');
           expect(relation.master).to.be.a('function');
           expect(relation.recursive).to.be.a('function');
-        }
+        },
       );
 
       model.initialize();
@@ -45,7 +45,7 @@ describe('model', () => {
           multicolumnUniqueIndex('a', 'b');
           multicolumnUniqueIndex('c', 'd');
           multicolumnUniqueIndex('e', 'f', 'g');
-        }
+        },
       );
 
       model.initialize();
@@ -62,7 +62,7 @@ describe('model', () => {
         ({validator}) => {
           expect(validator).to.be.a('function');
           validator(noop);
-        }
+        },
       );
 
       model.initialize();

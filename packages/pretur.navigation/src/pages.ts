@@ -28,7 +28,7 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
   component: ComponentClass<TProps> | StatelessComponent<TProps>,
   reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
   titleKey: string,
-  dynamic = false
+  dynamic = false,
 ): Page<TProps, TState, TReducerBuilderData> {
   return {
     component,
@@ -83,7 +83,7 @@ export class Pages {
   constructor(root: PageTreeRoot) {
     const descriptors = buildDescriptorsFromTree(root);
     this.pages = Map<string, PageDescriptor<any, any, any>>(
-      descriptors.pages.map(d => [d.path, d])
+      descriptors.pages.map(d => [d.path, d]),
     );
     this.folders = Map<string, PageFolderDescriptor>(descriptors.folders.map(d => [d.path, d]));
     this.calculatedPathTree = descriptors.pathTree;
@@ -135,7 +135,7 @@ export class Pages {
   }
 
   public buildInstance<TProps, TState, TReducerBuilderData>(
-    instantiationData: PageInstantiationData<TReducerBuilderData>
+    instantiationData: PageInstantiationData<TReducerBuilderData>,
   ): PageInstance<TProps, TState, TReducerBuilderData> {
     if (!this.hasPage(instantiationData.path)) {
       throw new Error(`No descriptor exists for the provided path (${instantiationData.path})`);

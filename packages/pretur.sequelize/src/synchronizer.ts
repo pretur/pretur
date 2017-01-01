@@ -238,7 +238,7 @@ function insert<T>(
               const nestedInsertData = assign(
                 {},
                 nestedItem,
-                { [aliasKeyMap[alias]]: instance[model.primaryKey] }
+                { [aliasKeyMap[alias]]: instance[model.primaryKey] },
               );
 
               details.push(targetModel.synchronizer(
@@ -267,7 +267,7 @@ function insert<T>(
             const nestedInsertData = assign(
               {},
               nested,
-              { [aliasKeyMap[alias]]: instance[model.primaryKey] }
+              { [aliasKeyMap[alias]]: instance[model.primaryKey] },
             );
 
             details.push(targetModel.synchronizer(

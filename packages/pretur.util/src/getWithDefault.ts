@@ -77,7 +77,7 @@ export function getWithDefault<T, K1 extends keyof T, K2 extends keyof T[K1]>(
   obj: T, defaultValue: T[K1][K2], path1: K1, path2: K2,
 ): T[K1][K2];
 export function getWithDefault<T, K1 extends keyof T>(
-  obj: T, defaultValue: T[K1], path: K1
+  obj: T, defaultValue: T[K1], path: K1,
 ): T[K1];
 export function getWithDefault<T>(obj: T, defaultValue: any, ...paths: string[]): any {
   return get(obj, paths, defaultValue);

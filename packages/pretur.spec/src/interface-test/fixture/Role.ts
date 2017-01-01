@@ -12,5 +12,5 @@ export default createModel<Role>(
   ({attribute}) => {
     attribute.primaryKey({ name: 'id' });
     attribute({ name: 'name', type: DataTypes.STRING() });
-  }
+  },
 );

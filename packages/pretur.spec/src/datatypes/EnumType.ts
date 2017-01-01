@@ -21,7 +21,7 @@ export default class EnumType<TKey extends string> extends AbstractType {
   public static create<TKey extends string>(
     name: string,
     values: ([TKey, string] | EnumValue<TKey>)[],
-    typeName?: string
+    typeName?: string,
   ): EnumType<TKey> {
     return new EnumType<TKey>(name, values, typeName);
   }
@@ -29,7 +29,7 @@ export default class EnumType<TKey extends string> extends AbstractType {
   private constructor(
     name: string,
     values: ([TKey, string] | EnumValue<TKey>)[],
-    typeName = 'string'
+    typeName = 'string',
   ) {
     super();
 

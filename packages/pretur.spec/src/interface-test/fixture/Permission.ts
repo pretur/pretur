@@ -18,5 +18,5 @@ export default createModel<Permission<any>>(
   ({attribute}) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });
     attribute({ name: 'name', type: DataTypes.STRING() });
-  }
+  },
 );

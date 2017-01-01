@@ -34,7 +34,7 @@ export interface BuildResolverOptions<T> {
 
 export function buildCustomResolver<T>(
   _: Spec<T>,
-  resolver: CustomResolver<T>
+  resolver: CustomResolver<T>,
 ): UnitializedResolver<T> {
   let pool: Pool = <any>null;
 
@@ -51,7 +51,7 @@ export function buildCustomResolver<T>(
 
 export function buildResolver<T>(
   spec: Spec<T>,
-  options?: BuildResolverOptions<T>
+  options?: BuildResolverOptions<T>,
 ): UnitializedResolver<T> {
   let pool: Pool = <any>null;
 
@@ -213,7 +213,7 @@ function buildNestedInclude(
   pool: Pool,
   queryInclude: QueryInclude | undefined,
   orderChain: string[] | undefined,
-  model: string
+  model: string,
 ): Sequelize.IncludeOptions[] | null {
   const aliasModelMap = pool.models[model].aliasModelMap;
 
@@ -251,7 +251,7 @@ function buildNestedInclude(
           pool,
           (typeof subQuery === 'object' && subQuery.include) || undefined,
           (Array.isArray(orderChain) && orderChain.slice(1)) || undefined,
-          aliasModelMap[alias]
+          aliasModelMap[alias],
         );
 
         if (nestedInclude) {

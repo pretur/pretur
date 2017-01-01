@@ -21,7 +21,7 @@ export interface AliasKeyMap {
 
 export type FieldWhereBuilders<T> = {
   [P in keyof T]: (value: T[P]) => FieldWhereClause;
-}
+};
 
 export interface ModelDescriptor<T> {
   spec: Spec<T>;
@@ -53,7 +53,7 @@ export interface BuildModelDescriptorOptions<T> {
 
 export function buildModelDescriptor<T>(
   spec: Spec<T>,
-  options?: BuildModelDescriptorOptions<T>
+  options?: BuildModelDescriptorOptions<T>,
 ): ModelDescriptor<T> {
   const primaryAttribute = spec.attributeArray.filter(a => a.primary)[0];
 
@@ -69,7 +69,7 @@ export function buildModelDescriptor<T>(
       m[r.alias] = r.model;
       return m;
     },
-    <AliasModelMap>{}
+    <AliasModelMap>{},
   );
 
   const aliasKeyMap = spec.relationArray.reduce(
@@ -77,7 +77,7 @@ export function buildModelDescriptor<T>(
       m[r.alias] = r.key;
       return m;
     },
-    <AliasKeyMap>{}
+    <AliasKeyMap>{},
   );
 
   const allowedAttributes

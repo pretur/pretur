@@ -35,7 +35,7 @@ export interface ActionDescriptor<TPayload, TMeta> {
 const TRANSFORMER_ERROR = 'The provided transformer is not a function';
 
 export function composeTransformers<A extends Action<any, any>>(
-  transformers?: ActionTransformer | ActionTransformer[]
+  transformers?: ActionTransformer | ActionTransformer[],
 ): ActionTransformer {
   if (!transformers) {
     return (action: A) => action;
@@ -69,7 +69,7 @@ export function composeTransformers<A extends Action<any, any>>(
 
 export function createActionDescriptor<TPayload, TMeta>(
   type: string,
-  transformers?: ActionTransformer | ActionTransformer[]
+  transformers?: ActionTransformer | ActionTransformer[],
 ): ActionDescriptor<TPayload, TMeta> {
   const transform = composeTransformers(transformers);
   return {
@@ -91,12 +91,12 @@ export interface TargetedActionDescriptorCreator<TPayload, TMeta> {
   unicast(
     target: ValidTargetType,
     payload?: TPayload,
-    meta?: TMeta
+    meta?: TMeta,
   ): TargetedAction<TPayload, TMeta>;
   multicast(
     targets: ValidTargetType[],
     payload?: TPayload,
-    meta?: TMeta
+    meta?: TMeta,
   ): TargetedAction<TPayload, TMeta>;
   broadcast(payload?: TPayload, meta?: TMeta): TargetedAction<TPayload, TMeta>;
 }
@@ -109,7 +109,7 @@ export interface TargetedActionDescriptor<TPayload, TMeta> {
 
 export function createTargetedActionDescriptor<TPayload, TMeta>(
   type: string,
-  transformers?: ActionTransformer | ActionTransformer[]
+  transformers?: ActionTransformer | ActionTransformer[],
 ): TargetedActionDescriptor<TPayload, TMeta> {
   const transform = composeTransformers(transformers);
   return {
@@ -169,7 +169,7 @@ export function createAsyncAction<TPayload, TResult>(
   resolve: (data?: TPayload) => Bluebird<TResult>,
   success: ActionDescriptor<TResult, any>,
   fail?: ActionDescriptor<any, any>,
-  attempt?: ActionDescriptor<TPayload, any>
+  attempt?: ActionDescriptor<TPayload, any>,
 ): AsyncActionDescriptor<TPayload> {
   return {
     create: (payload, meta) => dispatch => {

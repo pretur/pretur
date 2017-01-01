@@ -233,7 +233,7 @@ describe('createAsyncAction', () => {
     const SUCCESS = createActionDescriptor<number, void>('SUCCESS');
     const ATTEMPT = createActionDescriptor<void, void>('ATTEMPT');
     const ACTIONASYNC = createAsyncAction<void, number>(
-      () => Bluebird.resolve(1), SUCCESS, null!, ATTEMPT
+      () => Bluebird.resolve(1), SUCCESS, null!, ATTEMPT,
     );
     const act = ACTIONASYNC.create();
 
@@ -252,7 +252,7 @@ describe('createAsyncAction', () => {
     const SUCCESS = createActionDescriptor<number, void>('SUCCESS');
     const FAIL = createActionDescriptor<Error, void>('FAIL');
     const ACTIONASYNC = createAsyncAction<void, number>(
-      () => Bluebird.reject(new Error()), SUCCESS, FAIL
+      () => Bluebird.reject(new Error()), SUCCESS, FAIL,
     );
     const act = ACTIONASYNC.create();
 

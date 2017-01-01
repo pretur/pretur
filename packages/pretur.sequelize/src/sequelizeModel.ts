@@ -27,7 +27,7 @@ export interface BuildSequelizeModelOptions<TInstance, TAttributes> {
 export function buildSequelizeModel<TInstance, TAttributes>(
   spec: Spec<TAttributes>,
   sequelize: Sequelize.Sequelize,
-  options?: BuildSequelizeModelOptions<TInstance, TAttributes>
+  options?: BuildSequelizeModelOptions<TInstance, TAttributes>,
 ): UninitializedSequelizeModel<TInstance, TAttributes> {
   const attributes: { [attrib: string]: Sequelize.DefineAttributeColumnOptions } = {};
 

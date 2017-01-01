@@ -108,7 +108,7 @@ export function appendRelation(model: Model<any>, ...relations: Relation[]): voi
     if (model.relations.filter(r => r.alias === relation.alias).length > 0) {
       throw new Error(
         `relation from ${model.name} to ${relation.model} as ${relation.alias} ` +
-        `cannot be applied because there is already another relation with the same alias.`
+        `cannot be applied because there is already another relation with the same alias.`,
       );
     }
 
@@ -124,21 +124,21 @@ export function appendRelation(model: Model<any>, ...relations: Relation[]): voi
       default:
         throw new Error(
           `${relation.type} is not a valid relation type. ` +
-          `Please check ${model.name}.${relation.alias}.`
+          `Please check ${model.name}.${relation.alias}.`,
         );
     }
 
     if (relation.type === 'MANY_TO_MANY' && !relation.through) {
       throw new Error(
         `Many to many relations need a join table. ` +
-        `Please check ${model.name}.${relation.alias}`
+        `Please check ${model.name}.${relation.alias}`,
       );
     }
 
     if (relation.type === 'RECURSIVE' && relation.model !== model.name) {
       throw new Error(
         `Recursive relations must reference their own model. ` +
-        `Please check ${model.name}.${relation.alias}`
+        `Please check ${model.name}.${relation.alias}`,
       );
     }
 
@@ -153,7 +153,7 @@ export function appendRelation(model: Model<any>, ...relations: Relation[]): voi
         default:
           throw new Error(
             `${mod} is not a valid modification action type. ` +
-            `Please check ${model.name}.${relation.alias}.`
+            `Please check ${model.name}.${relation.alias}.`,
           );
       }
     };
@@ -199,7 +199,7 @@ function inheritors<T>(model: Model<any>, options: InheritorsOptions<T>) {
   const typeEnum = DataTypes.ENUM(
     options.typeIdentifierEnumTypeName || model.name + 'SubclassType',
     typeEnumValues,
-    typeEnumValues.map(t => `'${t.name}'`).join(' | ')
+    typeEnumValues.map(t => `'${t.name}'`).join(' | '),
   );
 
   appendAttribute(model, {

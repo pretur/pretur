@@ -23,5 +23,5 @@ export default createModel<User>(
       ownAliasOnTarget: 'users',
       target: RoleModel,
     });
-  }
+  },
 );

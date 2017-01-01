@@ -24,8 +24,11 @@ describe('combine', () => {
     const validator = combineValueValidator(
       async (v: number): Bluebird<ValueValidationError> => v > 1 ? null : { key: 'A' },
       async (v: number): Bluebird<ValueValidationError> => v > 2 ? null : { key: 'B' },
-      async (v: number): Bluebird<ValueValidationError> => v > 3 ? null : [{ key: 'C' }, { key: 'D' }],
-      async (v: number): Bluebird<ValueValidationError> => v > 4 ? null : { key: 'E' }
+      async (v: number): Bluebird<ValueValidationError> => v > 3 ? null : [
+        { key: 'C' },
+        { key: 'D' },
+      ],
+      async (v: number): Bluebird<ValueValidationError> => v > 4 ? null : { key: 'E' },
     );
     expect(await validator(3)).to.deep.equal([{ key: 'C' }, { key: 'D' }, { key: 'E' }]);
   });
@@ -82,7 +85,7 @@ describe('deepValidator', () => {
               key: 'A',
             }),
           },
-        )({ a: 1 })
+        )({ a: 1 }),
       ).to.deep.equal({ a: { data: { k: 'a', o: { a: 1 }, v: 1 }, key: 'A' } });
 
       expect(
@@ -90,8 +93,8 @@ describe('deepValidator', () => {
           {
             a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
             b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : null,
-          }
-        )({ a: 1 })
+          },
+        )({ a: 1 }),
       ).to.deep.equal({ a: { key: 'A' } });
 
       expect(
@@ -99,8 +102,8 @@ describe('deepValidator', () => {
           {
             a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
             b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : null,
-          }
-        )({ a: 1, b: 2 })
+          },
+        )({ a: 1, b: 2 }),
       ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
     },
   );
@@ -130,7 +133,7 @@ describe('deepValidator', () => {
       )({ a: 'A' })).to.deep.equal({ key: 'A' });
       expect(await deepValidator(asyncNoop, noop)({ a: 1 })).to.be.null;
       expect(
-        await deepValidator(asyncNoop, (_, k) => ({ key: k }))({ a: 'A' })
+        await deepValidator(asyncNoop, (_, k) => ({ key: k }))({ a: 'A' }),
       ).to.deep.equal({ a: { key: 'a' } });
     },
   );
@@ -146,7 +149,7 @@ describe('deepValidator', () => {
         await deepValidator<{ a: string, b: string }>(asyncNoop, {
           a: async (v): Bluebird<ValidationError> => ({ key: v }),
           b: async (v): Bluebird<ValidationError> => ({ key: v }),
-        })({ a: 'A', b: 'B' })
+        })({ a: 'A', b: 'B' }),
       ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
     },
   );
@@ -164,7 +167,7 @@ describe('deepValidator', () => {
           asyncNoop,
           async (): Bluebird<ValidationError> => ({ key: 'C' }),
           { a: async (v): Bluebird<ValidationError> => ({ key: v }) },
-        )({ a: 'A', b: 'B' })
+        )({ a: 'A', b: 'B' }),
       ).to.deep.equal({ a: { key: 'A' }, b: { key: 'C' } });
     },
   );
@@ -176,10 +179,14 @@ describe('deepValidator', () => {
         async ({ fail }): Bluebird<ValidationError> => fail ? { key: 'FAIL' } : null,
         {
           c: async (): Bluebird<ValidationError> => ({ key: 'C' }),
-          d: async (v, key, obj): Bluebird<ValidationError> => [{ key: v }, { key }, { data: obj, key: 'D' }],
+          d: async (v, key, obj): Bluebird<ValidationError> => [
+            { key: v },
+            { key },
+            { data: obj, key: 'D' },
+          ],
         },
       ),
-      e: deepValidator<null>(asyncNoop, async (v): Bluebird<ValidationError> => ({ key: v }))
+      e: deepValidator<null>(asyncNoop, async (v): Bluebird<ValidationError> => ({ key: v })),
     });
   });
 

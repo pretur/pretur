@@ -172,7 +172,7 @@ describe('createMutatorReducer', () => {
         if (action.type === 'RESET') {
           reset();
         }
-      }
+      },
     );
 
     const first = reducer(undefined, { type: 'INIT' });
@@ -193,7 +193,7 @@ describe('createMutatorReducer', () => {
         if (action.type === 'RESET') {
           reset(otherState);
         }
-      }
+      },
     );
 
     const first = reducer(undefined, { type: 'INIT' });

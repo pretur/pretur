@@ -87,7 +87,7 @@ export function buildSynchronizerCreator(endPointUrl: string): SynchronizerCreat
 
     function addIdAction(
       item: SynchronizerItem<any>,
-      action: 'UPDATE' | 'INSERT' | 'REMOVE'
+      action: 'UPDATE' | 'INSERT' | 'REMOVE',
     ): SynchronizerItem<any> {
       id += 1;
       item.itemId = id;

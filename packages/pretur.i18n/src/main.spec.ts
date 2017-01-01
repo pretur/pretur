@@ -37,7 +37,7 @@ describe('buildCompiler', () => {
     expect(formatter({ HUMAN: 'jack' })).to.be.equals('hello jack');
 
     const formatter2 = messageFormatCompile<{ PLACE: number }>(
-      'hello {PLACE, selectordinal, other{#th}} human'
+      'hello {PLACE, selectordinal, other{#th}} human',
     );
     expect(formatter2({ PLACE: 4 })).to.be.equals('hello 4th human');
   });
@@ -198,7 +198,7 @@ describe('internationalize', () => {
     () => {
       const i18n = internationalize(english, french);
       expect(i18n.buildFormatter('fr')('C')()).to.be.equals('bye');
-    }
+    },
   );
 
 });

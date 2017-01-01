@@ -74,7 +74,7 @@ describe('buildDescriptorsFromTree', () => {
   it('should properly propagate hidden', () => {
     expect(Array.prototype.concat(
       descriptors.folders.filter(f => !!f.hidden).map(f => f.path),
-      descriptors.pages.filter(p => p.hidden).map(p => p.path)
+      descriptors.pages.filter(p => p.hidden).map(p => p.path),
     )).to.deep.equal([
       'a',
       'a/b',

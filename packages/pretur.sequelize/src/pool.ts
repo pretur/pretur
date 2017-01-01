@@ -27,7 +27,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
         m[d.name] = d;
         return m;
       },
-      <ModelDescriptorMap>{}
+      <ModelDescriptorMap>{},
     ),
   };
 

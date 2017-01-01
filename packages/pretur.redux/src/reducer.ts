@@ -44,7 +44,7 @@ const hasOwn = Object.prototype.hasOwnProperty;
 
 export function createMutatorReducer<TState, TProps extends keyof TState>(
   initialState: TState,
-  mutator: Mutator<TState>
+  mutator: Mutator<TState>,
 ): Reducer<TState> {
   return function reducer(state = initialState, action: Action<any, any>) {
     let modified = false;
@@ -112,7 +112,7 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
 }
 
 export function createAutoReducer<TState extends AutoReducibleState>(
-  initialState: TState
+  initialState: TState,
 ): Reducer<TState> {
   const properties = Object.keys(initialState);
 

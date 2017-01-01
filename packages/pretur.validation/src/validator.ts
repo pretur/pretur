@@ -79,7 +79,7 @@ export interface PropValidator<T, K extends keyof T> {
 
 export type DeepValidatorMap<T> = {
   [P in keyof T]?: PropValidator<T, P>;
-}
+};
 
 export function deepValidator<T>(
   self: Validator<T>,

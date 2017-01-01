@@ -4,7 +4,7 @@ import { ValueValidator, ValueValidationError } from '../validator';
 export function minimumLength(
   key: string,
   minimumLength: number,
-  acceptEmpty = false
+  acceptEmpty = false,
 ): ValueValidator<string> {
   return async function minimumLengthValidator(str: string): Bluebird<ValueValidationError> {
 

@@ -22,22 +22,22 @@ export interface Language {
 export function format(
   language: Language,
   fallback: Language | null,
-  bundle: I18nBundle
+  bundle: I18nBundle,
 ): string;
 export function format(
   language: Language,
   fallback: Language | null,
-  key: string
+  key: string,
 ): I18nStringBuilder<string, any>;
 export function format(
   language: Language,
   fallback: Language | null,
-  nothing: null
+  nothing: null,
 ): null;
 export function format(
   language: Language,
   fallback: Language | null,
-  bundleOrKeyOrNothing: I18nBundle | string | null
+  bundleOrKeyOrNothing: I18nBundle | string | null,
 ): string | I18nStringBuilder<string, any> | null {
   if (process.env.NODE_ENV !== 'production' && !language) {
     throw new TypeError('language must be provided');
@@ -74,7 +74,7 @@ export function format(
 
 export function buildFormatter<F extends I18nFormatter>(
   language: Language,
-  fallback: Language | null = null
+  fallback: Language | null = null,
 ): F {
   return <F>((input: I18nBundle | string | null) => format(language, fallback, <any>input));
 }
@@ -87,7 +87,7 @@ export interface Compiler {
   constant(str: string): I18nStringBuilder<string, void>;
   callback<D>(callback: (data?: D) => string): I18nStringBuilder<string, D>;
   messageFormat<D extends MessageFormatParameters>(
-    formatString: string
+    formatString: string,
   ): I18nStringBuilder<string, D>;
   describe<T>(tree: T): LanguageDescriptor<T>;
 }
@@ -157,7 +157,7 @@ export interface Internationalizer<T> {
 
 export function internationalize<T>(
   mainLanguageDescriptor: LanguageDescriptor<T>,
-  ...otherLanguageDescriptors: LanguageDescriptor<any>[]
+  ...otherLanguageDescriptors: LanguageDescriptor<any>[],
 ): Internationalizer<T> {
   const languages: LanguageMap = {};
 

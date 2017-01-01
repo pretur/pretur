@@ -141,7 +141,7 @@ export class Navigator implements Reducible {
           const instancesArray = this.instances.toArray();
           instancesArray[toRemoveIndex] = newPage;
           newInstances = OrderedMap<string, PageInstance<any, any, any>>(
-            instancesArray.map(i => [i.mutex, i])
+            instancesArray.map(i => [i.mutex, i]),
           );
         }
 
@@ -228,7 +228,7 @@ export class Navigator implements Reducible {
             }
 
             return null;
-          }).filter(Boolean)
+          }).filter(Boolean),
         );
       }
 
@@ -294,7 +294,7 @@ export class Navigator implements Reducible {
   public replace(
     dispatch: Dispatch,
     toRemoveMutex: string,
-    toInsertData: PageInstantiationData<any>
+    toInsertData: PageInstantiationData<any>,
   ) {
     dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this.prefix, { toRemoveMutex, toInsertData }));
   }

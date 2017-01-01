@@ -70,7 +70,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: null, type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: null, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -78,7 +78,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', key: null, type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', key: null, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -86,11 +86,11 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' }),
       ).not.to.throw();
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -98,7 +98,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'BLAH' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'BLAH' }),
       ).to.throw();
     });
 
@@ -106,7 +106,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'MANY_TO_MANY' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'MANY_TO_MANY' }),
       ).to.throw();
     });
 
@@ -114,7 +114,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', model: 'B', type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', model: 'B', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -122,11 +122,11 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', onDelete: 'A', type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', onDelete: 'A', type: 'RECURSIVE' }),
       ).to.throw();
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', onUpdate: 'A', type: 'RECURSIVE' })
+        appendRelation(model, baseRelation, <any>{ alias: 'a', onUpdate: 'A', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -139,7 +139,7 @@ describe('relation', () => {
       it('should properly initialize an inheritors builder', () => {
         const main = mockModel('Main');
         expect(() =>
-          createRelationBuilder(main).inheritors
+          createRelationBuilder(main).inheritors,
         ).not.to.throw();
       });
 
@@ -288,7 +288,7 @@ describe('relation', () => {
       it('should properly initialize a master builder', () => {
         const main = mockModel('Main');
         expect(() =>
-          createRelationBuilder(main).inheritors
+          createRelationBuilder(main).inheritors,
         ).not.to.throw();
       });
 
@@ -368,7 +368,7 @@ describe('relation', () => {
       it('should properly initialize a injective builder', () => {
         const main = mockModel('Main');
         expect(() =>
-          createRelationBuilder(main).inheritors
+          createRelationBuilder(main).inheritors,
         ).not.to.throw();
       });
 
@@ -448,7 +448,7 @@ describe('relation', () => {
       it('should properly initialize a recursive builder', () => {
         const main = mockModel('Main');
         expect(() =>
-          createRelationBuilder(main).recursive
+          createRelationBuilder(main).recursive,
         ).not.to.throw();
       });
 

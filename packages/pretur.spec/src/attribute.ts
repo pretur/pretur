@@ -80,7 +80,7 @@ export function validateAttribute(attribute: Attribute<any>) {
       attribute.validator(attribute.defaultValue) !== null
     ) {
       throw new Error(
-        `The validator does not validate the defaultValue of ${attribute.defaultValue}`
+        `The validator does not validate the defaultValue of ${attribute.defaultValue}`,
       );
     }
   }
@@ -100,7 +100,7 @@ export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>
 
     if (chain(model.attributes).map('name').includes(attribute.name).value()) {
       throw new Error(
-        `Attribute ${attribute.name} of type ${attribute.type.typeName} was added twice.`
+        `Attribute ${attribute.name} of type ${attribute.type.typeName} was added twice.`,
       );
     }
 

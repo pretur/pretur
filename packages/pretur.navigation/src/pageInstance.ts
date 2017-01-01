@@ -15,7 +15,7 @@ export class PageInstance<TProps, TState, TReducerBuilderData> implements Reduci
 
   constructor(
     descriptor: PageDescriptor<TProps, TState, TReducerBuilderData> | null,
-    instantiationData: PageInstantiationData<TReducerBuilderData> | null
+    instantiationData: PageInstantiationData<TReducerBuilderData> | null,
   ) {
     if (descriptor === null || instantiationData === null) {
       return;

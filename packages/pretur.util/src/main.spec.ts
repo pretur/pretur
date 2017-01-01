@@ -17,7 +17,7 @@ interface A {
 const objBuilder: () => A = () => ({
   a: {
     b: [{ c: 'foo' }, { d: 1 }],
-    c: ['bar', 'baz']
+    c: ['bar', 'baz'],
   },
   b: [{ c: [{ d: true }] }],
   c: { 1: { e: { f: { 10: '10' } } }, 2: { e: { f: { 20: '20' } } } },

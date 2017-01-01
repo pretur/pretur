@@ -44,7 +44,7 @@ export interface ModelBuilder<T> {
 
 export function createModel<T>(
   options: CreateModelOptions,
-  initializer?: (modelBuilder: ModelBuilder<T>) => void
+  initializer?: (modelBuilder: ModelBuilder<T>) => void,
 ): UninitializedStateModel<T> {
   const model: Model<T> = {
     attributes: [],

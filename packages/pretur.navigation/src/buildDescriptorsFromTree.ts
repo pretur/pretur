@@ -36,7 +36,7 @@ export function buildDescriptorsFromTree(root: PageTreeRoot): Descriptors {
   const folderContents = buildFolderContents(folders.map(byPath), pages.map(byPath));
   const filteredFolderContents = buildFolderContents(
     folders.filter(visible).map(byPath),
-    pages.filter(visible).map(byPath)
+    pages.filter(visible).map(byPath),
   );
 
   return { pages, folders, pathTree, folderContents, filteredPathTree, filteredFolderContents };
@@ -49,7 +49,7 @@ function buildPageFolderTree(
   pathTree: PathTree,
   filteredPathTree: PathTree,
   chain: string[],
-  hidden: boolean
+  hidden: boolean,
 ): void {
 
   pathTree.push(chain.join('/'));

@@ -221,7 +221,7 @@ describe('joinModel', () => {
           multicolumnUniqueIndex('a', 'b');
           multicolumnUniqueIndex('c', 'd');
           multicolumnUniqueIndex('e', 'f', 'g');
-        }
+        },
       );
 
       model.initialize();

@@ -24,7 +24,7 @@ describe('createStore', () => {
     const obj2 = {};
     const store = createStore<any>((s = obj, {type}) => type === 'T' ? obj2 : s);
     return store.dispatch(
-      (dispatch) => Bluebird.delay(0).then(() => dispatch({ type: 'T' }))
+      (dispatch) => Bluebird.delay(0).then(() => dispatch({ type: 'T' })),
     ).then(() => expect(store.getState()).to.be.equals(obj2));
   });
 

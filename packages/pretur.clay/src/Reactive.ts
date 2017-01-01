@@ -33,7 +33,7 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
     set: TSet | null,
     query: Query | null,
     buildFetcher: (() => Fetcher) | null = null,
-    autoRefreshDebounceTime = 300
+    autoRefreshDebounceTime = 300,
   ) {
     super();
     if (set === null) {
@@ -175,7 +175,7 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
     dispatch: Dispatch,
     synchronizer: Synchronizer,
     autoDecay = true,
-    autoRefresh = true
+    autoRefresh = true,
   ): boolean {
     if (this.valid) {
       this.reactiveSet.appendSynchronizationModels(synchronizer);
@@ -196,7 +196,7 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
   public skipValidityAndSync(
     dispatch: Dispatch,
     synchronizer: Synchronizer,
-    autoRefresh = true
+    autoRefresh = true,
   ): void {
     this.reactiveSet.appendSynchronizationModels(synchronizer);
 

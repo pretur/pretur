@@ -19,15 +19,15 @@ export function createStore<TState>(topLevelReducer: Reducer<TState>, log = fals
       applyMiddleware(
         thunkMiddleware,
         emissionMiddleware,
-        createLoggerMiddleware()
-      )
+        createLoggerMiddleware(),
+      ),
     );
   }
   return reduxCreateStore(
     topLevelReducer,
     applyMiddleware(
       thunkMiddleware,
-      emissionMiddleware
-    )
+      emissionMiddleware,
+    ),
   );
 }

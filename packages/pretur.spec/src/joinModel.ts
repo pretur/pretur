@@ -37,7 +37,7 @@ export function joinee(
   model: UninitializedStateModel<any>,
   aliasOnJoin: string,
   aliasOnTarget: string,
-  options?: JoineeOptions
+  options?: JoineeOptions,
 ): Joinee {
   if (process.env.NODE_ENV !== 'production') {
     if (!model) {
@@ -75,7 +75,7 @@ export interface CreateJoinModelOptions {
 
 export function createJoinModel<T>(
   options: CreateJoinModelOptions,
-  initializer?: (modelBuilder: JoinModelBuilder) => void
+  initializer?: (modelBuilder: JoinModelBuilder) => void,
 ): UninitializedStateModel<T> {
 
   const firstJoinee = options.firstJoinee;
