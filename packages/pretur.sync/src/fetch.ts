@@ -15,30 +15,24 @@ export interface FetchResponse<TBody> {
   statusText: string;
 }
 
-export function fetch<TBody>(options: FetchOptions): Bluebird<FetchResponse<TBody>> {
-  return preturFetch(options.url, {
+export async function fetch<TBody>(options: FetchOptions): Bluebird<FetchResponse<TBody>> {
+  const response = await preturFetch(options.url, {
     body: JSON.stringify(options.body),
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
     method: options.method || 'GET',
-  }).then(response => {
-    let dataPromise: Bluebird<any>;
-
-    if (options.json) {
-      dataPromise = response.json<TBody>();
-    } else {
-      dataPromise = response.text();
-    }
-
-    return dataPromise.then(responseBody => {
-      return <FetchResponse<TBody>>{
-        body: responseBody,
-        ok: response.ok,
-        status: response.status,
-        statusText: response.statusText,
-      };
-    });
   });
+
+  const data = options.json
+    ? await response.json<TBody>()
+    : await response.text();
+
+  return <FetchResponse<TBody>>{
+    body: data,
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+  };
 }

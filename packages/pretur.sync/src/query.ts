@@ -6,35 +6,34 @@ export interface QueryOrder {
   chain?: string[];
 }
 
-export interface QueryFilters {
-  [attribute: string]: any;
-}
+export type QueryFilters<T> = {
+  [P in keyof T]?: any;
+};
 
 export interface QueryPagination {
-  skip?: number;
-  take?: number;
+  skip: number;
+  take: number;
 }
 
-export interface QueryInclude {
-  [alias: string]: SubQuery | boolean;
-}
+export type QueryInclude<T> = {
+  [P in keyof T]?: SubQuery<any> | boolean;
+};
 
-export interface SubQuery {
-  include?: QueryInclude;
-  filters?: QueryFilters;
-  attributes?: string[];
+export interface SubQuery<T> {
+  include?: QueryInclude<T>;
+  filters?: QueryFilters<T>;
+  attributes?: (keyof T)[];
   required?: boolean;
 }
 
-export interface Query {
-  queryId?: number;
-  model?: string;
-  byId?: number;
+export interface Query<T> {
+  model: string;
+  byId?: number | string | Partial<T>;
   count?: boolean;
   extra?: any;
-  include?: QueryInclude;
-  filters?: QueryFilters;
-  attributes?: string[];
+  include?: QueryInclude<T>;
+  filters?: QueryFilters<T>;
+  attributes?: (keyof T)[];
   pagination?: QueryPagination;
-  order?: QueryOrder;
+  order?: QueryOrder | QueryOrder[];
 }
