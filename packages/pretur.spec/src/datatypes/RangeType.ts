@@ -4,15 +4,15 @@ import IntegerType from './IntegerType';
 import DoubleType from './DoubleType';
 
 export default class RangeType extends AbstractType {
-  private rangeTypeName: string;
-  private rangeSubtype: AbstractType;
+  private _typeName: string;
+  private _subtype: AbstractType;
 
   public get typeName(): string {
-    return this.rangeTypeName;
+    return this._typeName;
   }
 
   public get subType(): AbstractType {
-    return this.rangeSubtype;
+    return this._subtype;
   }
 
   public static is(obj: any): obj is RangeType {
@@ -45,7 +45,7 @@ export default class RangeType extends AbstractType {
 
     const defaultTypeName = `[${subType.typeName}, ${subType.typeName}]`;
 
-    this.rangeSubtype = subType;
-    this.rangeTypeName = typeName || defaultTypeName;
+    this._subtype = subType;
+    this._typeName = typeName || defaultTypeName;
   }
 }

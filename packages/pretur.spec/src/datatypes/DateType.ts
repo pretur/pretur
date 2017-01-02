@@ -1,10 +1,10 @@
 import AbstractType from './AbstractType';
 
 export default class DateType extends AbstractType {
-  private dateTypeName: string;
+  private _typeName: string;
 
   public get typeName(): string {
-    return this.dateTypeName;
+    return this._typeName;
   }
 
   public static is(obj: any): obj is DateType {
@@ -17,6 +17,6 @@ export default class DateType extends AbstractType {
 
   private constructor(typeName = 'Date') {
     super();
-    this.dateTypeName = typeName;
+    this._typeName = typeName;
   }
 }
