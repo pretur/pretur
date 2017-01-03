@@ -1,6 +1,6 @@
 import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
-import { Query, SynchronizerItem } from 'pretur.sync';
+import { Query, InsertRequest, UpdateRequest, RemoveRequest } from 'pretur.sync';
 import { ResolveResult } from './resolver';
 import { ModelDescriptor } from './descriptor';
 import { ResultItemAppender } from './synchronizer';
@@ -11,10 +11,10 @@ export interface ModelDescriptorMap {
 
 export interface Pool {
   models: ModelDescriptorMap;
-  resolve(query: Query, context: any): Bluebird<ResolveResult<any>>;
+  resolve<T>(query: Query<T>, context: any): Bluebird<ResolveResult<T>>;
   sync(
     transaction: Sequelize.Transaction,
-    item: SynchronizerItem<any>,
+    item: InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<number | void>;
@@ -31,7 +31,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     ),
   };
 
-  pool.resolve = function resolve(query: Query, context: any): Bluebird<ResolveResult<any>> {
+  pool.resolve = function resolve<T>(query: Query<T>, context: any): Bluebird<ResolveResult<T>> {
     if (!query || !query.model) {
       return Bluebird.reject(new Error('query or query.model was not specified.'));
     }
@@ -51,7 +51,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
 
   pool.sync = function sync(
     transaction: Sequelize.Transaction,
-    item: SynchronizerItem<any>,
+    item: InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<number | void> {

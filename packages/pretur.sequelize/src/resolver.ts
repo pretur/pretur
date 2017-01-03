@@ -1,7 +1,7 @@
 import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
 import { intersection } from 'lodash';
-import { Query, QueryInclude } from 'pretur.sync';
+import { Query, SubQuery, QueryInclude } from 'pretur.sync';
 import { Spec } from 'pretur.spec';
 import { Pool } from './pool';
 
@@ -11,11 +11,11 @@ export interface ResolveResult<T> {
 }
 
 export interface Resolver<T> {
-  (query: Query, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T>, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface CustomResolver<T> {
-  (query: Query, pool: Pool, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T>, pool: Pool, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface UnitializedResolver<T> {
@@ -24,12 +24,12 @@ export interface UnitializedResolver<T> {
 }
 
 export interface ResolveInterceptor<T> {
-  (query: Query, result: ResolveResult<T>, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T>, result: ResolveResult<T>, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface BuildResolverOptions<T> {
   intercept?: ResolveInterceptor<T>;
-  queryTransformer?(query: Query): Query;
+  queryTransformer?(query: Query<T>): Query<T>;
 }
 
 export function buildCustomResolver<T>(
@@ -38,7 +38,7 @@ export function buildCustomResolver<T>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>null;
 
-  function wrappedResolver(query: Query, context: any): Bluebird<ResolveResult<T>> {
+  function wrappedResolver(query: Query<T>, context: any): Bluebird<ResolveResult<T>> {
     return resolver(query, pool, context);
   }
 
@@ -55,7 +55,7 @@ export function buildResolver<T>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>null;
 
-  function resolver(rawQuery: Query, context: any): Bluebird<ResolveResult<T>> {
+  function resolver(rawQuery: Query<T>, context: any): Bluebird<ResolveResult<T>> {
     let query = rawQuery;
 
     if (options && typeof options.queryTransformer === 'function') {
@@ -108,7 +108,7 @@ export function buildResolver<T>(
 
     if (query && query.count) {
       const promise = model.findAndCountAll(findOptions)
-        .then(({rows, count}) => ({ count, data: rows }));
+        .then(({ rows, count }) => ({ count, data: rows }));
 
       if (options && options.intercept) {
         const intercept = options.intercept;
@@ -132,7 +132,7 @@ export function buildResolver<T>(
   return { resolver, initialize };
 }
 
-function buildOrder(query: Query, pool: Pool, model: string): any[] | null {
+function buildOrder<T>(query: Query<T>, pool: Pool, model: string): any[] | null {
   const defaultOrder = pool.models[model].defaultOrder;
   const parameters: any[] = [];
 
@@ -161,7 +161,11 @@ function buildOrder(query: Query, pool: Pool, model: string): any[] | null {
   return [parameters];
 }
 
-function buildWhere(query: Query, pool: Pool, modelName: string): Sequelize.WhereOptions | null {
+function buildWhere<T>(
+  query: Query<T> | SubQuery<T>,
+  pool: Pool,
+  modelName: string,
+): Sequelize.WhereOptions | null {
   const where: Sequelize.WhereOptions = {};
   const model = pool.models[modelName];
 
@@ -174,7 +178,7 @@ function buildWhere(query: Query, pool: Pool, modelName: string): Sequelize.Wher
     }
 
     filtersKeys.map(field => {
-      const value = filters[field];
+      const value = filters[<keyof T>field];
 
       if (
         model.fieldWhereBuilders &&
@@ -202,16 +206,20 @@ function buildWhere(query: Query, pool: Pool, modelName: string): Sequelize.Wher
   return null;
 }
 
-function buildInclude(query: Query, pool: Pool, model: string): Sequelize.IncludeOptions[] | null {
+function buildInclude<T>(
+  query: Query<T>,
+  pool: Pool,
+  model: string,
+): Sequelize.IncludeOptions[] | null {
   const queryInclude = query && query.include;
   const orderChain = query && query.order && query.order.chain;
 
-  return buildNestedInclude(pool, queryInclude, orderChain, model);
+  return buildNestedInclude<T>(pool, queryInclude, orderChain, model);
 }
 
-function buildNestedInclude(
+function buildNestedInclude<T>(
   pool: Pool,
-  queryInclude: QueryInclude | undefined,
+  queryInclude: QueryInclude<T> | undefined,
   orderChain: string[] | undefined,
   model: string,
 ): Sequelize.IncludeOptions[] | null {
@@ -221,8 +229,11 @@ function buildNestedInclude(
     const include: Sequelize.IncludeOptions[] = [];
 
     Object.keys(aliasModelMap).forEach(alias => {
-      if ((queryInclude && queryInclude[alias]) || (orderChain && orderChain[0] === alias)) {
-        const subQuery = !!queryInclude && queryInclude[alias];
+      if (
+        (queryInclude && queryInclude[<keyof T>alias]) ||
+        (orderChain && orderChain[0] === alias)
+      ) {
+        const subQuery = !!queryInclude && queryInclude[<keyof T>alias];
         const targetModel = pool.models[aliasModelMap[alias]];
 
         if (!targetModel.sequelizeModel) {

@@ -4,12 +4,7 @@ import { intersection, assign, noop } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
 import { Spec } from 'pretur.spec';
 import { Pool } from './pool';
-import {
-  SynchronizerItem,
-  SynchronizerInsert,
-  SynchronizerUpdate,
-  SynchronizerRemove,
-} from 'pretur.sync';
+import { InsertRequest, UpdateRequest, RemoveRequest } from 'pretur.sync';
 
 export interface ResultItemAppender {
   appendError(error: I18nBundle): void;
@@ -23,7 +18,7 @@ export interface ErrorHandler<T> {
 export interface Insert<T> {
   (
     transaction: Sequelize.Transaction,
-    item: SynchronizerInsert<T>,
+    item: InsertRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<number | void>;
@@ -32,7 +27,7 @@ export interface Insert<T> {
 export interface Update<T> {
   (
     transaction: Sequelize.Transaction,
-    item: SynchronizerUpdate<T>,
+    item: UpdateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<void>;
@@ -41,7 +36,7 @@ export interface Update<T> {
 export interface Remove<T> {
   (
     transaction: Sequelize.Transaction,
-    item: SynchronizerRemove<T>,
+    item: RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<void>;
@@ -50,7 +45,7 @@ export interface Remove<T> {
 export interface Synchronizer<T> {
   (
     transaction: Sequelize.Transaction,
-    item: SynchronizerItem<T>,
+    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<number | void>;
@@ -72,12 +67,12 @@ export interface SynchronizationInterceptor<T, R> {
 }
 
 export interface BuildSynchronizerOptions<T> {
-  insertErrorHandler?: ErrorHandler<SynchronizerInsert<T>>;
-  updateErrorHandler?: ErrorHandler<SynchronizerUpdate<T>>;
-  removeErrorHandler?: ErrorHandler<SynchronizerRemove<T>>;
-  insertInterceptor?: SynchronizationInterceptor<SynchronizerInsert<T>, number | boolean>;
-  updateInterceptor?: SynchronizationInterceptor<SynchronizerUpdate<T>, boolean>;
-  removeInterceptor?: SynchronizationInterceptor<SynchronizerRemove<T>, boolean>;
+  insertErrorHandler?: ErrorHandler<InsertRequest<T>>;
+  updateErrorHandler?: ErrorHandler<UpdateRequest<T>>;
+  removeErrorHandler?: ErrorHandler<RemoveRequest<T>>;
+  insertInterceptor?: SynchronizationInterceptor<InsertRequest<T>, number | boolean>;
+  updateInterceptor?: SynchronizationInterceptor<UpdateRequest<T>, boolean>;
+  removeInterceptor?: SynchronizationInterceptor<RemoveRequest<T>, boolean>;
 }
 
 export function buildSynchronizer<T>(
@@ -88,12 +83,12 @@ export function buildSynchronizer<T>(
 
   function synchronizer(
     transaction: Sequelize.Transaction,
-    item: SynchronizerItem<T>,
+    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<number | void> {
 
-    if (item.action === 'INSERT') {
+    if (item.type === 'insert') {
       return insert(
         pool,
         spec.name,
@@ -106,7 +101,7 @@ export function buildSynchronizer<T>(
       );
     }
 
-    if (item.action === 'UPDATE') {
+    if (item.type === 'update') {
       return update(
         pool,
         spec.name,
@@ -119,7 +114,7 @@ export function buildSynchronizer<T>(
       );
     }
 
-    if (item.action === 'REMOVE') {
+    if (item.type === 'remove') {
       return remove(
         pool,
         spec.name,
@@ -147,10 +142,10 @@ const INJECTED_MASTER_RESOLUTION_KEY = '__INJECTED_MASTER_RESOLUTION_KEY';
 function insert<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<SynchronizerInsert<T>> | undefined,
-  interceptor: SynchronizationInterceptor<SynchronizerInsert<T>, number | boolean> | undefined,
+  errorHandler: ErrorHandler<InsertRequest<T>> | undefined,
+  interceptor: SynchronizationInterceptor<InsertRequest<T>, number | boolean> | undefined,
   transaction: Sequelize.Transaction,
-  item: SynchronizerInsert<T>,
+  item: InsertRequest<T>,
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<number | void> {
@@ -175,11 +170,11 @@ function insert<T>(
 
         masters.push(masterModel.synchronizer(
           transaction,
-          <SynchronizerInsert<any>>{
-            action: 'INSERT',
+          <InsertRequest<any>>{
             data: masterData,
-            itemId: item.itemId,
             model: masterModel.name,
+            requestId: item.requestId,
+            type: 'insert',
             [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => (<any>data)[master.key] = id,
           },
           rip,
@@ -243,11 +238,11 @@ function insert<T>(
 
               details.push(targetModel.synchronizer(
                 transaction,
-                <SynchronizerInsert<any>>{
-                  action: 'INSERT',
+                <InsertRequest<any>>{
                   data: nestedInsertData,
-                  itemId: item.itemId,
                   model: aliasModelMap[alias],
+                  requestId: item.requestId,
+                  type: 'insert',
                 },
                 rip,
                 context,
@@ -272,11 +267,11 @@ function insert<T>(
 
             details.push(targetModel.synchronizer(
               transaction,
-              <SynchronizerInsert<any>>{
-                action: 'INSERT',
+              <InsertRequest<any>>{
                 data: nestedInsertData,
-                itemId: item.itemId,
                 model: aliasModelMap[alias],
+                requestId: item.requestId,
+                type: 'insert',
               },
               rip,
               context,
@@ -327,10 +322,10 @@ function insert<T>(
 function update<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<SynchronizerUpdate<T>> | undefined,
-  interceptor: SynchronizationInterceptor<SynchronizerUpdate<T>, boolean> | undefined,
+  errorHandler: ErrorHandler<UpdateRequest<T>> | undefined,
+  interceptor: SynchronizationInterceptor<UpdateRequest<T>, boolean> | undefined,
   transaction: Sequelize.Transaction,
-  item: SynchronizerUpdate<T>,
+  item: UpdateRequest<T>,
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<void> {
@@ -377,10 +372,10 @@ function update<T>(
 function remove<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<SynchronizerRemove<T>> | undefined,
-  interceptor: SynchronizationInterceptor<SynchronizerRemove<T>, boolean> | undefined,
+  errorHandler: ErrorHandler<RemoveRequest<T>> | undefined,
+  interceptor: SynchronizationInterceptor<RemoveRequest<T>, boolean> | undefined,
   transaction: Sequelize.Transaction,
-  item: SynchronizerRemove<T>,
+  item: RemoveRequest<T>,
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<void> {
