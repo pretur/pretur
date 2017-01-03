@@ -48,7 +48,6 @@ describe('spec', () => {
   it('should properly forward the model properties without caching', () => {
     const model = mockModel('a');
     const spec = new Spec(model);
-    const noop = () => null!;
 
     expect(spec.name).to.be.equals('a');
     expect(spec.owner).to.be.equals(null);
@@ -60,13 +59,13 @@ describe('spec', () => {
     model.owner = 'b';
     model.virtual = true;
     model.join = true;
-    model.validator = noop;
+    model.validator = 'VALIDATOR';
 
     expect(spec.name).to.be.equals('c');
     expect(spec.owner).to.be.equals('b');
     expect(spec.virtual).to.be.equals(true);
     expect(spec.join).to.be.equals(true);
-    expect(spec.validator).to.be.equals(noop);
+    expect(spec.validator).to.be.equals('VALIDATOR');
 
     expect(spec.attributeArray).to.be.equals(model.attributes);
     expect(spec.indexes).to.be.equals(model.indexes);
@@ -242,15 +241,15 @@ describe('spec', () => {
       model.relations.push(<any>{ alias: '3', owner: ['c', 'b'] });
       model.relations.push(<any>{ alias: '4', owner: null });
 
-      expect(spec.filterByOwner('b') !.relations.byAlias('1')).not.to.be.undefined;
-      expect(spec.filterByOwner('b') !.relations.byAlias('2')).to.be.undefined;
-      expect(spec.filterByOwner('b') !.relations.byAlias('3')).not.to.be.undefined;
-      expect(spec.filterByOwner('b') !.relations.byAlias('4')).not.to.be.undefined;
+      expect(spec.filterByOwner('b')!.relations.byAlias('1')).not.to.be.undefined;
+      expect(spec.filterByOwner('b')!.relations.byAlias('2')).to.be.undefined;
+      expect(spec.filterByOwner('b')!.relations.byAlias('3')).not.to.be.undefined;
+      expect(spec.filterByOwner('b')!.relations.byAlias('4')).not.to.be.undefined;
 
-      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('1')).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('2')).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('3')).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']) !.relations.byAlias('4')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.relations.byAlias('1')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.relations.byAlias('2')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.relations.byAlias('3')).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.relations.byAlias('4')).not.to.be.undefined;
     });
 
     it('should properly filter attributes', () => {
@@ -264,15 +263,15 @@ describe('spec', () => {
       model.attributes.push(<any>{ name: '3', owner: ['c', 'b'] });
       model.attributes.push(<any>{ name: '4', owner: null });
 
-      expect(spec.filterByOwner('b') !.attributes['1']).not.to.be.undefined;
-      expect(spec.filterByOwner('b') !.attributes['2']).to.be.undefined;
-      expect(spec.filterByOwner('b') !.attributes['3']).not.to.be.undefined;
-      expect(spec.filterByOwner('b') !.attributes['4']).not.to.be.undefined;
+      expect(spec.filterByOwner('b')!.attributes['1']).not.to.be.undefined;
+      expect(spec.filterByOwner('b')!.attributes['2']).to.be.undefined;
+      expect(spec.filterByOwner('b')!.attributes['3']).not.to.be.undefined;
+      expect(spec.filterByOwner('b')!.attributes['4']).not.to.be.undefined;
 
-      expect(spec.filterByOwner(['b', 'c']) !.attributes['1']).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']) !.attributes['2']).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']) !.attributes['3']).not.to.be.undefined;
-      expect(spec.filterByOwner(['b', 'c']) !.attributes['4']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.attributes['1']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.attributes['2']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.attributes['3']).not.to.be.undefined;
+      expect(spec.filterByOwner(['b', 'c'])!.attributes['4']).not.to.be.undefined;
     });
 
   });

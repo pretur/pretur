@@ -1,4 +1,3 @@
-import { Validator } from 'pretur.validation';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 import { Spec } from './spec';
@@ -23,10 +22,10 @@ export interface Model<T> {
   owner: Owner;
   virtual: boolean;
   join: boolean;
-  attributes: Attribute<any>[];
+  attributes: Attribute<T, keyof T>[];
   indexes: Indexes;
   relations: Relation[];
-  validator?: Validator<T>;
+  validator?: string;
 }
 
 export interface CreateModelOptions {
@@ -36,10 +35,10 @@ export interface CreateModelOptions {
 }
 
 export interface ModelBuilder<T> {
-  attribute: AttributeBuilder;
-  relation: RelationsBuilder;
-  validator(validator: Validator<T>): void;
-  multicolumnUniqueIndex(...fields: string[]): void;
+  attribute: AttributeBuilder<T>;
+  relation: RelationsBuilder<T>;
+  validator(validator: string): void;
+  multicolumnUniqueIndex(...fields: (keyof T)[]): void;
 }
 
 export function createModel<T>(
@@ -60,7 +59,7 @@ export function createModel<T>(
     attribute: createAttributeBuilder(model),
     relation: createRelationBuilder(model),
 
-    validator(validator: Validator<T>) {
+    validator(validator: string) {
       model.validator = validator;
     },
 
@@ -73,7 +72,7 @@ export function createModel<T>(
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return new Spec(model);
+    return new Spec<T>(model);
   }
 
   return {

@@ -1,4 +1,3 @@
-import { Validator } from 'pretur.validation';
 import { assign } from 'lodash';
 import { appendAttribute, AbstractType, DataTypes, EnumValue } from './attribute';
 import { Model, UninitializedStateModel, Owner } from './model';
@@ -32,60 +31,60 @@ export interface Relation {
   onUpdate: ModificationActions;
 }
 
-export interface Inheritor {
-  target: UninitializedStateModel<any>;
-  alias: string;
+export interface Inheritor<TSource, TTarget> {
+  target: UninitializedStateModel<TTarget>;
+  alias: keyof TSource;
   i18nKey: string;
 }
 
-export interface InheritorsOptions<T> {
-  sharedExistingUniqueField: string;
-  aliasOnSubclasses: string;
-  typeIdentifierFieldName?: string;
+export interface InheritorsOptions<TSource, TTarget> {
+  sharedExistingUniqueField: keyof TTarget;
+  aliasOnSubclasses: keyof TTarget;
+  typeIdentifierFieldName: keyof TSource;
   typeIdentifierEnumTypeName?: string;
   typeIdentifierRequired?: boolean;
-  typeIdentifierValidator?: Validator<T>;
-  inheritors: Inheritor[];
+  typeIdentifierValidator?: string;
+  inheritors: Inheritor<TSource, TTarget>[];
 }
 
-export interface MasterOptions<T> {
-  target: UninitializedStateModel<any>;
-  alias: string;
-  ownAliasOnTarget: string;
-  foreignKey?: string;
+export interface MasterOptions<TSource, TTarget> {
+  target: UninitializedStateModel<TTarget>;
+  alias: keyof TSource;
+  ownAliasOnTarget: keyof TTarget;
+  foreignKey: keyof TSource;
   foreignKeyType?: AbstractType;
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  validator?: Validator<T>;
+  validator?: string;
   owner?: Owner;
   targetOwner?: Owner;
 }
 
-export interface InjectiveOptions<T> {
-  target: UninitializedStateModel<any>;
-  alias: string;
-  ownAliasOnTarget: string;
-  foreignKey?: string;
+export interface InjectiveOptions<TSource, TTarget> {
+  target: UninitializedStateModel<TTarget>;
+  alias: keyof TSource;
+  ownAliasOnTarget: keyof TTarget;
+  foreignKey: keyof TSource;
   foreignKeyType?: AbstractType;
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  validator?: Validator<T>;
+  validator?: string;
   owner?: Owner;
   targetOwner?: Owner;
 }
 
 export interface RecursiveOptions<T> {
-  alias: string;
-  key?: string;
+  alias: keyof T;
+  key: keyof T;
   keyType?: AbstractType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  validator?: Validator<T>;
+  validator?: string;
 }
 
-export function appendRelation(model: Model<any>, ...relations: Relation[]): void {
+export function appendRelation<T>(model: Model<T>, ...relations: Relation[]): void {
   const relation = assign<Relation>({}, ...relations);
 
   if (process.env.NODE_ENV !== 'production') {
@@ -165,7 +164,10 @@ export function appendRelation(model: Model<any>, ...relations: Relation[]): voi
   model.relations.push(relation);
 }
 
-function inheritors<T>(model: Model<any>, options: InheritorsOptions<T>) {
+function inheritors<TSource, TTarget>(
+  model: Model<TSource>,
+  options: InheritorsOptions<TSource, TTarget>,
+) {
   const typeEnumValues: EnumValue<string>[] = [];
 
   options.inheritors.forEach(inheritor => {
@@ -204,17 +206,17 @@ function inheritors<T>(model: Model<any>, options: InheritorsOptions<T>) {
 
   appendAttribute(model, {
     mutable: true,
-    name: options.typeIdentifierFieldName || 'type',
+    name: options.typeIdentifierFieldName,
     required: !!options.typeIdentifierRequired,
     type: typeEnum,
     validator: options.typeIdentifierValidator,
   });
 }
 
-function master<T>(model: Model<any>, options: MasterOptions<T>) {
+function master<TSource, TTarget>(model: Model<TSource>, options: MasterOptions<TSource, TTarget>) {
   appendRelation(model, {
     alias: options.alias,
-    key: options.foreignKey || `${options.alias}Id`,
+    key: options.foreignKey,
     model: options.target.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -226,7 +228,7 @@ function master<T>(model: Model<any>, options: MasterOptions<T>) {
 
   appendRelation(options.target.model, {
     alias: options.ownAliasOnTarget,
-    key: options.foreignKey || `${options.alias}Id`,
+    key: options.foreignKey,
     model: model.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -238,17 +240,20 @@ function master<T>(model: Model<any>, options: MasterOptions<T>) {
 
   appendAttribute(model, {
     mutable: true,
-    name: options.foreignKey || `${options.alias}Id`,
+    name: options.foreignKey,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
   });
 }
 
-function injective<T>(model: Model<any>, options: InjectiveOptions<T>) {
+function injective<TSource, TTarget>(
+  model: Model<TSource>,
+  options: InjectiveOptions<TSource, TTarget>,
+) {
   appendRelation(model, {
     alias: options.alias,
-    key: options.foreignKey || `${options.alias}Id`,
+    key: options.foreignKey,
     model: options.target.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -260,7 +265,7 @@ function injective<T>(model: Model<any>, options: InjectiveOptions<T>) {
 
   appendRelation(options.target.model, {
     alias: options.ownAliasOnTarget,
-    key: options.foreignKey || `${options.alias}Id`,
+    key: options.foreignKey,
     model: model.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -272,17 +277,17 @@ function injective<T>(model: Model<any>, options: InjectiveOptions<T>) {
 
   appendAttribute(model, {
     mutable: false,
-    name: options.foreignKey || `${options.alias}Id`,
+    name: options.foreignKey,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
   });
 }
 
-function recursive<T>(model: Model<any>, options: RecursiveOptions<T>) {
+function recursive<T>(model: Model<T>, options: RecursiveOptions<T>) {
   appendRelation(model, {
     alias: options.alias,
-    key: options.key || `${options.alias}Id`,
+    key: options.key,
     model: model.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -294,25 +299,26 @@ function recursive<T>(model: Model<any>, options: RecursiveOptions<T>) {
 
   appendAttribute(model, {
     mutable: true,
-    name: options.key || `${options.alias}Id`,
+    name: options.key,
     required: false,
     type: options.keyType || DataTypes.INTEGER(),
     validator: options.validator,
   });
 }
 
-export interface RelationsBuilder {
-  inheritors<T>(options: InheritorsOptions<T>): void;
-  master<T>(options: MasterOptions<T>): void;
-  injective<T>(options: InjectiveOptions<T>): void;
-  recursive<T>(options: RecursiveOptions<T>): void;
+export interface RelationsBuilder<TSource> {
+  inheritors<TTarget>(options: InheritorsOptions<TSource, TTarget>): void;
+  master<TTarget>(options: MasterOptions<TSource, TTarget>): void;
+  injective<TTarget>(options: InjectiveOptions<TSource, TTarget>): void;
+  recursive(options: RecursiveOptions<TSource>): void;
 }
 
-export function createRelationBuilder(model: Model<any>): RelationsBuilder {
+export function createRelationBuilder<TSource>(model: Model<TSource>): RelationsBuilder<TSource> {
   return {
-    inheritors: (options: InheritorsOptions<any>) => inheritors(model, options),
-    injective: (options: InjectiveOptions<any>) => injective(model, options),
-    master: (options: MasterOptions<any>) => master(model, options),
-    recursive: (options: RecursiveOptions<any>) => recursive(model, options),
+    inheritors: <TTarget>(options: InheritorsOptions<TSource, TTarget>) =>
+      inheritors(model, options),
+    injective: <TTarget>(options: InjectiveOptions<TSource, TTarget>) => injective(model, options),
+    master: <TTarget>(options: MasterOptions<TSource, TTarget>) => master(model, options),
+    recursive: (options: RecursiveOptions<TSource>) => recursive(model, options),
   };
 }

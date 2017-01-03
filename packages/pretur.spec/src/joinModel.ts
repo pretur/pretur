@@ -9,79 +9,79 @@ import {
   DataTypes,
 } from './attribute';
 
-export interface JoinModelBuilder {
-  attribute: AttributeBuilder;
-  multicolumnUniqueIndex(...fields: string[]): void;
+export interface JoinModelBuilder<T> {
+  attribute: AttributeBuilder<T>;
+  multicolumnUniqueIndex(...fields: (keyof T)[]): void;
 }
 
-export interface JoineeOptions {
-  key?: string;
+export interface JoineeOptions<TJoin, TSource, TTarget> {
+  model: UninitializedStateModel<TSource>;
+  aliasOnJoin: keyof TJoin;
+  aliasOnTarget: keyof TTarget;
+  key: keyof TJoin;
   type?: IntegerType | StringType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   primary?: boolean;
 }
 
-export interface Joinee {
-  model: UninitializedStateModel<any>;
-  aliasOnJoin: string;
-  aliasOnTarget: string;
-  key: string;
+export interface Joinee<TJoin, TSource, TTarget> {
+  model: UninitializedStateModel<TSource>;
+  aliasOnJoin: keyof TJoin;
+  aliasOnTarget: keyof TTarget;
+  key: keyof TJoin;
   primary: boolean;
   type: IntegerType | StringType;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
 
-export function joinee(
-  model: UninitializedStateModel<any>,
-  aliasOnJoin: string,
-  aliasOnTarget: string,
-  options?: JoineeOptions,
-): Joinee {
+export function joineeValidateAndSetDefault<TJoin, TSource, TTarget>(
+  options: JoineeOptions<TJoin, TSource, TTarget>,
+): Joinee<TJoin, TSource, TTarget> {
   if (process.env.NODE_ENV !== 'production') {
-    if (!model) {
+    if (!options.model) {
       throw new Error('model is not provided');
     }
 
-    if (typeof aliasOnJoin !== 'string') {
-      throw new Error(`alias ${aliasOnJoin} is not valid`);
+    if (typeof options.aliasOnJoin !== 'string') {
+      throw new Error(`alias ${options.aliasOnJoin} is not valid`);
     }
 
-    if (typeof aliasOnTarget !== 'string') {
-      throw new Error(`alias ${aliasOnTarget} is not valid`);
+    if (typeof options.aliasOnTarget !== 'string') {
+      throw new Error(`alias ${options.aliasOnTarget} is not valid`);
     }
   }
 
   return {
-    model,
-    aliasOnJoin,
-    aliasOnTarget,
-    key: (options && options.key) || `${aliasOnJoin}Id`,
-    onDelete: (options && options.onDelete) || 'CASCADE',
-    onUpdate: (options && options.onUpdate) || 'CASCADE',
-    primary: !(options && options.primary === false),
-    type: (options && options.type) || DataTypes.INTEGER(),
+    aliasOnJoin: options.aliasOnJoin,
+    aliasOnTarget: options.aliasOnTarget,
+    key: options.key,
+    model: options.model,
+    onDelete: options.onDelete || 'CASCADE',
+    onUpdate: options.onUpdate || 'CASCADE',
+    primary: options.primary !== false,
+    type: options.type || DataTypes.INTEGER(),
   };
 }
 
-export interface CreateJoinModelOptions {
+export interface CreateJoinModelOptions<TJoin, TFirst, TSecond> {
   name: string;
   owner: Owner;
-  firstJoinee: Joinee;
-  secondJoinee: Joinee;
+  firstJoinee: JoineeOptions<TJoin, TFirst, TSecond>;
+  secondJoinee: JoineeOptions<TJoin, TSecond, TFirst>;
   virtual?: boolean;
 }
 
-export function createJoinModel<T>(
-  options: CreateJoinModelOptions,
-  initializer?: (modelBuilder: JoinModelBuilder) => void,
-): UninitializedStateModel<T> {
+export function createJoinModel<TJoin, TSecond, TFirst>(
+  options: CreateJoinModelOptions<TJoin, TSecond, TFirst>,
+  initializer?: (modelBuilder: JoinModelBuilder<TJoin>) => void,
+): UninitializedStateModel<TJoin> {
 
-  const firstJoinee = options.firstJoinee;
-  const secondJoinee = options.secondJoinee;
+  const firstJoinee = joineeValidateAndSetDefault(options.firstJoinee);
+  const secondJoinee = joineeValidateAndSetDefault(options.secondJoinee);
 
-  const model: Model<any> = {
+  const model: Model<TJoin> = {
     attributes: [],
     indexes: { unique: [] },
     join: true,
@@ -91,7 +91,7 @@ export function createJoinModel<T>(
     virtual: !!options.virtual,
   };
 
-  const builder = <JoinModelBuilder>{
+  const builder = <JoinModelBuilder<TJoin>>{
     attribute: createAttributeBuilder(model),
     multicolumnUniqueIndex(...fields: string[]) {
       model.indexes.unique.push(fields);
@@ -162,11 +162,11 @@ export function createJoinModel<T>(
     virtual: !!options.virtual,
   });
 
-  function initialize(): Spec<T> {
+  function initialize(): Spec<TJoin> {
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return new Spec(model);
+    return new Spec<TJoin>(model);
   }
 
   return {

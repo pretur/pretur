@@ -1,12 +1,11 @@
-import { Validator } from 'pretur.validation';
 import { assign, chain } from 'lodash';
 import { Model, Owner } from './model';
 import { DataTypes, AbstractType, IntegerType, StringType } from './datatypes';
 
 export * from './datatypes';
 
-export interface Attribute<T> {
-  name: string;
+export interface Attribute<T, K extends keyof T> {
+  name: K;
   type: AbstractType;
   owner?: Owner;
   required?: boolean;
@@ -14,11 +13,11 @@ export interface Attribute<T> {
   primary?: boolean;
   autoIncrement?: boolean;
   mutable?: boolean;
-  defaultValue?: T;
-  validator?: Validator<T>;
+  defaultValue?: T[K];
+  validator?: string;
 }
 
-function getCommonDefaults(owner: Owner): Attribute<any> {
+function getCommonDefaults(owner: Owner): Attribute<any, string> {
   return {
     owner,
     autoIncrement: false,
@@ -31,15 +30,15 @@ function getCommonDefaults(owner: Owner): Attribute<any> {
   };
 }
 
-export interface PrimaryKeyOptions<T> {
-  name: string;
+export interface PrimaryKeyOptions<T, K extends keyof T> {
+  name: K;
   type?: IntegerType | StringType;
   autoIncrement?: boolean;
   mutable?: boolean;
-  validator?: Validator<T>;
+  validator?: string;
 }
 
-function getPrimaryKeyDefaults(owner: Owner): Attribute<any> {
+function getPrimaryKeyDefaults(owner: Owner): Attribute<any, string> {
   return assign(getCommonDefaults(owner), {
     autoIncrement: true,
     mutable: false,
@@ -48,7 +47,7 @@ function getPrimaryKeyDefaults(owner: Owner): Attribute<any> {
   });
 }
 
-export function validateAttribute(attribute: Attribute<any>) {
+export function validateAttribute(attribute: Attribute<any, string>) {
   if (process.env.NODE_ENV !== 'production') {
     if (!attribute.name || typeof attribute.name !== 'string') {
       throw new Error(`Attribute name < ${attribute.name} > is invalid`);
@@ -70,24 +69,14 @@ export function validateAttribute(attribute: Attribute<any>) {
       throw new Error(`primary means unique and required. Providing both is redundant.`);
     }
 
-    if (attribute.validator && typeof attribute.validator !== 'function') {
-      throw new Error(`Attribute ${attribute.name} has non function validator.`);
-    }
-
-    if (
-      attribute.defaultValue !== undefined &&
-      attribute.validator &&
-      attribute.validator(attribute.defaultValue) !== null
-    ) {
-      throw new Error(
-        `The validator does not validate the defaultValue of ${attribute.defaultValue}`,
-      );
+    if (attribute.validator && typeof attribute.validator !== 'string') {
+      throw new Error(`Attribute ${attribute.name} has non string validator.`);
     }
   }
 }
 
-export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>[]): void {
-  const attribute = assign<Attribute<any>>({}, ...attributes);
+export function appendAttribute<T>(model: Model<T>, ...attributes: Attribute<T, keyof T>[]): void {
+  const attribute = assign<Attribute<T, keyof T>>({}, ...attributes);
 
   if (process.env.NODE_ENV !== 'production') {
     if (!model) {
@@ -110,12 +99,12 @@ export function appendAttribute(model: Model<any>, ...attributes: Attribute<any>
   model.attributes.push(attribute);
 }
 
-export interface AttributeBuilder {
-  <T>(options: Attribute<T>): void;
-  primaryKey<T>(options?: PrimaryKeyOptions<T>): void;
+export interface AttributeBuilder<T> {
+  <K extends keyof T>(options: Attribute<T, K>): void;
+  primaryKey<K extends keyof T>(options?: PrimaryKeyOptions<T, K>): void;
 }
 
-export function createAttributeBuilder(model: Model<any>): AttributeBuilder {
+export function createAttributeBuilder<T>(model: Model<T>): AttributeBuilder<T> {
   if (process.env.NODE_ENV !== 'production' && !model) {
     throw new Error('model must be provided');
   }
@@ -123,18 +112,19 @@ export function createAttributeBuilder(model: Model<any>): AttributeBuilder {
   const commonDefaults = getCommonDefaults(model.owner);
   const pkDefaults = getPrimaryKeyDefaults(model.owner);
 
-  function attributeBuilder<T>(options: Attribute<T>): void {
+  function attributeBuilder<K extends keyof T>(options: Attribute<T, K>): void {
     appendAttribute(model, commonDefaults, options);
   }
 
-  const ab = <AttributeBuilder>attributeBuilder;
+  const ab = <AttributeBuilder<T>>attributeBuilder;
 
-  ab.primaryKey = function buildPrimaryKey<T>(options?: PrimaryKeyOptions<T>): void {
-    if (options && StringType.is(options.type) && !('autoIncrement' in options)) {
-      options.autoIncrement = false;
-    }
-    appendAttribute(model, pkDefaults, <Attribute<T>>options);
-  };
+  ab.primaryKey
+    = function buildPrimaryKey<K extends keyof T>(options?: PrimaryKeyOptions<T, K>): void {
+      if (options && StringType.is(options.type) && !('autoIncrement' in options)) {
+        options.autoIncrement = false;
+      }
+      appendAttribute(model, pkDefaults, <Attribute<T, K>>options);
+    };
 
   return ab;
 }

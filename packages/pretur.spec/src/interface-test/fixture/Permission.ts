@@ -7,15 +7,15 @@ export interface PermissionValues<T> {
 }
 
 export interface Permission<T> {
-  id?: number;
-  name?: string;
-  values?: PermissionValues<T>;
-  users?: User[];
+  id: number;
+  name: string;
+  values: PermissionValues<T>;
+  users: User[];
 }
 
 export default createModel<Permission<any>>(
   { name: 'Role', owner: null },
-  ({attribute}) => {
+  ({ attribute }) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });
     attribute({ name: 'name', type: DataTypes.STRING() });
   },

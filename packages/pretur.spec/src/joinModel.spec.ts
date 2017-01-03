@@ -3,9 +3,24 @@
 import { expect } from 'chai';
 import { IntegerType, StringType, DataTypes } from './attribute';
 import { Model, UninitializedStateModel } from './model';
-import { createJoinModel, joinee } from './joinModel';
+import { createJoinModel, joineeValidateAndSetDefault } from './joinModel';
 
-function mockModel(name: string): Model<any> {
+interface MockModel {
+  a: number;
+  aId: number;
+  b: string;
+  bId: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+  g: number;
+  count: number;
+  all_a: MockModel[];
+  all_b: MockModel[];
+}
+
+function mockModel(name: string): Model<MockModel> {
   return {
     name,
     attributes: [],
@@ -17,7 +32,7 @@ function mockModel(name: string): Model<any> {
   };
 }
 
-function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel<any> {
+function mockUninitializedStateModel(model: Model<MockModel>): UninitializedStateModel<any> {
   return {
     model,
     initialize: () => null!,
@@ -30,19 +45,39 @@ function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel
 
 describe('joinModel', () => {
 
-  describe('joinee', () => {
+  describe('joineeValidateAndSetDefault', () => {
 
     it('should fail if provided invalid input', () => {
       const model = mockUninitializedStateModel(mockModel('A'));
 
-      expect(() => joinee(null!, 'a', 'all_a')).to.throw();
-      expect(() => joinee(model, null!, 'all_a')).to.throw();
-      expect(() => joinee(model, 'a', null!)).to.throw();
+      expect(() => joineeValidateAndSetDefault<any, any, any>({
+        aliasOnJoin: 'a',
+        aliasOnTarget: 'all_a',
+        key: 'aId',
+        model: null!,
+      })).to.throw();
+      expect(() => joineeValidateAndSetDefault<any, any, any>({
+        model,
+        aliasOnJoin: null!,
+        aliasOnTarget: 'all_a',
+        key: 'aId',
+      })).to.throw();
+      expect(() => joineeValidateAndSetDefault<any, any, any>({
+        model,
+        aliasOnJoin: 'a',
+        aliasOnTarget: null!,
+        key: 'aId',
+      })).to.throw();
     });
 
     it('should return a joinee with valid defaults', () => {
       const model = mockUninitializedStateModel(mockModel('A'));
-      const joineeModel = joinee(model, 'a', 'all_a');
+      const joineeModel = joineeValidateAndSetDefault<any, any, any>({
+        model,
+        aliasOnJoin: 'a',
+        aliasOnTarget: 'all_a',
+        key: 'aId',
+      });
 
       expect(joineeModel.aliasOnJoin).to.be.equals('a');
       expect(joineeModel.aliasOnTarget).to.be.equals('all_a');
@@ -56,7 +91,10 @@ describe('joinModel', () => {
 
     it('should return a joinee with overriden defaults', () => {
       const model = mockUninitializedStateModel(mockModel('A'));
-      const joineeModel = joinee(model, 'a', 'all_a', {
+      const joineeModel = joineeValidateAndSetDefault<any, any, any>({
+        model,
+        aliasOnJoin: 'a',
+        aliasOnTarget: 'all_a',
         key: 'someId',
         onDelete: 'SET NULL',
         onUpdate: 'NO ACTION',
@@ -82,11 +120,21 @@ describe('joinModel', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
 
-      const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
+      const joinModel = createJoinModel<MockModel, MockModel, MockModel>({
+        firstJoinee: {
+          aliasOnJoin: 'a',
+          aliasOnTarget: 'all_a',
+          key: 'aId',
+          model: mockUninitializedStateModel(modelA),
+        },
         name: 'a',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
+        secondJoinee: {
+          aliasOnJoin: 'b',
+          aliasOnTarget: 'all_b',
+          key: 'bId',
+          model: mockUninitializedStateModel(modelB),
+        },
         virtual: true,
       });
 
@@ -101,15 +149,23 @@ describe('joinModel', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
 
-      const joinModel = createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a', {
+      const joinModel = createJoinModel<MockModel, MockModel, MockModel>({
+        firstJoinee: {
+          aliasOnJoin: 'a',
+          aliasOnTarget: 'all_a',
+          key: 'aId',
+          model: mockUninitializedStateModel(modelA),
           primary: true,
-        }),
+        },
         name: 'a',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b', {
+        secondJoinee: {
+          aliasOnJoin: 'b',
+          aliasOnTarget: 'all_b',
+          key: 'bId',
+          model: mockUninitializedStateModel(modelB),
           primary: false,
-        }),
+        },
         virtual: true,
       });
 
@@ -148,11 +204,21 @@ describe('joinModel', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
 
-      createJoinModel({
-        firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
+      createJoinModel<MockModel, MockModel, MockModel>({
+        firstJoinee: {
+          aliasOnJoin: 'a',
+          aliasOnTarget: 'all_a',
+          key: 'aId',
+          model: mockUninitializedStateModel(modelA),
+        },
         name: 'J',
         owner: ['b', 'c'],
-        secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
+        secondJoinee: {
+          aliasOnJoin: 'b',
+          aliasOnTarget: 'all_b',
+          key: 'bId',
+          model: mockUninitializedStateModel(modelB),
+        },
         virtual: true,
       });
 
@@ -183,15 +249,25 @@ describe('joinModel', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
 
-      const joinModel = createJoinModel(
+      const joinModel = createJoinModel<MockModel, MockModel, MockModel>(
         {
-          firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
+          firstJoinee: {
+            aliasOnJoin: 'a',
+            aliasOnTarget: 'all_a',
+            key: 'aId',
+            model: mockUninitializedStateModel(modelA),
+          },
           name: 'a',
           owner: ['b', 'c'],
-          secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
+          secondJoinee: {
+            aliasOnJoin: 'b',
+            aliasOnTarget: 'all_b',
+            key: 'bId',
+            model: mockUninitializedStateModel(modelB),
+          },
           virtual: true,
         },
-        ({attribute}) => {
+        ({ attribute }) => {
 
           attribute({
             name: 'count',
@@ -209,14 +285,24 @@ describe('joinModel', () => {
     it('should properly call the builder with valid multicolumnUniqueIndex builder', () => {
       const modelA = mockModel('A');
       const modelB = mockModel('B');
-      const model = createJoinModel(
+      const model = createJoinModel<MockModel, MockModel, MockModel>(
         {
-          firstJoinee: joinee(mockUninitializedStateModel(modelA), 'a', 'all_a'),
+          firstJoinee: {
+            aliasOnJoin: 'a',
+            aliasOnTarget: 'all_a',
+            key: 'aId',
+            model: mockUninitializedStateModel(modelA),
+          },
           name: 'a',
           owner: null,
-          secondJoinee: joinee(mockUninitializedStateModel(modelB), 'b', 'all_b'),
+          secondJoinee: {
+            aliasOnJoin: 'b',
+            aliasOnTarget: 'all_b',
+            key: 'bId',
+            model: mockUninitializedStateModel(modelB),
+          },
         },
-        ({multicolumnUniqueIndex}) => {
+        ({ multicolumnUniqueIndex }) => {
           expect(multicolumnUniqueIndex).to.be.a('function');
           multicolumnUniqueIndex('a', 'b');
           multicolumnUniqueIndex('c', 'd');

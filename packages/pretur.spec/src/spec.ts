@@ -1,14 +1,13 @@
-import { Validator } from 'pretur.validation';
 import { Indexes, Model, Owner } from './model';
 import { Attribute } from './attribute';
 import { Relation } from './relation';
 import { uniq, find, assign, castArray, intersection, trim } from 'lodash';
 
-export interface AttributeMap {
-  [name: string]: Attribute<any>;
-}
+export type AttributeMap<T> = {
+  [P in keyof T]?: Attribute<T, P>;
+};
 
-export interface Relations {
+export interface Relations<T> {
   superclass: Relation[];
   subclass: Relation[];
   master: Relation[];
@@ -16,7 +15,7 @@ export interface Relations {
   recursive: Relation[];
   manyToMany: Relation[];
   injective: Relation[];
-  byAlias(alias: string): Relation | undefined;
+  byAlias(alias: keyof T): Relation | undefined;
 }
 
 function nonVirtual(relation: Relation) {
@@ -38,7 +37,7 @@ export function ownersIntersect(first: Owner, second: Owner): boolean {
   return intersection(firstAsArray, secondAsArray).filter(validateOwnder).length > 0;
 }
 
-function populateRelations(relationsObj: Relations, relationsArray: Relation[]) {
+function populateRelations<T>(relationsObj: Relations<T>, relationsArray: Relation[]) {
   relationsArray.forEach(relation => {
     switch (relation.type) {
       case 'SUPERCLASS':
@@ -68,8 +67,8 @@ function populateRelations(relationsObj: Relations, relationsArray: Relation[]) 
 
 export class Spec<T> {
   private model: Model<T>;
-  private byAlias = (alias: string) => find(this.model.relations, { alias });
-  private nonVirtualByAlias = (alias: string) =>
+  private byAlias = (alias: keyof T) => find(this.model.relations, { alias });
+  private nonVirtualByAlias = (alias: keyof T) =>
     find(this.model.relations.filter(nonVirtual), { alias });
 
   public get name(): string {
@@ -88,17 +87,17 @@ export class Spec<T> {
     return this.model.join;
   }
 
-  public get validator(): Validator<T> | undefined {
+  public get validator(): string | undefined {
     return this.model.validator;
   }
 
-  public get attributes(): AttributeMap {
-    const map: AttributeMap = {};
+  public get attributes(): AttributeMap<T> {
+    const map = <AttributeMap<T>>{};
     this.model.attributes.forEach(attrib => map[attrib.name] = attrib);
     return map;
   }
 
-  public get attributeArray(): Attribute<any>[] {
+  public get attributeArray(): Attribute<T, keyof T>[] {
     return this.model.attributes;
   }
 
@@ -106,8 +105,8 @@ export class Spec<T> {
     return this.model.indexes;
   }
 
-  public get relations(): Relations {
-    const rels: Relations = {
+  public get relations(): Relations<T> {
+    const rels: Relations<T> = {
       byAlias: this.byAlias,
       detail: [],
       injective: [],
@@ -127,8 +126,8 @@ export class Spec<T> {
     return this.model.relations;
   }
 
-  public get nonVirtualRelations(): Relations {
-    const rels: Relations = {
+  public get nonVirtualRelations(): Relations<T> {
+    const rels: Relations<T> = {
       byAlias: this.nonVirtualByAlias,
       detail: [],
       injective: [],

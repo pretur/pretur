@@ -3,12 +3,22 @@
 import { expect } from 'chai';
 import { createModel } from './model';
 
+interface MockModel {
+  a: number;
+  b: string;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+  g: number;
+}
+
 describe('model', () => {
 
   describe('createModel', () => {
 
     it('should properly build an UninitializedStateModel object', () => {
-      const model = createModel({
+      const model = createModel<MockModel>({
         name: 'a',
         owner: ['b', 'c'],
         virtual: false,
@@ -24,7 +34,7 @@ describe('model', () => {
     it('should properly call the builder with valid attribute and relation builder', () => {
       const model = createModel(
         { name: 'a', owner: null! },
-        ({attribute, relation}) => {
+        ({ attribute, relation }) => {
           expect(attribute).to.be.a('function');
           expect(attribute.primaryKey).to.be.a('function');
           expect(relation.inheritors).to.be.a('function');
@@ -38,9 +48,9 @@ describe('model', () => {
     });
 
     it('should properly call the builder with valid multicolumnUniqueIndex builder', () => {
-      const model = createModel(
+      const model = createModel<MockModel>(
         { name: 'a', owner: null! },
-        ({multicolumnUniqueIndex}) => {
+        ({ multicolumnUniqueIndex }) => {
           expect(multicolumnUniqueIndex).to.be.a('function');
           multicolumnUniqueIndex('a', 'b');
           multicolumnUniqueIndex('c', 'd');
@@ -56,18 +66,17 @@ describe('model', () => {
     });
 
     it('should properly call the builder with valid validator setter', () => {
-      const noop = () => null!;
       const model = createModel(
         { name: 'a', owner: null! },
-        ({validator}) => {
+        ({ validator }) => {
           expect(validator).to.be.a('function');
-          validator(noop);
+          validator('VALIDATE');
         },
       );
 
       model.initialize();
 
-      expect(model.model.validator).to.be.equals(noop);
+      expect(model.model.validator).to.be.equals('VALIDATE');
     });
 
   });

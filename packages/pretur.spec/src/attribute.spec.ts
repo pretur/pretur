@@ -4,7 +4,14 @@ import { expect } from 'chai';
 import { Model } from './model';
 import { appendAttribute, createAttributeBuilder, DataTypes } from './attribute';
 
-function mockModel(name: string): Model<any> {
+interface MockModel {
+  a: number;
+  b: string;
+  c: number;
+  d: number;
+}
+
+function mockModel(name: string): Model<MockModel> {
   return {
     name,
     attributes: [],
@@ -105,31 +112,6 @@ describe('attribute', () => {
         type: t,
         validator: <any>'blah',
       })).to.throw();
-    });
-
-    it('should fail when the validator cannot validate the provided default value', () => {
-      const model = mockModel('A');
-      const t = DataTypes.INTEGER();
-
-      expect(() => appendAttribute(model, {
-        defaultValue: 1,
-        name: 'a',
-        type: t,
-        validator: n => n > 0 ? { data: null, key: 'A' } : null!,
-      })).to.throw();
-
-      expect(() => appendAttribute(model, {
-        defaultValue: null,
-        name: 'a',
-        type: t,
-        validator: n => n === null ? { data: null, key: 'A' } : null!,
-      })).to.throw();
-
-      expect(() => appendAttribute(model, {
-        name: 'a',
-        type: t,
-        validator: n => n > 0 ? { data: null, key: 'A' } : null!,
-      })).not.to.throw();
     });
 
   });

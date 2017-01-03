@@ -11,7 +11,36 @@ import {
   createRelationBuilder,
 } from './relation';
 
-function mockModel(name: string): Model<any> {
+interface MockModel {
+  id: number;
+  type: string;
+  main: MockModel;
+  master: MockModel;
+  masterId: number;
+  someId: number;
+  details: MockModel[];
+  parent: MockModel;
+}
+
+interface Child1 {
+  id: number;
+  main: MockModel;
+  a: number;
+}
+
+interface Child2 {
+  id: number;
+  main: MockModel;
+  b: number;
+}
+
+interface Child3 {
+  id: number;
+  main: MockModel;
+  c: number;
+}
+
+function mockModel(name: string): Model<MockModel> {
   return {
     name,
     attributes: [],
@@ -146,8 +175,8 @@ describe('relation', () => {
       interface TestCase {
         (
           main: Model<any>,
-          inheritor: (name: string, alias: string, i18nKey: string) => Inheritor,
-          appendInheritorGroup: (options: InheritorsOptions<any>) => void
+          inheritor: <T>(name: string, alias: keyof T, i18nKey: string) => Inheritor<MockModel, T>,
+          appendInheritorGroup: <T>(options: InheritorsOptions<MockModel, T>) => void
         ): void;
       }
 
@@ -176,11 +205,12 @@ describe('relation', () => {
             append({
               aliasOnSubclasses: 'main',
               inheritors: [
-                inheritor('Child1', 'a', 'A'),
-                inheritor('Child2', 'b', 'A'),
-                inheritor('Child3', 'c', 'A'),
+                inheritor<Child1 & Child2 & Child3>('Child1', 'a', 'A'),
+                inheritor<Child1 & Child2 & Child3>('Child2', 'b', 'A'),
+                inheritor<Child1 & Child2 & Child3>('Child3', 'c', 'A'),
               ],
               sharedExistingUniqueField: 'id',
+              typeIdentifierFieldName: 'type',
             });
 
             assetEnumType(main, 0, 'type', 'MainSubclassType', ['a', 'b', 'c']);
@@ -189,18 +219,18 @@ describe('relation', () => {
         [
           'should add the type enum with required and validator',
           (main, inheritor, append) => {
-            const validator = () => null!;
             append({
               aliasOnSubclasses: 'main',
-              inheritors: [inheritor('Child1', 'a', 'A')],
+              inheritors: [inheritor<Child1>('Child1', 'a', 'A')],
               sharedExistingUniqueField: 'id',
+              typeIdentifierFieldName: 'type',
               typeIdentifierRequired: true,
-              typeIdentifierValidator: validator,
+              typeIdentifierValidator: 'VALIDATOR',
             });
 
             assetEnumType(main, 0, 'type', 'MainSubclassType', ['a']);
             expect(main.attributes[0].required).to.be.true;
-            expect(main.attributes[0].validator).to.be.equals(validator);
+            expect(main.attributes[0].validator).to.be.equals('VALIDATOR');
           },
         ],
         [
@@ -209,9 +239,9 @@ describe('relation', () => {
             main.owner = 'owner';
             main.virtual = true;
 
-            const child1 = inheritor('Child1', 'a', 'A');
-            const child2 = inheritor('Child2', 'b', 'A');
-            const child3 = inheritor('Child3', 'c', 'A');
+            const child1 = inheritor<Child1 & Child2 & Child3>('Child1', 'a', 'A');
+            const child2 = inheritor<Child1 & Child2 & Child3>('Child2', 'b', 'A');
+            const child3 = inheritor<Child1 & Child2 & Child3>('Child3', 'c', 'A');
 
             child3.target.virtual = true;
             child3.target.model.virtual = true;
@@ -220,6 +250,7 @@ describe('relation', () => {
               aliasOnSubclasses: 'main',
               inheritors: [child1, child2, child3],
               sharedExistingUniqueField: 'id',
+              typeIdentifierFieldName: 'type',
             });
 
             expect(main.relations[0].owner).to.be.equals('owner');
@@ -277,7 +308,7 @@ describe('relation', () => {
         const appendInheritorGroup = createRelationBuilder(main).inheritors;
 
         it(expectation, () => {
-          testCase(main, inheritor, appendInheritorGroup);
+          testCase(main, <any>inheritor, appendInheritorGroup);
         });
       });
 
@@ -298,6 +329,7 @@ describe('relation', () => {
 
         createRelationBuilder(detail).master({
           alias: 'master',
+          foreignKey: 'masterId',
           ownAliasOnTarget: 'details',
           target: mockUninitializedStateModel(master),
         });
@@ -316,7 +348,6 @@ describe('relation', () => {
       it('should properly override the properties of relations and the fk attribute', () => {
         const master = mockModel('Master');
         const detail = mockModel('Detail');
-        const noop = () => null!;
 
         detail.virtual = true;
 
@@ -331,7 +362,7 @@ describe('relation', () => {
           required: true,
           target: mockUninitializedStateModel(master),
           targetOwner: 'owner2',
-          validator: noop,
+          validator: 'VALIDATOR',
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -358,7 +389,7 @@ describe('relation', () => {
         expect(detail.attributes[0].name).to.be.equals('someId');
         expect(detail.attributes[0].type).to.be.instanceof(StringType);
         expect(detail.attributes[0].required).to.be.equals(true);
-        expect(detail.attributes[0].validator).to.be.equals(noop);
+        expect(detail.attributes[0].validator).to.be.equals('VALIDATOR');
       });
 
     });
@@ -378,6 +409,7 @@ describe('relation', () => {
 
         createRelationBuilder(injected).injective({
           alias: 'master',
+          foreignKey: 'masterId',
           ownAliasOnTarget: 'injected',
           target: mockUninitializedStateModel(master),
         });
@@ -396,7 +428,6 @@ describe('relation', () => {
       it('should properly override the properties of relations and the fk attribute', () => {
         const master = mockModel('Master');
         const injected = mockModel('Injected');
-        const noop = () => null!;
 
         injected.virtual = true;
 
@@ -411,7 +442,7 @@ describe('relation', () => {
           required: true,
           target: mockUninitializedStateModel(master),
           targetOwner: 'owner2',
-          validator: noop,
+          validator: 'VALIDATION',
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -438,7 +469,7 @@ describe('relation', () => {
         expect(injected.attributes[0].name).to.be.equals('someId');
         expect(injected.attributes[0].type).to.be.instanceof(StringType);
         expect(injected.attributes[0].required).to.be.equals(true);
-        expect(injected.attributes[0].validator).to.be.equals(noop);
+        expect(injected.attributes[0].validator).to.be.equals('VALIDATION');
       });
 
     });
@@ -457,6 +488,7 @@ describe('relation', () => {
 
         createRelationBuilder(master).recursive({
           alias: 'parent',
+          key: 'id',
         });
 
         expect(master.relations[0].alias).to.be.equals('parent');
@@ -469,7 +501,6 @@ describe('relation', () => {
 
       it('should properly override the properties of the relation and the key', () => {
         const master = mockModel('Master');
-        const noop = () => null!;
 
         master.owner = 'owner';
         master.virtual = true;
@@ -480,7 +511,7 @@ describe('relation', () => {
           keyType: DataTypes.STRING(),
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
-          validator: noop,
+          validator: 'VALIDATE',
         });
 
         expect(master.relations[0].owner).to.be.equals('owner');
@@ -496,7 +527,7 @@ describe('relation', () => {
         expect(master.attributes[0].name).to.be.equals('someId');
         expect(master.attributes[0].type).to.be.instanceof(StringType);
         expect(master.attributes[0].required).to.be.equals(false);
-        expect(master.attributes[0].validator).to.be.equals(noop);
+        expect(master.attributes[0].validator).to.be.equals('VALIDATE');
       });
 
     });
