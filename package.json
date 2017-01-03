@@ -9,8 +9,7 @@
     "publish-all": "node runFor.js --all npm -- publish",
     "bump": "lerna publish --skip-git",
     "lint": "tslint -e \"packages/*/node_modules/**\" -e \"packages/*/lib/**\" \"packages/**/*.ts\" \"packages/**/*.tsx\"",
-    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register \"packages/**/*.spec.ts\"",
-    "postinstall": "npm run for-all -- npm install"
+    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register \"packages/**/*.spec.ts\""
   },
   "repository": {
     "type": "git",
