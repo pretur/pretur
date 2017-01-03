@@ -62,6 +62,11 @@ export interface ValidateResponse extends ResponseBase {
   errors?: I18nBundle[];
 }
 
+export interface BatchResponse extends ResponseBase {
+  type: 'batch';
+  queue: Response[];
+}
+
 export type Response =
   | SelectResponse<any>
   | RefreshResponse<any>
@@ -69,4 +74,5 @@ export type Response =
   | InsertResponse<any>
   | UpdateResponse
   | RemoveResponse
-  | ValidateResponse;
+  | ValidateResponse
+  | BatchResponse;

@@ -45,6 +45,11 @@ export interface ValidateRequest<T> extends RequestBase {
   data: T;
 }
 
+export interface BatchRequest extends RequestBase {
+  type: 'batch';
+  queue: Request[];
+}
+
 export type Request =
   | SelectRequest<any>
   | RefreshRequest<any>
@@ -52,4 +57,5 @@ export type Request =
   | InsertRequest<any>
   | UpdateRequest<any>
   | RemoveRequest<any>
-  | ValidateRequest<any>;
+  | ValidateRequest<any>
+  | BatchRequest;
