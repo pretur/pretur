@@ -35,5 +35,5 @@ export interface Query<T> {
   filters?: QueryFilters<T>;
   attributes?: (keyof T)[];
   pagination?: QueryPagination;
-  order?: QueryOrder | QueryOrder[];
+  order?: QueryOrder;
 }
