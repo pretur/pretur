@@ -495,7 +495,7 @@ describe('relation', () => {
         expect(master.relations[0].type).to.be.equals('RECURSIVE');
 
         expect(master.attributes[0].mutable).to.be.true;
-        expect(master.attributes[0].name).to.be.equals('parentId');
+        expect(master.attributes[0].name).to.be.equals('id');
         expect(master.attributes[0].type).to.be.instanceof(IntegerType);
       });
 

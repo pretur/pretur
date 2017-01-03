@@ -103,14 +103,14 @@ describe('attribute', () => {
       })).to.throw();
     });
 
-    it('should fail when validator is provided and is not a function', () => {
+    it('should fail when validator is provided and is not a string', () => {
       const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
       expect(() => appendAttribute(model, {
         name: 'a',
         type: t,
-        validator: <any>'blah',
+        validator: <any>(() => null),
       })).to.throw();
     });
 
