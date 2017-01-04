@@ -1,4 +1,4 @@
-import { createJoinModel } from '../../main';
+import { createJoinModel, UninitializedStateModel } from '../../main';
 import UserModel, { User } from './User';
 import PermissionModel, { Permission } from './Permission';
 
@@ -9,19 +9,20 @@ export interface UserPermission {
   permission: Permission<any>;
 }
 
-export default createJoinModel<UserPermission, User, Permission<any>>({
-  firstJoinee: {
-    aliasOnJoin: 'user',
-    aliasOnTarget: 'users',
-    key: 'userId',
-    model: UserModel,
-  },
-  name: 'UserPermission',
-  owner: null,
-  secondJoinee: {
-    aliasOnJoin: 'permission',
-    aliasOnTarget: 'permissions',
-    key: 'permissionId',
-    model: PermissionModel,
-  },
-});
+export default <UninitializedStateModel<UserPermission>>
+  createJoinModel<UserPermission, User, Permission<any>>({
+    firstJoinee: {
+      aliasOnJoin: 'user',
+      aliasOnTarget: 'users',
+      key: 'userId',
+      model: UserModel,
+    },
+    name: 'UserPermission',
+    owner: 'me',
+    secondJoinee: {
+      aliasOnJoin: 'permission',
+      aliasOnTarget: 'permissions',
+      key: 'permissionId',
+      model: PermissionModel,
+    },
+  });

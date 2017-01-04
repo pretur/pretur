@@ -17,6 +17,7 @@ interface ReducerBuilderData {
 }
 
 const desciptor = {
+  // tslint:disable-next-line:no-null-keyword
   component: () => null!,
   path: 'admin',
   reducerBuilder: ({rank, fail}: ReducerBuilderData) => (s = { B: rank }, a: any): State => {

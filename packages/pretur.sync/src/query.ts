@@ -28,7 +28,7 @@ export interface SubQuery<T> {
 
 export interface Query<T> {
   model: string;
-  byId?: number | string | Partial<T>;
+  byId?: Partial<T>;
   count?: boolean;
   extra?: any;
   include?: QueryInclude<T>;

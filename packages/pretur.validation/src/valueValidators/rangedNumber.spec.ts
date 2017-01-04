@@ -6,30 +6,20 @@ import { rangedNumber } from './rangedNumber';
 
 describe('value-validator:rangedNumber', () => {
 
-  it('should return null for valid input', async (): Bluebird<void> => {
+  it('should return undefined for valid input', async (): Bluebird<void> => {
     const validator1 = rangedNumber('A', 1.5, 1.6);
     const validator2 = rangedNumber('A', 1.5, 1.6, false, false);
     const validator3 = rangedNumber('A', 3);
-    expect(await validator1(1.5)).to.be.null;
-    expect(await validator1(1.6)).to.be.null;
-    expect(await validator2(1.51)).to.be.null;
-    expect(await validator3(Number.POSITIVE_INFINITY)).to.be.null;
+    expect(await validator1(1.5)).to.be.undefined;
+    expect(await validator1(1.6)).to.be.undefined;
+    expect(await validator2(1.51)).to.be.undefined;
+    expect(await validator3(Number.POSITIVE_INFINITY)).to.be.undefined;
   });
 
   it(
     'should return bundle with {VALUE, FROM, TO, INCLUSIVE_FROM, INCLUSIVE_TO} for invalid input',
     async (): Bluebird<void> => {
       const validator = rangedNumber('A', -10, 10, true, false);
-      expect(await validator(null!)).to.deep.equal({
-        data: {
-          FROM: -10,
-          INCLUSIVE_FROM: true,
-          INCLUSIVE_TO: false,
-          TO: 10,
-          VALUE: null,
-        },
-        key: 'A',
-      });
       expect(await validator(undefined!)).to.deep.equal({
         data: {
           FROM: -10,

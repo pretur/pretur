@@ -16,7 +16,7 @@ class ReduceMe implements Reducible {
   public initialized: boolean;
   public payload: any;
 
-  constructor(initialized = false, changing = false, payload: any = null) {
+  constructor(initialized = false, changing = false, payload?: any) {
     this.changing = changing;
     this.initialized = initialized;
     this.payload = payload;
@@ -75,7 +75,7 @@ describe('createAutoReducer', () => {
 
     const initial = reducer(undefined, { type: 'INIT' });
     const second = reducer(initial, { payload: true, type: 'OTHER' });
-    expect(initial.a.payload).to.be.null;
+    expect(initial.a.payload).to.be.undefined;
     expect(second.a.payload).to.be.true;
   });
 
@@ -86,7 +86,7 @@ describe('createMutatorReducer', () => {
   it('should create a mutatorReducer that properly initializes state', () => {
     const initialState = { a: ' ', b: 1 };
 
-    const reducer = createMutatorReducer(initialState, () => null);
+    const reducer = createMutatorReducer(initialState, () => undefined);
 
     const state = reducer(undefined, { type: 'INIT' });
     expect(state).to.be.equals(initialState);
@@ -232,7 +232,7 @@ describe('createReducibleReducer', () => {
 
     const initial = reducer(undefined, { type: 'INIT' });
     const second = reducer(initial, { payload: true, type: 'OTHER' });
-    expect(initial.payload).to.be.null;
+    expect(initial.payload).to.be.undefined;
     expect(second.payload).to.be.true;
   });
 
@@ -265,7 +265,7 @@ describe('createReducibleMap', () => {
     });
 
     expect(reducer.bar.payload).to.be.equals('hello');
-    expect(reducer.foo.payload).to.be.equals(null);
+    expect(reducer.foo.payload).to.be.equals(undefined);
 
     const initialized = reducer.reduce({ type: 'INIT' });
 

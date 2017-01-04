@@ -36,7 +36,7 @@ export function buildCustomResolver<T>(
   _: Spec<T>,
   resolver: CustomResolver<T>,
 ): UnitializedResolver<T> {
-  let pool: Pool = <any>null;
+  let pool: Pool = <any>undefined;
 
   function wrappedResolver(query: Query<T>, context: any): Bluebird<ResolveResult<T>> {
     return resolver(query, pool, context);
@@ -53,7 +53,7 @@ export function buildResolver<T>(
   spec: Spec<T>,
   options?: BuildResolverOptions<T>,
 ): UnitializedResolver<T> {
-  let pool: Pool = <any>null;
+  let pool: Pool = <any>undefined;
 
   function resolver(rawQuery: Query<T>, context: any): Bluebird<ResolveResult<T>> {
     let query = rawQuery;
@@ -132,7 +132,7 @@ export function buildResolver<T>(
   return { resolver, initialize };
 }
 
-function buildOrder<T>(query: Query<T>, pool: Pool, model: string): any[] | null {
+function buildOrder<T>(query: Query<T>, pool: Pool, model: string): any[] | undefined {
   const defaultOrder = pool.models[model].defaultOrder;
   const parameters: any[] = [];
 
@@ -153,7 +153,7 @@ function buildOrder<T>(query: Query<T>, pool: Pool, model: string): any[] | null
 
   if (parameters.length === 0) {
     if (!Array.isArray(defaultOrder)) {
-      return null;
+      return;
     }
     return [defaultOrder.slice()];
   }
@@ -165,11 +165,11 @@ function buildWhere<T>(
   query: Query<T> | SubQuery<T>,
   pool: Pool,
   modelName: string,
-): Sequelize.WhereOptions | null {
+): Sequelize.WhereOptions | undefined {
   const where: Sequelize.WhereOptions = {};
   const model = pool.models[modelName];
 
-  if (query && typeof query.filters === 'object' && query.filters !== null) {
+  if (query && query.filters) {
     const filters = query.filters;
     let filtersKeys = Object.keys(query.filters);
 
@@ -185,8 +185,10 @@ function buildWhere<T>(
         typeof model.fieldWhereBuilders[field] === 'function'
       ) {
         where[field] = model.fieldWhereBuilders[field](value);
+      // tslint:disable:no-null-keyword
       } else if (value === null) {
         where[field] = null!;
+      // tslint:enable:no-null-keyword
       } else if (Array.isArray(value)) {
         where[field] = { $in: value };
       } else {
@@ -203,14 +205,14 @@ function buildWhere<T>(
 
     return where;
   }
-  return null;
+  return;
 }
 
 function buildInclude<T>(
   query: Query<T>,
   pool: Pool,
   model: string,
-): Sequelize.IncludeOptions[] | null {
+): Sequelize.IncludeOptions[] | undefined {
   const queryInclude = query && query.include;
   const orderChain = query && query.order && query.order.chain;
 
@@ -222,7 +224,7 @@ function buildNestedInclude<T>(
   queryInclude: QueryInclude<T> | undefined,
   orderChain: string[] | undefined,
   model: string,
-): Sequelize.IncludeOptions[] | null {
+): Sequelize.IncludeOptions[] | undefined {
   const aliasModelMap = pool.models[model].aliasModelMap;
 
   if (queryInclude || orderChain) {
@@ -276,5 +278,5 @@ function buildNestedInclude<T>(
     return include;
   }
 
-  return null;
+  return;
 }

@@ -195,7 +195,7 @@ export function hook(dispatch: Dispatch, ...transformers: ActionTransformer[]): 
     if (typeof action === 'function') {
       throw new TypeError('cannot hook into thunks');
     }
-    if (typeof action !== 'object' || action === null) {
+    if (!action) {
       throw new TypeError('invalid action provided to hook into');
     }
     dispatch(transform(action));

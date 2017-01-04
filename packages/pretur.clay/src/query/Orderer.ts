@@ -30,9 +30,9 @@ export default class Orderer extends UniqueReducible {
     return this.queryOrderChain;
   }
 
-  public get plain(): QueryOrder | null {
+  public get plain(): QueryOrder | undefined {
     if (!this.queryOrderField) {
-      return null;
+      return;
     }
     const order = <QueryOrder>{
       field: this.queryOrderField,

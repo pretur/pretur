@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
-import { Validator } from 'pretur.validation';
+import { ValueValidationError } from 'pretur.validation';
 import { Action, Dispatch } from 'pretur.redux';
 import StatusReporter from './StatusReporter';
 import {
@@ -11,29 +11,29 @@ import {
 } from './actions';
 
 class Value<T> extends StatusReporter {
-  private originalValue: this | null;
-  private valueValidator: Validator<T> | null;
+  private originalValue?: this;
+  private _validator: string | undefined;
   private rawValue: T;
-  private errorBundle: I18nBundle | null;
+  private _validationError: ValueValidationError;
 
-  constructor(validator: Validator<T> | null, synchronized: boolean, value: T) {
+  constructor(validator: Validator<T> | undefined, synchronized: boolean, value: T) {
     super(synchronized);
-    this.originalValue = synchronized ? this : null;
-    this.valueValidator = validator || null;
+    this.originalValue = synchronized ? this : undefined;
+    this._validator = validator || undefined;
     this.rawValue = value;
-    this.errorBundle = validator ? validator(value) : null;
+    this._validationError = validator ? validator(value) : undefined;
   }
 
   public get value(): T {
     return this.rawValue;
   }
 
-  public get original(): this | null {
+  public get original(): this | undefined {
     return this.originalValue;
   }
 
-  public get error(): I18nBundle | null {
-    return this.errorBundle;
+  public get error(): I18nBundle | undefined {
+    return this._validationError;
   }
 
   public reduce(action: Action<any, any>): this {
@@ -53,8 +53,8 @@ class Value<T> extends StatusReporter {
       const clone = this.clone();
       clone.statusInstance = this.statusInstance.setDecayed();
 
-      if (clone.valueValidator) {
-        clone.errorBundle = clone.valueValidator(clone.value);
+      if (clone._validator) {
+        clone._validationError = clone._validator(clone.value);
       }
 
       return clone;
@@ -71,8 +71,8 @@ class Value<T> extends StatusReporter {
 
       const clone = this.clone();
 
-      if (clone.valueValidator) {
-        clone.errorBundle = clone.valueValidator(action.payload);
+      if (clone._validator) {
+        clone._validationError = clone._validator(action.payload);
       }
 
       clone.rawValue = action.payload;
@@ -86,7 +86,7 @@ class Value<T> extends StatusReporter {
 
     if (CLAY_DATA_SET_ERROR.is(this.uniqueId, action)) {
       const clone = this.clone();
-      clone.errorBundle = action.payload || null;
+      clone._validationError = action.payload;
       return clone;
     }
 
@@ -110,7 +110,7 @@ class Value<T> extends StatusReporter {
   }
 
   protected checkValidity(): boolean {
-    if (!this.errorBundle) {
+    if (!this._validationError) {
       return true;
     }
     return false;
@@ -119,13 +119,13 @@ class Value<T> extends StatusReporter {
   protected cloneOverride(clone: this): void {
     super.cloneOverride(clone);
     clone.originalValue = this.originalValue;
-    clone.valueValidator = this.valueValidator;
+    clone._validator = this._validator;
     clone.rawValue = this.rawValue;
-    clone.errorBundle = this.errorBundle;
+    clone._validationError = this._validationError;
   }
 
   protected createInstance(): this {
-    return <this>new Value(null, false, <any>undefined);
+    return <this>new Value(undefined, false, <any>undefined);
   }
 }
 

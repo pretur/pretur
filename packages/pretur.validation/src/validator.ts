@@ -3,7 +3,7 @@ import { I18nBundle } from 'pretur.i18n';
 
 export type PropertyPath = number | string | (number | string)[];
 
-export type ValueValidationError = null | I18nBundle | I18nBundle[];
+export type ValueValidationError = undefined | I18nBundle | I18nBundle[];
 export interface ArrayValidationError extends Array<ValidationError> { }
 export interface ObjectValidationError {
   [prop: string]: ValidationError;
@@ -13,10 +13,10 @@ export type ValidationError = ValueValidationError | ArrayValidationError | Obje
 
 function getNestedError(error: ValidationError, path: PropertyPath): ValidationError {
   if (!error) {
-    return null;
+    return;
   }
 
-  if (process.env.NODE_ENV !== 'production' && (path === null || path === undefined)) {
+  if (process.env.NODE_ENV !== 'production' && path === undefined) {
     throw new Error(`path must be provided`);
   }
 
@@ -32,7 +32,7 @@ function getNestedError(error: ValidationError, path: PropertyPath): ValidationE
   for (let i = 0; i < path.length; i++) {
     currentValue = (<any>currentValue)[path[i]];
     if (!currentValue) {
-      return null;
+      return;
     }
   }
 
@@ -57,7 +57,7 @@ export function getError(error: ValidationError, path: PropertyPath): ValueValid
         validateBundle(<any>{});
       }
       (<any[]>result).forEach(validateBundle);
-    } else if (result !== null) {
+    } else if (result) {
       validateBundle(<I18nBundle>result);
     }
   }
@@ -98,9 +98,9 @@ export function deepValidator<T>(
   propOrMap?: PropValidator<T, keyof T> | DeepValidatorMap<T>,
   lastMap?: DeepValidatorMap<T>,
 ): Validator<T> {
-  let self: Validator<T> | null = null;
-  let prop: PropValidator<T, keyof T> | null = null;
-  let map: DeepValidatorMap<T> | null = null;
+  let self: Validator<T> | undefined = undefined;
+  let prop: PropValidator<T, keyof T> | undefined = undefined;
+  let map: DeepValidatorMap<T> | undefined = undefined;
 
   if (selfOrPropOrMap && typeof selfOrPropOrMap === 'object') {
     map = selfOrPropOrMap;
@@ -130,7 +130,7 @@ export function deepValidator<T>(
     }
 
     if (value) {
-      let result: ObjectValidationError | null = null;
+      let result: ObjectValidationError | undefined = undefined;
 
       if (map) {
         for (const mapKey of Object.keys(map)) {
@@ -172,14 +172,14 @@ export function deepValidator<T>(
       return result;
     }
 
-    return null;
+    return;
   };
 
 }
 
 export function combineValueValidator<T>(...validators: ValueValidator<T>[]): ValueValidator<T> {
   return async function combinedValidator(value: T): Bluebird<ValueValidationError> {
-    let result: I18nBundle[] | null = null;
+    let result: I18nBundle[] | undefined = undefined;
     for (const validator of validators) {
       if (typeof validator === 'function') {
         const error = await validator(value);

@@ -9,7 +9,7 @@ export function minimumLength(
   return async function minimumLengthValidator(str: string): Bluebird<ValueValidationError> {
 
     if (acceptEmpty && !str) {
-      return null;
+      return;
     }
 
     if (typeof str !== 'string' || str.length < minimumLength) {
@@ -23,6 +23,6 @@ export function minimumLength(
       };
     }
 
-    return null;
+    return;
   };
 }

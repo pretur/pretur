@@ -2,7 +2,7 @@ import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 import { Spec } from './spec';
 
-export type Owner = null | string | string[];
+export type Owner = string | string[];
 
 export interface Indexes {
   unique: string[][];

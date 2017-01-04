@@ -1,5 +1,4 @@
 export interface I18nFormatter {
-  (nothing: null): null;
   (bundle: I18nBundle): string;
   <K extends string>(key: string): I18nStringBuilder<K, any>;
 }
@@ -21,30 +20,26 @@ export interface Language {
 
 export function format(
   language: Language,
-  fallback: Language | null,
+  fallback: Language | undefined,
   bundle: I18nBundle,
 ): string;
 export function format(
   language: Language,
-  fallback: Language | null,
+  fallback: Language | undefined,
   key: string,
 ): I18nStringBuilder<string, any>;
 export function format(
   language: Language,
-  fallback: Language | null,
-  nothing: null,
-): null;
+  fallback: Language | undefined,
+  nothing: undefined,
+): undefined;
 export function format(
   language: Language,
-  fallback: Language | null,
-  bundleOrKeyOrNothing: I18nBundle | string | null,
-): string | I18nStringBuilder<string, any> | null {
+  fallback: Language | undefined,
+  bundleOrKeyOrNothing: I18nBundle | string | undefined,
+): string | I18nStringBuilder<string, any> | undefined {
   if (process.env.NODE_ENV !== 'production' && !language) {
     throw new TypeError('language must be provided');
-  }
-
-  if (bundleOrKeyOrNothing === null) {
-    return null;
   }
 
   if (typeof bundleOrKeyOrNothing === 'object') {
@@ -65,18 +60,14 @@ export function format(
     return targetKey;
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    throw new TypeError('key or bundle object expected');
-  }
-
-  return null;
+  return;
 }
 
 export function buildFormatter<F extends I18nFormatter>(
   language: Language,
-  fallback: Language | null = null,
+  fallback: Language | undefined = undefined,
 ): F {
-  return <F>((input: I18nBundle | string | null) => format(language, fallback, <any>input));
+  return <F>((input: I18nBundle | string | undefined) => format(language, fallback, <any>input));
 }
 
 export interface MessageFormatParameters {

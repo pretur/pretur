@@ -123,7 +123,7 @@ export function buildModelDescriptor<T>(
     defaultOrder,
     sanitizeAttributes,
     initialize,
-    fieldWhereBuilders: (options && options.fieldWhereBuilders) || undefined,
+    fieldWhereBuilders: (options && options.fieldWhereBuilders),
     name: spec.name,
     primaryKey: primaryAttribute ? primaryAttribute.name : undefined,
   };

@@ -153,11 +153,11 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
     dispatch(CLAY_DATA_UNREMOVE_ITEM.create.unicast(this.uniqueId, target));
   }
 
-  public refresh(dispatch: Dispatch, query: Query, fetcher: Fetcher): Bluebird<number | null> {
+  public refresh(dispatch: Dispatch, query: Query, fetcher: Fetcher): Bluebird<number | undefined> {
     const fetchPromise = fetcher.add(query);
     return fetchPromise.then(result => {
       dispatch(CLAY_DATA_RESET.create.unicast(this.uniqueId, result.data || []));
-      return result.count || null;
+      return result.count || undefined;
     });
   }
 

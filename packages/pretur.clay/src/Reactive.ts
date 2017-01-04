@@ -25,18 +25,18 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
   private reactiveQuerier: Querier;
   private reactviceInitialized: boolean;
   private reactiveCount: number;
-  private buildFetcher: (() => Fetcher) | null;
+  private buildFetcher?: () => Fetcher;
   private autoRefreshDebounceTime: number;
   private autoRefreshTimerId: number;
 
   constructor(
-    set: TSet | null,
-    query: Query | null,
-    buildFetcher: (() => Fetcher) | null = null,
+    set?: TSet,
+    query?: Query,
+    buildFetcher?: () => Fetcher,
     autoRefreshDebounceTime = 300,
   ) {
     super();
-    if (set === null) {
+    if (!set) {
       return;
     }
     this.reactiveSet = set;
@@ -218,6 +218,6 @@ export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Reco
   }
 
   protected createInstance(): this {
-    return <this>new Reactive<TSet, TRecord, T>(null, null);
+    return <this>new Reactive<TSet, TRecord, T>();
   }
 }

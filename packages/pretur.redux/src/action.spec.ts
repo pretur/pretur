@@ -62,20 +62,20 @@ describe('hook', () => {
     const t3 = (a: any) => { a['4'] = a['3'] + 1; return a; };
     const t4 = (a: any) => { a['5'] = a['4'] + 1; return a; };
 
-    let action: any = null!;
+    let action: any = undefined!;
     const enhancedDispatch = hook((a: any) => action = a, t1, t2, t3, t4);
     enhancedDispatch(<Action<any, any>>{ type: 'A', 1: 1 });
     expect(action['5']).to.be.equals(5);
   });
 
   it('should fail if provided a thunk', () => {
-    const enhancedDispatch = hook(() => null!);
-    expect(() => enhancedDispatch(() => null!)).to.throw();
+    const enhancedDispatch = hook(() => undefined!);
+    expect(() => enhancedDispatch(() => undefined!)).to.throw();
   });
 
   it('should fail if provided an invalid action', () => {
-    const enhancedDispatch = hook(() => null!);
-    expect(() => enhancedDispatch(null!)).to.throw();
+    const enhancedDispatch = hook(() => undefined!);
+    expect(() => enhancedDispatch(undefined!)).to.throw();
   });
 
 });
@@ -233,7 +233,7 @@ describe('createAsyncAction', () => {
     const SUCCESS = createActionDescriptor<number, void>('SUCCESS');
     const ATTEMPT = createActionDescriptor<void, void>('ATTEMPT');
     const ACTIONASYNC = createAsyncAction<void, number>(
-      () => Bluebird.resolve(1), SUCCESS, null!, ATTEMPT,
+      () => Bluebird.resolve(1), SUCCESS, undefined!, ATTEMPT,
     );
     const act = ACTIONASYNC.create();
 

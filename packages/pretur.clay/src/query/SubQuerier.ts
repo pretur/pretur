@@ -12,15 +12,15 @@ export default class SubQuerier extends UniqueReducible {
   private subQueryAttributor: Attributor;
   private subQueryRequired: Value<boolean>;
 
-  constructor(subquery: SubQuery | null) {
+  constructor(subquery?: SubQuery) {
     super();
-    if (subquery === null) {
+    if (!subquery) {
       return;
     }
     this.subQueryIncluder = new Includer(subquery.include);
     this.subQueryFilterer = new Filterer(subquery.filters);
     this.subQueryAttributor = new Attributor(subquery.attributes);
-    this.subQueryRequired = new Value(null, true, !!subquery.required);
+    this.subQueryRequired = new Value(undefined, true, !!subquery.required);
   }
 
   public get includer(): Includer {
@@ -39,17 +39,17 @@ export default class SubQuerier extends UniqueReducible {
     const subquery = <SubQuery>{};
 
     const include = this.subQueryIncluder.plain;
-    if (include !== null) {
+    if (include) {
       subquery.include = include;
     }
 
     const filters = this.subQueryFilterer.plain;
-    if (filters !== null) {
+    if (filters) {
       subquery.filters = filters;
     }
 
     const attributes = this.subQueryAttributor.plain;
-    if (attributes !== null) {
+    if (attributes) {
       subquery.attributes = attributes;
     }
 
@@ -93,6 +93,6 @@ export default class SubQuerier extends UniqueReducible {
   }
 
   protected createInstance(): this {
-    return <this>new SubQuerier(null);
+    return <this>new SubQuerier();
   }
 }

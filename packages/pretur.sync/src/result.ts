@@ -38,7 +38,7 @@ export interface InsertResult<T> extends ResultBase {
   type: 'insert';
   cancelled: boolean;
   transactionFailed: boolean;
-  generatedId?: number | string | Partial<T>;
+  generatedId?: Partial<T>;
   validationError: ValidationError;
   warnings?: I18nBundle[];
   errors?: I18nBundle[];

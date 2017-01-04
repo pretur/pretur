@@ -169,13 +169,13 @@ export class Spec<T> {
     this.model = model;
   }
 
-  public filterByOwner(owner: Owner): Spec<T> | null {
+  public filterByOwner(owner: Owner): Spec<T> | undefined {
     if (!owner || !this.model.owner || owner.length === 0 || this.model.owner.length === 0) {
       return this;
     }
 
     if (!ownersIntersect(owner, this.model.owner)) {
-      return null;
+      return;
     }
 
     const newModel = assign({}, this.model, {

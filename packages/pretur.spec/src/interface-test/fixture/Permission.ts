@@ -1,4 +1,4 @@
-import { createModel, DataTypes } from '../../main';
+import { createModel, DataTypes, UninitializedStateModel } from '../../main';
 import { User } from './User';
 
 export interface PermissionValues<T> {
@@ -13,8 +13,8 @@ export interface Permission<T> {
   users: User[];
 }
 
-export default createModel<Permission<any>>(
-  { name: 'Role', owner: null },
+export default <UninitializedStateModel<Permission<any>>>createModel<Permission<any>>(
+  { name: 'Role', owner: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });
     attribute({ name: 'name', type: DataTypes.STRING() });

@@ -2,8 +2,8 @@ import { createTargetedActionDescriptor, TargetedActionDescriptor } from 'pretur
 import { PageInstantiationData } from './pages';
 import { NavigatorPageReplaceOptions } from './navigator';
 
-export const NAVIGATION_TRANSIT_TO_PAGE: TargetedActionDescriptor<string | null, void>
-  = createTargetedActionDescriptor<string | null, void>('NAVIGATION_TRANSIT_TO_PAGE');
+export const NAVIGATION_TRANSIT_TO_PAGE: TargetedActionDescriptor<string, void>
+  = createTargetedActionDescriptor<string, void>('NAVIGATION_TRANSIT_TO_PAGE');
 
 export const NAVIGATION_OPEN_PAGE: TargetedActionDescriptor<PageInstantiationData<any>, void>
   = createTargetedActionDescriptor<PageInstantiationData<any>, void>('NAVIGATION_OPEN_PAGE');

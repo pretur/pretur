@@ -49,9 +49,9 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
   return function reducer(state = initialState, action: Action<any, any>) {
     let modified = false;
 
-    let set: TState | null = null!;
-    let unset: TProps[] | null = <any>null;
-    let reset: TState | null = null;
+    let set: TState | undefined = undefined!;
+    let unset: TProps[] | undefined = <any>undefined;
+    let reset: TState | undefined = undefined;
 
     function setter<TProps extends keyof TState>(prop: TProps, value: TState[TProps]) {
       if (value !== state![prop]) {

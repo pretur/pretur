@@ -3,6 +3,7 @@
 import { expect } from 'chai';
 import { buildDescriptorsFromTree } from '../src/buildDescriptorsFromTree';
 
+// tslint:disable-next-line:no-null-keyword
 const component = () => null!;
 const reducerBuilder = () => () => 'state!';
 

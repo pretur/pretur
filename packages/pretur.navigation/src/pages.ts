@@ -108,14 +108,14 @@ export class Pages {
     return this.folders.get(path);
   }
 
-  public isHidden(path: string): boolean | null {
+  public isHidden(path: string): boolean {
     if (this.hasPage(path)) {
       return !!this.getPage(path).hidden;
     }
     if (this.getFolder(path)) {
       return !!this.getFolder(path).hidden;
     }
-    return null;
+    return false;
   }
 
   public get pathTree(): PathTree {

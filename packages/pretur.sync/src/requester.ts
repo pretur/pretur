@@ -67,7 +67,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     return ++_uniqueId;
   }
 
-  let currentBatch: BatchRequestMetadata | null = null;
+  let currentBatch: BatchRequestMetadata | undefined = undefined;
 
   let queue: RequestQueueItem[] = [];
   let requestRunning = false;
@@ -267,7 +267,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             cancelled: true,
             transactionFailed: false,
             type: 'insert',
-            validationError: null,
+            validationError: undefined,
           });
         },
       };
@@ -310,7 +310,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             cancelled: true,
             transactionFailed: false,
             type: 'update',
-            validationError: null,
+            validationError: undefined,
           });
         },
       };
@@ -352,7 +352,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             cancelled: true,
             transactionFailed: false,
             type: 'remove',
-            validationError: null,
+            validationError: undefined,
           });
         },
       };
@@ -394,7 +394,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             name,
             cancelled: true,
             type: 'validate',
-            validationError: null,
+            validationError: undefined,
           });
         },
       };
@@ -419,7 +419,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   function batchEnd() {
     if (currentBatch) {
       const previousBatch = currentBatch;
-      currentBatch = null;
+      currentBatch = undefined;
       queue.push({
         request: <BatchRequest>{
           queue: previousBatch.queue.map(item => item.request),
@@ -454,7 +454,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     queue = [];
     if (currentBatch) {
       currentBatch.queue.forEach(item => item.cancel());
-      currentBatch = null;
+      currentBatch = undefined;
     }
   }
 

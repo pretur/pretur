@@ -23,9 +23,9 @@ export default class Paginator extends UniqueReducible {
     return this.takeItems || undefined;
   }
 
-  public get plain(): QueryPagination | null {
+  public get plain(): QueryPagination | undefined {
     if (typeof this.skipItems !== 'number' && typeof this.takeItems !== 'number') {
-      return null;
+      return;
     }
     const pagination = <QueryPagination>{};
     if (typeof this.skipItems === 'number') {

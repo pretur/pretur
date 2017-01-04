@@ -4,7 +4,7 @@ import { ValueValidator, ValueValidationError } from '../validator';
 export function numeric(key: string): ValueValidator<string> {
   return async function numericValidator(str: string): Bluebird<ValueValidationError> {
     if (!str) {
-      return null;
+      return;
     }
 
     const value = Number(str);
@@ -13,6 +13,6 @@ export function numeric(key: string): ValueValidator<string> {
       return { key, data: { VALUE: str } };
     }
 
-    return null;
+    return;
   };
 }

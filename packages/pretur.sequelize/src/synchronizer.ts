@@ -79,7 +79,7 @@ export function buildSynchronizer<T>(
   spec: Spec<T>,
   options?: BuildSynchronizerOptions<T>,
 ): UnitializedSynchronizer<T> {
-  let pool: Pool = <any>null;
+  let pool: Pool = <any>undefined;
 
   function synchronizer(
     transaction: Sequelize.Transaction,
@@ -181,7 +181,7 @@ function insert<T>(
           context,
         ));
 
-        (<any>data)[master.alias] = null;
+        (<any>data)[master.alias] = undefined;
       }
     });
 

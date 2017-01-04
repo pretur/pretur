@@ -54,13 +54,13 @@ describe('format', () => {
 
   it('should format the string using the main language', () => {
     const language = <Language>{ A: compiler.constant('B') };
-    const str = format(language, null, 'A')();
+    const str = format(language, undefined, 'A')();
     expect(str).to.be.equals('B');
   });
 
   it('should format the string using the main language with data', () => {
     const language = <Language>{ A: compiler.callback((d: { C: string }) => 'B' + d.C) };
-    const str = format(language, null, 'A')({ C: 'C' });
+    const str = format(language, undefined, 'A')({ C: 'C' });
     expect(str).to.be.equals('BC');
   });
 
@@ -84,20 +84,16 @@ describe('format', () => {
 
   it('should fail if it finds no match', () => {
     expect(() => format({}, {}, 'A')({ C: 'C' })).to.throw();
-    expect(() => format({}, null, 'A')({ C: 'C' })).to.throw();
+    expect(() => format({}, undefined, 'A')({ C: 'C' })).to.throw();
   });
 
   it('should fail if it finds no match with bundle', () => {
     expect(() => format({}, {}, { data: { C: 'C' }, key: 'A' })).to.throw();
-    expect(() => format({}, null, { data: { C: 'C' }, key: 'A' })).to.throw();
+    expect(() => format({}, undefined, { data: { C: 'C' }, key: 'A' })).to.throw();
   });
 
-  it('should fail if key or bundle is not provided', () => {
-    expect(() => format({}, {}, undefined!)).to.throw();
-  });
-
-  it('should not fail if bundle is null', () => {
-    expect(() => format({}, {}, null)).not.to.throw();
+  it('should not fail if bundle is not provided', () => {
+    expect(() => format({}, {}, undefined)).not.to.throw();
   });
 
 });

@@ -46,7 +46,7 @@ function mockModel(name: string): Model<MockModel> {
     attributes: [],
     indexes: { unique: [] },
     join: false,
-    owner: null!,
+    owner: undefined!,
     relations: [],
     virtual: false,
   };
@@ -55,7 +55,7 @@ function mockModel(name: string): Model<MockModel> {
 function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel<any> {
   return {
     model,
-    initialize: () => null!,
+    initialize: () => undefined!,
     join: model.join,
     name: model.name,
     owner: model.owner,
@@ -64,13 +64,13 @@ function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel
 }
 
 const baseRelation = <Relation>{
-  alias: null!,
+  alias: undefined!,
   key: 'aId',
   model: 'A',
   onDelete: 'CASCADE',
   onUpdate: 'CASCADE',
-  owner: null!,
-  type: null!,
+  owner: undefined!,
+  type: undefined!,
 };
 
 describe('relation', () => {
@@ -88,7 +88,7 @@ describe('relation', () => {
     });
 
     it('should fail when model is invalid', () => {
-      expect(() => appendRelation(null!)).to.throw();
+      expect(() => appendRelation(undefined!)).to.throw();
     });
 
     it('should fail when no relations are provided', () => {
@@ -99,7 +99,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: null, type: 'RECURSIVE' }),
+        appendRelation(model, baseRelation, <any>{ alias: undefined, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -107,7 +107,7 @@ describe('relation', () => {
       const model = mockModel('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', key: null, type: 'RECURSIVE' }),
+        appendRelation(model, baseRelation, <any>{ alias: 'a', key: undefined, type: 'RECURSIVE' }),
       ).to.throw();
     });
 

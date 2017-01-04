@@ -28,15 +28,15 @@ export default class Filterer extends UniqueReducible {
     return this.queryFilters[field];
   }
 
-  public get plain(): QueryFilters | null {
+  public get plain(): QueryFilters | undefined {
     if (!this.queryFilters) {
-      return null;
+      return;
     }
 
     const keys = Object.keys(this.queryFilters);
 
     if (keys.length === 0) {
-      return null;
+      return;
     }
 
     const filters: QueryFilters = {};

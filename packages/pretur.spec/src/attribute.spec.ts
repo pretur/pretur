@@ -17,7 +17,7 @@ function mockModel(name: string): Model<MockModel> {
     attributes: [],
     indexes: { unique: [] },
     join: false,
-    owner: null!,
+    owner: undefined!,
     relations: [],
     virtual: false,
   };
@@ -31,7 +31,7 @@ describe('attribute', () => {
       const model = mockModel('A');
       const t = DataTypes.INTEGER();
 
-      expect(() => appendAttribute(model, { name: null!, type: t })).to.throw();
+      expect(() => appendAttribute(model, { name: undefined!, type: t })).to.throw();
       expect(() => appendAttribute(model, { name: <any>1, type: t })).to.throw();
       expect(() => appendAttribute(model, { name: <any>0, type: t })).to.throw();
       expect(() => appendAttribute(model, { name: <any>false, type: t })).to.throw();
@@ -50,7 +50,7 @@ describe('attribute', () => {
 
       expect(() => appendAttribute(model, {
         autoIncrement: true,
-        name: null!,
+        name: undefined!,
         primary: false,
         type: t,
       })).to.throw();
@@ -62,7 +62,7 @@ describe('attribute', () => {
 
       expect(() => appendAttribute(model, {
         autoIncrement: true,
-        name: null!,
+        name: undefined!,
         primary: true,
         type: t,
       })).to.throw();
@@ -110,7 +110,7 @@ describe('attribute', () => {
       expect(() => appendAttribute(model, {
         name: 'a',
         type: t,
-        validator: <any>(() => null),
+        validator: <any>(() => undefined),
       })).to.throw();
     });
 
@@ -123,7 +123,7 @@ describe('attribute', () => {
       const type = DataTypes.INTEGER();
 
       appendAttribute(model, { name: 'a', type });
-      appendAttribute(model, { name: 'a', type: null! }, { name: 'b', type });
+      appendAttribute(model, { name: 'a', type: undefined! }, { name: 'b', type });
       appendAttribute(model, <any>{}, { name: 'c', type });
 
       expect(model.attributes[0].name).to.be.equals('a');
@@ -132,7 +132,7 @@ describe('attribute', () => {
     });
 
     it('should fail if no model is provided', () => {
-      expect(() => appendAttribute(null!, <any>{})).to.throw();
+      expect(() => appendAttribute(undefined!, <any>{})).to.throw();
     });
 
     it('should fail if no attribute is provided', () => {
@@ -152,7 +152,7 @@ describe('attribute', () => {
   describe('createAttributeBuilder', () => {
 
     it('should fail if no model is provided', () => {
-      expect(() => createAttributeBuilder(null!)).to.throw();
+      expect(() => createAttributeBuilder(undefined!)).to.throw();
     });
 
     describe('attributeBuilder', () => {

@@ -26,7 +26,7 @@ function mockModel(name: string): Model<MockModel> {
     attributes: [],
     indexes: { unique: [] },
     join: false,
-    owner: null!,
+    owner: undefined!,
     relations: [],
     virtual: false,
   };
@@ -35,7 +35,7 @@ function mockModel(name: string): Model<MockModel> {
 function mockUninitializedStateModel(model: Model<MockModel>): UninitializedStateModel<any> {
   return {
     model,
-    initialize: () => null!,
+    initialize: () => undefined!,
     join: model.join,
     name: model.name,
     owner: model.owner,
@@ -54,18 +54,18 @@ describe('joinModel', () => {
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',
         key: 'aId',
-        model: null!,
+        model: undefined!,
       })).to.throw();
       expect(() => joineeValidateAndSetDefault<any, any, any>({
         model,
-        aliasOnJoin: null!,
+        aliasOnJoin: undefined!,
         aliasOnTarget: 'all_a',
         key: 'aId',
       })).to.throw();
       expect(() => joineeValidateAndSetDefault<any, any, any>({
         model,
         aliasOnJoin: 'a',
-        aliasOnTarget: null!,
+        aliasOnTarget: undefined!,
         key: 'aId',
       })).to.throw();
     });
@@ -294,7 +294,7 @@ describe('joinModel', () => {
             model: mockUninitializedStateModel(modelA),
           },
           name: 'a',
-          owner: null,
+          owner: undefined!,
           secondJoinee: {
             aliasOnJoin: 'b',
             aliasOnTarget: 'all_b',

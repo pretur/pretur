@@ -6,6 +6,7 @@ import { Navigator, deisolate } from '../src/navigator';
 import * as actions from '../src/actions';
 import * as persist from '../src/persist';
 
+// tslint:disable-next-line:no-null-keyword
 const component = () => null!;
 const reducerBuilder: any
   = () => (s = { value: 1 }, {value}: { value: any }) => value ? { value } : s;
@@ -47,12 +48,12 @@ const tree: PageTreeRoot = {
 
 const navigator = new Navigator(new Pages(tree), 'ADMIN');
 
-function check(nav: Navigator, open: string[], active: string | null, store = true) {
+function check(nav: Navigator, open: string[], active: string | undefined, store = true) {
 
   expect(nav.all.map(i => i!.path).toArray()).to.deep.equal(open);
 
-  if (active === null) {
-    expect(nav.active).to.be.null;
+  if (!active) {
+    expect(nav.active).to.be.undefined;
   } else {
     expect(nav.active!.mutex).to.be.equals(active);
   }
@@ -64,7 +65,7 @@ function check(nav: Navigator, open: string[], active: string | null, store = tr
   }
 }
 
-function checkStore(_: Navigator, open: string[], active: string | null) {
+function checkStore(_: Navigator, open: string[], active: string | undefined) {
   expect(persist.load('ADMIN').map(i => i.path)).to.be.deep.equal(open);
   expect(persist.loadActivePage('ADMIN')).to.be.equals(active);
 }
@@ -95,7 +96,7 @@ describe('Navigator', () => {
         nav.open(dispatch, { mutex: '3', path: 'blah3' });
         nav.open(dispatch, { mutex: '4', path: 'blah4' });
 
-        check(nav, [], null);
+        check(nav, [], undefined);
         expect(nav).to.be.equals(navigator);
       });
 
@@ -188,7 +189,7 @@ describe('Navigator', () => {
         nav.replace(dispatch, 'blah', { mutex: '3', path: 'blah3' });
         nav.replace(dispatch, 'blah', { mutex: '4', path: 'blah4' });
 
-        check(nav, [], null);
+        check(nav, [], undefined);
         expect(nav).to.be.equals(navigator);
       });
 
@@ -273,7 +274,7 @@ describe('Navigator', () => {
 
         nav.close(dispatch, '6');
         check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/g/e'], '5', false);
-        checkStore(nav, ['a/d/e', 'f', 'a/d/e', 'f'], null);
+        checkStore(nav, ['a/d/e', 'f', 'a/d/e', 'f'], undefined);
       });
 
       it('should properly change the active page after it has been closed', () => {
@@ -287,12 +288,12 @@ describe('Navigator', () => {
         check(nav, ['a/d/e'], '3');
       });
 
-      it('should set active page to null if all pages are closed', () => {
+      it('should set active page to undefined if all pages are closed', () => {
         nav.close(dispatch, '1');
         nav.close(dispatch, '2');
         nav.close(dispatch, '3');
         nav.close(dispatch, '4');
-        check(nav, [], null);
+        check(nav, [], undefined);
       });
 
     });
@@ -317,9 +318,9 @@ describe('Navigator', () => {
         expect(previousNav).to.be.equals(nav);
       });
 
-      it('should transit to null properly', () => {
-        nav.transit(dispatch, null);
-        check(nav, ['a/d/e', 'f', 'a/d/e'], null);
+      it('should transit to undefined properly', () => {
+        nav.transit(dispatch, undefined);
+        check(nav, ['a/d/e', 'f', 'a/d/e'], undefined);
       });
 
       it('should leave store unchanged when transiting to non persistent pages', () => {
@@ -365,7 +366,7 @@ describe('Navigator', () => {
 
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
         nav.clear(dispatch);
-        check(nav, [], null);
+        check(nav, [], undefined);
       });
 
     });
@@ -422,10 +423,10 @@ describe('Navigator', () => {
 
         nav.load(dispatch);
 
-        check(nav, ['a/d/e', 'a/d/e'], null, false);
+        check(nav, ['a/d/e', 'a/d/e'], undefined, false);
       });
 
-      it('should tolerate null active page', () => {
+      it('should tolerate undefined active page', () => {
         let nav: Navigator = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
         persist.clear('ADMIN');
@@ -436,7 +437,7 @@ describe('Navigator', () => {
 
         nav.load(dispatch);
 
-        check(nav, ['a/d/e', 'a/d/e'], null);
+        check(nav, ['a/d/e', 'a/d/e'], undefined);
       });
 
     });
@@ -536,8 +537,8 @@ describe('Navigator', () => {
 
   describe('active', () => {
 
-    it('should return null when there are no active pages', () => {
-      expect(navigator.active).to.be.null;
+    it('should return undefined when there are no active pages', () => {
+      expect(navigator.active).to.be.undefined;
     });
 
     it('should return the current active page', () => {
@@ -554,8 +555,8 @@ describe('Navigator', () => {
 
   describe('activeMutex', () => {
 
-    it('should return null when there are no active pages', () => {
-      expect(navigator.activeMutex).to.be.null;
+    it('should return undefined when there are no active pages', () => {
+      expect(navigator.activeMutex).to.be.undefined;
     });
 
     it('should return the current active page\' mutex', () => {

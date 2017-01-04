@@ -11,9 +11,9 @@ function mockModel(name: string): Model<any> {
     attributes: [],
     indexes: { unique: [] },
     join: false,
-    owner: null!,
+    owner: undefined!,
     relations: [],
-    validator: null!,
+    validator: undefined!,
     virtual: false,
   };
 }
@@ -29,9 +29,9 @@ describe('ownersIntersect', () => {
 
     expect(ownersIntersect(['', '  \t \n\n\n ', 'o'], '  \t \n\n\n ')).to.be.false;
     expect(ownersIntersect([' ', '  \t \n\n\n ', 'o'], ' ')).to.be.false;
-    expect(ownersIntersect(['', '', 'o'], null)).to.be.false;
-    expect(ownersIntersect(['', null!, 'o'], null)).to.be.false;
-    expect(ownersIntersect(['', null!, 'o'], null)).to.be.false;
+    expect(ownersIntersect(['', '', 'o'], undefined!)).to.be.false;
+    expect(ownersIntersect(['', undefined!, 'o'], undefined!)).to.be.false;
+    expect(ownersIntersect(['', undefined!, 'o'], undefined!)).to.be.false;
     expect(ownersIntersect(['', undefined!, 'o'], undefined!)).to.be.false;
     expect(ownersIntersect(['', '', 'o'], undefined!)).to.be.false;
     expect(ownersIntersect(['', 's', 'o'], ['t', '', 'i'])).to.be.false;
@@ -50,10 +50,10 @@ describe('spec', () => {
     const spec = new Spec(model);
 
     expect(spec.name).to.be.equals('a');
-    expect(spec.owner).to.be.equals(null);
+    expect(spec.owner).to.be.undefined;
     expect(spec.virtual).to.be.equals(false);
     expect(spec.join).to.be.equals(false);
-    expect(spec.validator).to.be.equals(null);
+    expect(spec.validator).to.be.undefined;
 
     model.name = 'c';
     model.owner = 'b';
@@ -78,7 +78,7 @@ describe('spec', () => {
 
     expect(Object.keys(spec.attributes).length).to.be.equals(0);
 
-    model.attributes.push({ name: 'id', owner: null, type: null! });
+    model.attributes.push({ name: 'id', owner: undefined, type: undefined! });
 
     expect(Object.keys(spec.attributes).length).to.be.equals(1);
     expect(spec.attributes['id'].name).to.be.equals('id');
@@ -196,18 +196,18 @@ describe('spec', () => {
 
       model.owner = 'owner';
 
-      expect(spec.filterByOwner(null)).to.be.equals(spec);
+      expect(spec.filterByOwner(undefined!)).to.be.equals(spec);
       expect(spec.filterByOwner([])).to.be.equals(spec);
     });
 
-    it('should return null if input and the model owner(s) have non in common', () => {
+    it('should return undefined if input and the model owner(s) have non in common', () => {
       const model = mockModel('M');
       const spec = new Spec(model);
 
       model.owner = 'owner';
 
-      expect(spec.filterByOwner('a')).to.be.null;
-      expect(spec.filterByOwner(['a', 'b'])).to.be.null;
+      expect(spec.filterByOwner('a')).to.be.undefined;
+      expect(spec.filterByOwner(['a', 'b'])).to.be.undefined;
     });
 
     it('should return a new spec if there are intersecting owners', () => {
@@ -216,16 +216,16 @@ describe('spec', () => {
 
       model.owner = 'b';
 
-      expect(spec.filterByOwner(['a', 'b'])).not.to.be.null;
+      expect(spec.filterByOwner(['a', 'b'])).not.to.be.undefined;
       expect(spec.filterByOwner(['a', 'b'])).not.to.be.equals(spec);
 
       model.owner = ['b', 'c'];
 
-      expect(spec.filterByOwner(['a', 'd'])).to.be.null;
-      expect(spec.filterByOwner('a')).to.be.null;
-      expect(spec.filterByOwner(['c', 'b'])).not.to.be.null;
+      expect(spec.filterByOwner(['a', 'd'])).to.be.undefined;
+      expect(spec.filterByOwner('a')).to.be.undefined;
+      expect(spec.filterByOwner(['c', 'b'])).not.to.be.undefined;
       expect(spec.filterByOwner(['c', 'b'])).not.to.be.equals(spec);
-      expect(spec.filterByOwner('c')).not.to.be.null;
+      expect(spec.filterByOwner('c')).not.to.be.undefined;
       expect(spec.filterByOwner('c')).not.to.be.equals(spec);
 
     });
@@ -239,7 +239,7 @@ describe('spec', () => {
       model.relations.push(<any>{ alias: '1' });
       model.relations.push(<any>{ alias: '2', owner: 'c' });
       model.relations.push(<any>{ alias: '3', owner: ['c', 'b'] });
-      model.relations.push(<any>{ alias: '4', owner: null });
+      model.relations.push(<any>{ alias: '4', owner: undefined });
 
       expect(spec.filterByOwner('b')!.relations.byAlias('1')).not.to.be.undefined;
       expect(spec.filterByOwner('b')!.relations.byAlias('2')).to.be.undefined;
@@ -261,7 +261,7 @@ describe('spec', () => {
       model.attributes.push(<any>{ name: '1' });
       model.attributes.push(<any>{ name: '2', owner: 'c' });
       model.attributes.push(<any>{ name: '3', owner: ['c', 'b'] });
-      model.attributes.push(<any>{ name: '4', owner: null });
+      model.attributes.push(<any>{ name: '4', owner: undefined });
 
       expect(spec.filterByOwner('b')!.attributes['1']).not.to.be.undefined;
       expect(spec.filterByOwner('b')!.attributes['2']).to.be.undefined;

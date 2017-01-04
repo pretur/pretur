@@ -10,25 +10,25 @@ import {
   ValidationError,
 } from './validator';
 
-const noop = () => null;
-const asyncNoop = () => Bluebird.resolve(null);
+const noop = () => undefined;
+const asyncNoop = () => Bluebird.resolve(undefined);
 
 describe('combine', () => {
 
   it('should return always-valid validator if non provided', async (): Bluebird<void> => {
     const validator = combineValueValidator();
-    expect(await validator({})).to.be.null;
+    expect(await validator({})).to.be.undefined;
   });
 
   it('should return bail out with the first failed validation', async (): Bluebird<void> => {
     const validator = combineValueValidator(
-      async (v: number): Bluebird<ValueValidationError> => v > 1 ? null : { key: 'A' },
-      async (v: number): Bluebird<ValueValidationError> => v > 2 ? null : { key: 'B' },
-      async (v: number): Bluebird<ValueValidationError> => v > 3 ? null : [
+      async (v: number): Bluebird<ValueValidationError> => v > 1 ? undefined : { key: 'A' },
+      async (v: number): Bluebird<ValueValidationError> => v > 2 ? undefined : { key: 'B' },
+      async (v: number): Bluebird<ValueValidationError> => v > 3 ? undefined : [
         { key: 'C' },
         { key: 'D' },
       ],
-      async (v: number): Bluebird<ValueValidationError> => v > 4 ? null : { key: 'E' },
+      async (v: number): Bluebird<ValueValidationError> => v > 4 ? undefined : { key: 'E' },
     );
     expect(await validator(3)).to.deep.equal([{ key: 'C' }, { key: 'D' }, { key: 'E' }]);
   });
@@ -41,32 +41,29 @@ describe('getError', () => {
     expect(() => getError([], <any>{})).to.throw();
     expect(() => getError([], <any>false)).to.throw();
     expect(() => getError([], <any>true)).to.throw();
-    expect(() => getError([], null!)).to.throw();
-    expect(() => getError([], null!)).to.throw();
     expect(() => getError([], undefined!)).to.throw();
   });
 
-  it('should return null when there is no error', () => {
-    expect(getError(null, 1)).to.be.null;
-    expect((<any>getError)(null)).to.be.null;
-    expect((<any>getError)(undefined)).to.be.null;
+  it('should return undefined when there is no error', () => {
+    expect(getError(undefined, 1)).to.be.undefined;
+    expect((<any>getError)(undefined)).to.be.undefined;
   });
 
   it('should throw when path does not point to a valid error set', () => {
     expect(() => getError([{ b: [{}] }], [0, 'b', 0])).to.throw();
     expect(() => getError([{ b: [{}] }], 0)).to.throw();
     expect(() => getError({ b: [] }, 'b')).to.throw();
-    expect(() => getError([null, [{ key: 'V' }, null]], [1])).to.throw();
+    expect(() => getError([undefined, [{ key: 'V' }, undefined]], [1])).to.throw();
   });
 
   it('should properly return the error set when path is valid', () => {
-    expect(getError(null, [0, 'b', 0])).to.be.null;
-    expect(getError({ a: [{}, {}, [{ b: [null] }], {}] }, ['a', 2, 'b', 0])).to.be.null;
+    expect(getError(undefined, [0, 'b', 0])).to.be.undefined;
+    expect(getError({ a: [{}, {}, [{ b: [undefined] }], {}] }, ['a', 2, 'b', 0])).to.be.undefined;
     expect(getError({ a: [[{ c: { key: 'A' } }]] }, ['a', 0, 0, 'c'])).to.deep.equal({ key: 'A' });
-    expect(getError({ a: null }, ['a'])).to.be.null;
-    expect(getError({ a: null }, 'a')).to.be.null;
-    expect(getError([null, { key: 'V' }], 1)).to.deep.equal({ key: 'V' });
-    expect(getError([null, [{ key: 'V' }, { key: 'U' }]], [1]))
+    expect(getError({ a: undefined }, ['a'])).to.be.undefined;
+    expect(getError({ a: undefined }, 'a')).to.be.undefined;
+    expect(getError([undefined, { key: 'V' }], 1)).to.deep.equal({ key: 'V' });
+    expect(getError([undefined, [{ key: 'V' }, { key: 'U' }]], [1]))
       .to.deep.equal([{ key: 'V' }, { key: 'U' }]);
   });
 
@@ -92,7 +89,7 @@ describe('deepValidator', () => {
         await deepValidator<{ a: number, b?: number }>(
           {
             a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
-            b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : null,
+            b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : undefined,
           },
         )({ a: 1 }),
       ).to.deep.equal({ a: { key: 'A' } });
@@ -101,7 +98,7 @@ describe('deepValidator', () => {
         await deepValidator<{ a: number, b: number }>(
           {
             a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
-            b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : null,
+            b: async (v): Bluebird<ValidationError> => v ? { key: 'B' } : undefined,
           },
         )({ a: 1, b: 2 }),
       ).to.deep.equal({ a: { key: 'A' }, b: { key: 'B' } });
@@ -131,7 +128,7 @@ describe('deepValidator', () => {
         ({ a }) => Bluebird.resolve({ key: a }),
         noop,
       )({ a: 'A' })).to.deep.equal({ key: 'A' });
-      expect(await deepValidator(asyncNoop, noop)({ a: 1 })).to.be.null;
+      expect(await deepValidator(asyncNoop, noop)({ a: 1 })).to.be.undefined;
       expect(
         await deepValidator(asyncNoop, (_, k) => ({ key: k }))({ a: 'A' }),
       ).to.deep.equal({ a: { key: 'a' } });
@@ -173,10 +170,10 @@ describe('deepValidator', () => {
   );
 
   it('should be properly nested', async (): Bluebird<void> => {
-    await deepValidator<{ a: any, b: { fail: boolean, c: any, d: any }, e: null }>({
+    await deepValidator<{ a: any, b: { fail: boolean, c: any, d: any }, e: undefined }>({
       a: async (): Bluebird<ValidationError> => ({ key: 'A' }),
       b: deepValidator<{ fail: boolean, c: any, d: any }>(
-        async ({ fail }): Bluebird<ValidationError> => fail ? { key: 'FAIL' } : null,
+        async ({ fail }): Bluebird<ValidationError> => fail ? { key: 'FAIL' } : undefined,
         {
           c: async (): Bluebird<ValidationError> => ({ key: 'C' }),
           d: async (v, key, obj): Bluebird<ValidationError> => [
@@ -186,7 +183,7 @@ describe('deepValidator', () => {
           ],
         },
       ),
-      e: deepValidator<null>(asyncNoop, async (v): Bluebird<ValidationError> => ({ key: v })),
+      e: deepValidator<undefined>(asyncNoop, async (v): Bluebird<ValidationError> => ({ key: v })),
     });
   });
 

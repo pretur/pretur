@@ -26,6 +26,6 @@ export function rangedNumber(
       };
     }
 
-    return null;
+    return;
   };
 }

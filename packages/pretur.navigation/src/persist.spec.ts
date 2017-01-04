@@ -38,7 +38,7 @@ describe('persist', () => {
       saveActivePage('ADM', 'admin');
       clear('');
       expect(load('')).to.be.deep.equal([]);
-      expect(loadActivePage('')).to.be.null;
+      expect(loadActivePage('')).to.be.undefined;
       expect(loadActivePage('ADM')).to.be.equals('admin');
     });
 

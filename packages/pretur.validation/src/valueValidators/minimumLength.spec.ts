@@ -6,16 +6,15 @@ import { minimumLength } from './minimumLength';
 
 describe('value-validator:minimumLength', () => {
 
-  it('should return null for valid input', async (): Bluebird<void> => {
+  it('should return undefined for valid input', async (): Bluebird<void> => {
     const validator1 = minimumLength('A', 2, false);
     const validator2 = minimumLength('A', 3, true);
-    expect(await validator1('12')).to.be.null;
-    expect(await validator1('1234')).to.be.null;
-    expect(await validator2('123')).to.be.null;
-    expect(await validator2('123456')).to.be.null;
-    expect(await validator2('')).to.be.null;
-    expect(await validator2(null!)).to.be.null;
-    expect(await validator2(undefined!)).to.be.null;
+    expect(await validator1('12')).to.be.undefined;
+    expect(await validator1('1234')).to.be.undefined;
+    expect(await validator2('123')).to.be.undefined;
+    expect(await validator2('123456')).to.be.undefined;
+    expect(await validator2('')).to.be.undefined;
+    expect(await validator2(undefined!)).to.be.undefined;
   });
 
   it(
@@ -29,10 +28,6 @@ describe('value-validator:minimumLength', () => {
       });
       expect(await validator1('')).to.deep.equal({
         data: { ACCEPT_EMPTY: false, MINIMUM_LENGTH: 2, VALUE: '' },
-        key: 'A',
-      });
-      expect(await validator1(null!)).to.deep.equal({
-        data: { ACCEPT_EMPTY: false, MINIMUM_LENGTH: 2, VALUE: null },
         key: 'A',
       });
       expect(await validator1(undefined!)).to.deep.equal({

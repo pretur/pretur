@@ -19,6 +19,7 @@ export function Navigate(
   {navigator}: NagivateProps,
 ): React.ReactElement<NavigatePassedProps<any>> {
   if (!navigator.active) {
+    // tslint:disable-next-line:no-null-keyword
     return null!;
   }
   const Component

@@ -9,6 +9,6 @@ export function nonEmptyString(key: string): ValueValidator<string> {
         data: { VALUE: str },
       };
     }
-    return null;
+    return;
   };
 }

@@ -9,13 +9,13 @@ export function exactLength(
   return async function exactLengthValidator(str: string): Bluebird<ValueValidationError> {
 
     if (acceptEmpty && !str) {
-      return null;
+      return;
     }
 
     if (typeof str !== 'string' || str.length !== length) {
       return { key, data: { ACCEPT_EMPTY: acceptEmpty, EXPECTED_LENGTH: length, VALUE: str } };
     }
 
-    return null;
+    return;
   };
 }

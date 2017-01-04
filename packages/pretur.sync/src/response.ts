@@ -32,7 +32,7 @@ export interface OperateResponse<T> extends ResponseBase {
 export interface InsertResponse<T> extends ResponseBase {
   type: 'insert';
   transactionFailed: boolean;
-  generatedId?: number | string | Partial<T>;
+  generatedId?: Partial<T>;
   validationError: ValidationError;
   warnings?: I18nBundle[];
   errors?: I18nBundle[];

@@ -19,9 +19,9 @@ export default class Attributor extends UniqueReducible {
     return this.queryAttributes;
   }
 
-  public get plain(): string[] | null {
+  public get plain(): string[] | undefined {
     if (!Array.isArray(this.queryAttributes) || this.queryAttributes.length === 0) {
-      return null;
+      return;
     }
     return this.queryAttributes.slice();
   }

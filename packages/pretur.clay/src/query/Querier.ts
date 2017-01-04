@@ -20,9 +20,9 @@ export default class Querier extends UniqueReducible {
   private queryExtra: Value<any>;
   private shouldExtraCausePaginationReset: boolean;
 
-  constructor(query: Query | null, shouldExtraCausePaginationReset = false) {
+  constructor(query?: Query, shouldExtraCausePaginationReset = false) {
     super();
-    if (query === null) {
+    if (!query) {
       return;
     }
     this.queryModel = '' + query.model;
@@ -33,7 +33,7 @@ export default class Querier extends UniqueReducible {
     this.queryAttributor = new Attributor(query.attributes);
     this.queryPaginator = new Paginator(query.pagination);
     this.queryOrderer = new Orderer(query.order);
-    this.queryExtra = new Value(null, true, query.extra);
+    this.queryExtra = new Value(undefined, true, query.extra);
     this.shouldExtraCausePaginationReset = shouldExtraCausePaginationReset;
   }
 
@@ -78,22 +78,22 @@ export default class Querier extends UniqueReducible {
 
     query.model = this.queryModel;
 
-    if (typeof this.queryById === 'number') {
+    if (this.queryById) {
       query.byId = this.queryById;
     }
 
     const include = this.queryIncluder.plain;
-    if (include !== null) {
+    if (include) {
       query.include = include;
     }
 
     const filters = this.queryFilterer.plain;
-    if (filters !== null) {
+    if (filters) {
       query.filters = filters;
     }
 
     const attributes = this.queryAttributor.plain;
-    if (attributes !== null) {
+    if (Array.isArray(attributes)) {
       query.attributes = attributes;
     }
 
@@ -102,12 +102,12 @@ export default class Querier extends UniqueReducible {
     }
 
     const pagination = this.queryPaginator.plain;
-    if (pagination !== null) {
+    if (pagination) {
       query.pagination = pagination;
     }
 
     const order = this.queryOrderer.plain;
-    if (order !== null) {
+    if (order) {
       query.order = order;
     }
 
@@ -182,6 +182,6 @@ export default class Querier extends UniqueReducible {
   }
 
   protected createInstance(): this {
-    return <this>new Querier(null);
+    return <this>new Querier();
   }
 }

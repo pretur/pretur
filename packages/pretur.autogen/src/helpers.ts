@@ -48,6 +48,7 @@ export function literal(value: any) {
     value = value.toString();
   }
 
+  // tslint:disable-next-line:no-null-keyword
   if (value === null) {
     return safe('null');
   }

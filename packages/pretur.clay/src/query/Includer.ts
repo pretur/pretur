@@ -12,7 +12,7 @@ export default class Includer extends UniqueReducible {
     if (include) {
       const keys = Object.keys(include);
       this.includedSubQueriers = Map<string, SubQuerier | boolean>(keys.map(alias => {
-        if (typeof include[alias] === 'object' && include[alias] !== null) {
+        if (include[alias]) {
           return [alias, new SubQuerier(include[alias])];
         }
 
@@ -20,7 +20,7 @@ export default class Includer extends UniqueReducible {
           return [alias, true];
         }
 
-        return null;
+        return;
       }).filter(Boolean));
 
     } else {
@@ -32,9 +32,9 @@ export default class Includer extends UniqueReducible {
     return this.includedSubQueriers;
   }
 
-  public get plain(): QueryInclude | null {
+  public get plain(): QueryInclude | undefined {
     if (this.includedSubQueriers.size === 0) {
-      return null;
+      return;
     }
     const include: QueryInclude = {};
 

@@ -8,6 +8,6 @@ export function integer(key: string): ValueValidator<number> {
       return { key, data: { VALUE: num } };
     }
 
-    return null;
+    return;
   };
 }

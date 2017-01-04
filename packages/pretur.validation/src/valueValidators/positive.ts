@@ -9,6 +9,6 @@ export function positive(key: string): ValueValidator<number> {
         data: { VALUE: num },
       };
     }
-    return null;
+    return;
   };
 }

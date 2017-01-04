@@ -31,21 +31,21 @@ export class Navigator implements Reducible {
   private prefix: string;
 
   private instances = OrderedMap<string, PageInstance<any, any, any>>();
-  private activePageMutex: string | null = null;
+  private activePageMutex: string | undefined;
 
   constructor(pages: Pages, prefix = '') {
     this.pages = pages;
     this.prefix = prefix;
   }
 
-  public get active(): PageInstance<any, any, any> | null {
+  public get active(): PageInstance<any, any, any> | undefined {
     if (!this.activePageMutex) {
-      return null;
+      return undefined;
     }
-    return this.instances.get(this.activePageMutex) || null;
+    return this.instances.get(this.activePageMutex) || undefined;
   }
 
-  public get activeMutex(): string | null {
+  public get activeMutex(): string | undefined {
     return this.activePageMutex;
   }
 
@@ -56,7 +56,7 @@ export class Navigator implements Reducible {
   public reduce(action: Action<any, any>): this {
     if (NAVIGATION_TRANSIT_TO_PAGE.is(this.prefix, action)) {
       if (!action.payload) {
-        saveActivePage(this.prefix, null);
+        saveActivePage(this.prefix, undefined);
         const newNav = <this>new Navigator(this.pages, this.prefix);
         newNav.instances = this.instances;
         return newNav;
@@ -115,7 +115,7 @@ export class Navigator implements Reducible {
         return this;
       }
 
-      const {toRemoveMutex, toInsertData} = action.payload;
+      const { toRemoveMutex, toInsertData } = action.payload;
 
       if (this.instances.has(toInsertData.mutex)) {
 
@@ -177,7 +177,7 @@ export class Navigator implements Reducible {
           } else {
             targetIndex = 1;
           }
-          const targetMutex: string | null = ordering.get(targetIndex) || null;
+          const targetMutex: string | undefined = ordering.get(targetIndex);
 
           if (
             targetMutex &&
@@ -186,7 +186,7 @@ export class Navigator implements Reducible {
           ) {
             saveActivePage(this.prefix, targetMutex);
           } else {
-            saveActivePage(this.prefix, null);
+            saveActivePage(this.prefix, undefined);
           }
 
           newNav.activePageMutex = targetMutex;
@@ -211,8 +211,8 @@ export class Navigator implements Reducible {
       const instantiationData = load(this.prefix);
       const loadedActivePageMutex = loadActivePage(this.prefix);
 
-      let instances: OrderedMap<string, PageInstance<any, any, any>> | null = null;
-      let activePageMutex: string | null = null;
+      let instances: OrderedMap<string, PageInstance<any, any, any>> | undefined = undefined;
+      let activePageMutex: string | undefined = undefined;
 
       if (instantiationData && instantiationData.length > 0) {
         instances = OrderedMap<string, PageInstance<any, any, any>>(
@@ -227,7 +227,7 @@ export class Navigator implements Reducible {
               return [pageInstance.mutex, pageInstance];
             }
 
-            return null;
+            return;
           }).filter(Boolean),
         );
       }
@@ -283,7 +283,7 @@ export class Navigator implements Reducible {
     return this;
   }
 
-  public transit(dispatch: Dispatch, mutex: string | null) {
+  public transit(dispatch: Dispatch, mutex: string | undefined) {
     dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this.prefix, mutex));
   }
 

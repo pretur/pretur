@@ -6,14 +6,13 @@ import { exactLength } from './exactLength';
 
 describe('value-validator:exactLength', () => {
 
-  it('should return null for valid input', async (): Bluebird<void> => {
+  it('should return undefined for valid input', async (): Bluebird<void> => {
     const validator1 = exactLength('A', 2, false);
     const validator2 = exactLength('A', 3, true);
-    expect(await validator1('12')).to.be.null;
-    expect(await validator2('123')).to.be.null;
-    expect(await validator2('')).to.be.null;
-    expect(await validator2(null!)).to.be.null;
-    expect(await validator2(undefined!)).to.be.null;
+    expect(await validator1('12')).to.be.undefined;
+    expect(await validator2('123')).to.be.undefined;
+    expect(await validator2('')).to.be.undefined;
+    expect(await validator2(undefined!)).to.be.undefined;
   });
 
   it(
@@ -29,8 +28,8 @@ describe('value-validator:exactLength', () => {
         data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: '' },
         key: 'A',
       });
-      expect(await validator1(null!)).to.deep.equal({
-        data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: null },
+      expect(await validator1(undefined!)).to.deep.equal({
+        data: { ACCEPT_EMPTY: false, EXPECTED_LENGTH: 2, VALUE: undefined },
         key: 'A',
       });
       expect(await validator1(undefined!)).to.deep.equal({
