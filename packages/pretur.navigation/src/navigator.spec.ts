@@ -1,6 +1,7 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
+import { find } from 'lodash';
 import { Pages, PageTreeRoot } from '../src/pages';
 import { Navigator, deisolate } from '../src/navigator';
 import * as actions from '../src/actions';
@@ -9,7 +10,7 @@ import * as persist from '../src/persist';
 // tslint:disable-next-line:no-null-keyword
 const component = () => null!;
 const reducerBuilder: any
-  = () => (s = { value: 1 }, {value}: { value: any }) => value ? { value } : s;
+  = () => (s = { value: 1 }, { value }: { value: any }) => value ? { value } : s;
 
 const tree: PageTreeRoot = {
   'a': {
@@ -50,7 +51,7 @@ const navigator = new Navigator(new Pages(tree), 'ADMIN');
 
 function check(nav: Navigator, open: string[], active: string | undefined, store = true) {
 
-  expect(nav.all.map(i => i!.path).toArray()).to.deep.equal(open);
+  expect(nav.all.map(instance => instance.path)).to.deep.equal(open);
 
   if (!active) {
     expect(nav.active).to.be.undefined;
@@ -466,17 +467,17 @@ describe('Navigator', () => {
       const newNav = nav.reduce(<any>{ type: 'STUFF!', value: 10 });
       expect(nav.active!.state.value).to.be.equals(1);
       expect(newNav.active!.state.value).to.be.equals(10);
-      expect(newNav.all.get('1').state.value).to.be.equals(1);
-      expect(newNav.all.get('2').state.value).to.be.equals(1);
+      expect(find(newNav.all, page => page.mutex === '1')!.state.value).to.be.equals(1);
+      expect(find(newNav.all, page => page.mutex === '2')!.state.value).to.be.equals(1);
     });
 
     it('should call reduce on all pages if the action is deisolated', () => {
       const newNav = nav.reduce(deisolate(<any>{ type: 'STUFF!', value: 10 }));
       expect(nav.active!.state.value).to.be.equals(1);
       expect(newNav.active!.state.value).to.be.equals(10);
-      expect(newNav.all.get('1').state.value).to.be.equals(10);
-      expect(newNav.all.get('2').state.value).to.be.equals(10);
-      expect(newNav.all.get('3').state.value).to.be.equals(10);
+      expect(find(newNav.all, page => page.mutex === '1')!.state.value).to.be.equals(10);
+      expect(find(newNav.all, page => page.mutex === '2')!.state.value).to.be.equals(10);
+      expect(find(newNav.all, page => page.mutex === '3')!.state.value).to.be.equals(10);
     });
 
     it('should absorb actions that target it', () => {
@@ -508,7 +509,7 @@ describe('Navigator', () => {
   describe('all', () => {
 
     it('should return an empty map', () => {
-      expect(navigator.all.map(ins => ins!.path).toArray()).to.deep.equal([]);
+      expect(navigator.all.map(instance => instance.path)).to.deep.equal([]);
     });
 
     it('should return all open pages in correct order', () => {
@@ -524,7 +525,7 @@ describe('Navigator', () => {
       nav.open(dispatch, { mutex: '3', path: 'f' });
       nav.open(dispatch, { mutex: '5', path: 'f' });
 
-      expect(nav.all.map(ins => ins!.path).toArray()).to.deep.equal([
+      expect(nav.all.map(instance => instance.path)).to.deep.equal([
         'a/d/e',
         'a/d/e',
         'f',

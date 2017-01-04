@@ -1,5 +1,4 @@
 import { ComponentClass, StatelessComponent } from 'react';
-import { Map } from 'immutable';
 import { Reducer } from 'pretur.redux';
 import { PageInstance } from './pageInstance';
 import { buildDescriptorsFromTree } from './buildDescriptorsFromTree';
@@ -73,8 +72,8 @@ export interface FolderContents {
 }
 
 export class Pages {
-  private pages: Map<string, PageDescriptor<any, any, any>>;
-  private folders: Map<string, PageFolderDescriptor>;
+  private pages: { [page: string]: PageDescriptor<any, any, any> };
+  private folders: { [page: string]: PageFolderDescriptor };
   private calculatedPathTree: PathTree;
   private calculatedFolderContents: FolderContents;
   private calculatedFilteredPathTree: PathTree;
@@ -82,10 +81,12 @@ export class Pages {
 
   constructor(root: PageTreeRoot) {
     const descriptors = buildDescriptorsFromTree(root);
-    this.pages = Map<string, PageDescriptor<any, any, any>>(
-      descriptors.pages.map(d => [d.path, d]),
-    );
-    this.folders = Map<string, PageFolderDescriptor>(descriptors.folders.map(d => [d.path, d]));
+    this.pages = {};
+    descriptors.pages.forEach(d => this.pages[d.path] = d);
+
+    this.folders = {};
+    descriptors.folders.forEach(d => this.folders[d.path] = d);
+
     this.calculatedPathTree = descriptors.pathTree;
     this.calculatedFolderContents = descriptors.folderContents;
     this.calculatedFilteredPathTree = descriptors.filteredPathTree;
@@ -93,19 +94,19 @@ export class Pages {
   }
 
   public hasPage(path: string): boolean {
-    return this.pages.has(path);
+    return !!this.pages[path];
   }
 
   public getPage(path: string): PageDescriptor<any, any, any> {
-    return this.pages.get(path);
+    return this.pages[path];
   }
 
   public hasFolder(path: string): boolean {
-    return this.folders.has(path);
+    return !!this.folders[path];
   }
 
   public getFolder(path: string): PageFolderDescriptor {
-    return this.folders.get(path);
+    return this.folders[path];
   }
 
   public isHidden(path: string): boolean {
@@ -140,6 +141,6 @@ export class Pages {
     if (!this.hasPage(instantiationData.path)) {
       throw new Error(`No descriptor exists for the provided path (${instantiationData.path})`);
     }
-    return new PageInstance(this.pages.get(instantiationData.path), instantiationData);
+    return new PageInstance(this.pages[instantiationData.path], instantiationData);
   }
 }

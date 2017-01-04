@@ -1,6 +1,5 @@
-import { OrderedMap } from 'immutable';
 import { Reducible, Action, Dispatch } from 'pretur.redux';
-
+import { indexOf, omit, without } from 'lodash';
 import { PageInstance } from './pageInstance';
 import { Pages, PageInstantiationData } from './pages';
 import { load, clear, loadActivePage, save, saveActivePage } from './persist';
@@ -21,260 +20,315 @@ export function deisolate<A extends Action<any, any>>(action: A): A {
   return action;
 }
 
-export interface NavigatorPageReplaceOptions {
+export interface PageReplaceOptions {
   toRemoveMutex: string;
   toInsertData: PageInstantiationData<any>;
 }
 
-export class Navigator implements Reducible {
-  private pages: Pages;
-  private prefix: string;
+export interface PageOpenOptions {
+  path: string;
+  mutex: string;
+  reducerBuilderData?: any;
+  titleData?: any;
+  insertAfterMutex?: string;
+}
 
-  private instances = OrderedMap<string, PageInstance<any, any, any>>();
-  private activePageMutex: string | undefined;
+interface InstanceMap {
+  [prop: string]: PageInstance<any, any, any>;
+}
+
+interface Instances {
+  pageOrder: string[];
+  pages: InstanceMap;
+}
+
+function orderedPages(instances: Instances): PageInstance<any, any, any>[] {
+  return instances.pageOrder.map(path => instances.pages[path]);
+}
+
+function cloneInstances(oldInstances: Instances): Instances {
+  return {
+    pageOrder: [...oldInstances.pageOrder],
+    pages: { ...oldInstances.pages },
+  };
+}
+
+function openPage(instances: Instances, options: PageOpenOptions, pages: Pages): Instances {
+  const newInstances = cloneInstances(instances);
+  const { insertAfterMutex, ...instantiationData } = options;
+
+  const newPage = pages.buildInstance(instantiationData);
+  const insertAfterIndex = indexOf(newInstances.pageOrder, insertAfterMutex);
+
+  if (insertAfterIndex !== -1) {
+    newInstances.pageOrder.splice(insertAfterIndex + 1, 0, options.mutex);
+  } else {
+    newInstances.pageOrder.push(options.mutex);
+  }
+
+  newInstances.pages[options.mutex] = newPage;
+
+  return newInstances;
+}
+
+function replacePage(instances: Instances, options: PageReplaceOptions, pages: Pages): Instances {
+  const toRemoveIndex = indexOf(instances.pageOrder, options.toRemoveMutex);
+
+  if (toRemoveIndex === -1) {
+    return openPage(instances, options.toInsertData, pages);
+  }
+
+  const newPage = pages.buildInstance(options.toInsertData);
+
+  const newPageOrder = [...instances.pageOrder];
+  newPageOrder.splice(toRemoveIndex, 1, options.toInsertData.mutex);
+
+  const newPages = <InstanceMap>omit(instances.pages, options.toRemoveMutex);
+  newPages[options.toInsertData.mutex] = newPage;
+
+  return { pageOrder: newPageOrder, pages: newPages };
+}
+
+export class Navigator implements Reducible {
+  private _pages: Pages;
+  private _prefix: string;
+
+  private _instances: Instances = { pageOrder: [], pages: {} };
+  private _activePageMutex: string | undefined;
 
   constructor(pages: Pages, prefix = '') {
-    this.pages = pages;
-    this.prefix = prefix;
+    this._pages = pages;
+    this._prefix = prefix;
   }
 
   public get active(): PageInstance<any, any, any> | undefined {
-    if (!this.activePageMutex) {
-      return undefined;
+    if (!this._activePageMutex) {
+      return;
     }
-    return this.instances.get(this.activePageMutex) || undefined;
+    return this._instances.pages[this._activePageMutex];
   }
 
   public get activeMutex(): string | undefined {
-    return this.activePageMutex;
+    return this._activePageMutex;
   }
 
-  public get all(): OrderedMap<string, PageInstance<any, any, any>> {
-    return this.instances;
+  public get all(): PageInstance<any, any, any>[] {
+    return orderedPages(this._instances);
   }
 
   public reduce(action: Action<any, any>): this {
-    if (NAVIGATION_TRANSIT_TO_PAGE.is(this.prefix, action)) {
+    if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
       if (!action.payload) {
-        saveActivePage(this.prefix, undefined);
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = this.instances;
+        saveActivePage(this._prefix, undefined);
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = this._instances;
         return newNav;
       }
 
-      if (this.instances.has(action.payload)) {
+      if (this._instances.pages[action.payload]) {
 
-        if (this.instances.get(action.payload).descriptor.persistent !== false) {
-          saveActivePage(this.prefix, action.payload);
+        if (this._instances.pages[action.payload].descriptor.persistent !== false) {
+          saveActivePage(this._prefix, action.payload);
         }
 
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = this.instances;
-        newNav.activePageMutex = action.payload;
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = this._instances;
+        newNav._activePageMutex = action.payload;
         return newNav;
       }
 
       return this;
     }
 
-    if (NAVIGATION_OPEN_PAGE.is(this.prefix, action)) {
-      if (action.payload && this.instances.has(action.payload.mutex)) {
+    if (NAVIGATION_OPEN_PAGE.is(this._prefix, action)) {
+      if (action.payload && this._instances.pages[action.payload.mutex]) {
 
-        if (this.instances.get(action.payload.mutex).descriptor.persistent !== false) {
-          saveActivePage(this.prefix, action.payload.mutex);
+        if (this._instances.pages[action.payload.mutex].descriptor.persistent !== false) {
+          saveActivePage(this._prefix, action.payload.mutex);
         }
 
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = this.instances;
-        newNav.activePageMutex = action.payload.mutex;
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = this._instances;
+        newNav._activePageMutex = action.payload.mutex;
         return newNav;
       }
 
-      if (action.payload && this.pages.hasPage(action.payload.path)) {
-        const newPage = this.pages.buildInstance(action.payload);
-        const newInstances = this.instances.set(action.payload.mutex, newPage);
+      if (action.payload && this._pages.hasPage(action.payload.path)) {
+        const newInstances = openPage(this._instances, action.payload, this._pages);
 
-        if (this.pages.getPage(action.payload.path).persistent !== false) {
-          save(this.prefix, newInstances
-            .filter((i: PageInstance<any, any, any>) => i.descriptor.persistent !== false)
-            .map((i: PageInstance<any, any, any>) => i.instantiationData)
-            .toArray());
-          saveActivePage(this.prefix, action.payload.mutex);
+        if (this._pages.getPage(action.payload.path).persistent !== false) {
+          save(this._prefix, orderedPages(newInstances)
+            .filter(instance => instance.descriptor.persistent !== false)
+            .map(instance => instance.instantiationData),
+          );
+          saveActivePage(this._prefix, action.payload.mutex);
         }
 
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = newInstances;
-        newNav.activePageMutex = action.payload.mutex;
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = newInstances;
+        newNav._activePageMutex = action.payload.mutex;
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_REPLACE_PAGE.is(this.prefix, action)) {
+    if (NAVIGATION_REPLACE_PAGE.is(this._prefix, action)) {
       if (!action.payload) {
         return this;
       }
 
-      const { toRemoveMutex, toInsertData } = action.payload;
+      const { toInsertData } = action.payload;
 
-      if (this.instances.has(toInsertData.mutex)) {
+      if (this._instances.pages[toInsertData.mutex]) {
 
-        if (this.instances.get(toInsertData.mutex).descriptor.persistent !== false) {
-          saveActivePage(this.prefix, toInsertData.mutex);
+        if (this._instances.pages[toInsertData.mutex].descriptor.persistent !== false) {
+          saveActivePage(this._prefix, toInsertData.mutex);
         }
 
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = this.instances;
-        newNav.activePageMutex = toInsertData.mutex;
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = this._instances;
+        newNav._activePageMutex = toInsertData.mutex;
         return newNav;
       }
 
-      if (this.pages.hasPage(toInsertData.path)) {
-        const toRemoveIndex = this.instances.keySeq().findIndex(key => key === toRemoveMutex);
+      if (this._pages.hasPage(toInsertData.path)) {
+        const newInstances = replacePage(this._instances, action.payload, this._pages);
 
-        const newPage = this.pages.buildInstance(toInsertData);
-        let newInstances: OrderedMap<string, PageInstance<any, any, any>>;
-
-        if (toRemoveIndex === -1) {
-          newInstances = this.instances.set(toInsertData.mutex, newPage);
-        } else {
-          const instancesArray = this.instances.toArray();
-          instancesArray[toRemoveIndex] = newPage;
-          newInstances = OrderedMap<string, PageInstance<any, any, any>>(
-            instancesArray.map(i => [i.mutex, i]),
+        if (this._pages.getPage(toInsertData.path).persistent !== false) {
+          save(this._prefix, orderedPages(newInstances)
+            .filter(instance => instance.descriptor.persistent !== false)
+            .map(instance => instance.instantiationData),
           );
+          saveActivePage(this._prefix, toInsertData.mutex);
         }
 
-        if (this.pages.getPage(toInsertData.path).persistent !== false) {
-          save(this.prefix, newInstances
-            .filter((i: PageInstance<any, any, any>) => i.descriptor.persistent !== false)
-            .map((i: PageInstance<any, any, any>) => i.instantiationData)
-            .toArray());
-          saveActivePage(this.prefix, toInsertData.mutex);
-        }
-
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = newInstances;
-        newNav.activePageMutex = toInsertData.mutex;
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = newInstances;
+        newNav._activePageMutex = toInsertData.mutex;
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_CLOSE_PAGE.is(this.prefix, action)) {
+    if (NAVIGATION_CLOSE_PAGE.is(this._prefix, action)) {
       const mutex = action.payload;
 
-      if (mutex && this.instances.has(mutex)) {
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.activePageMutex = this.activePageMutex;
+      if (mutex && this._instances.pages[mutex]) {
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._activePageMutex = this._activePageMutex;
 
-        if (this.activePageMutex === mutex) {
-          const ordering = this.instances.keySeq();
-          const index = ordering.indexOf(mutex);
+        if (this._activePageMutex === mutex) {
+          const index = this._instances.pageOrder.indexOf(mutex);
           let targetIndex: number;
           if (index > 0) {
             targetIndex = index - 1;
           } else {
             targetIndex = 1;
           }
-          const targetMutex: string | undefined = ordering.get(targetIndex);
+          const targetMutex: string | undefined = this._instances.pageOrder[targetIndex];
 
           if (
             targetMutex &&
-            this.instances.has(targetMutex) &&
-            this.instances.get(targetMutex).descriptor.persistent !== false
+            this._instances.pages[targetMutex] &&
+            this._instances.pages[targetMutex].descriptor.persistent !== false
           ) {
-            saveActivePage(this.prefix, targetMutex);
+            saveActivePage(this._prefix, targetMutex);
           } else {
-            saveActivePage(this.prefix, undefined);
+            saveActivePage(this._prefix, undefined);
           }
 
-          newNav.activePageMutex = targetMutex;
+          newNav._activePageMutex = targetMutex;
         }
 
-        newNav.instances = this.instances.remove(mutex);
+        const newInstances: Instances = {
+          pageOrder: without(this._instances.pageOrder, mutex),
+          pages: <InstanceMap>omit(this._instances.pages, mutex),
+        };
 
-        if (this.instances.get(mutex).descriptor.persistent !== false) {
-          save(this.prefix, newNav.instances
-            .filter((i: PageInstance<any, any, any>) => i.descriptor.persistent !== false)
-            .map((i: PageInstance<any, any, any>) => i.instantiationData)
-            .toArray());
+        if (this._instances.pages[mutex].descriptor.persistent !== false) {
+          save(this._prefix, orderedPages(newInstances)
+            .filter(instance => instance.descriptor.persistent !== false)
+            .map(instance => instance.instantiationData),
+          );
         }
 
+        newNav._instances = newInstances;
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_LOAD_PAGES.is(this.prefix, action)) {
+    if (NAVIGATION_LOAD_PAGES.is(this._prefix, action)) {
 
-      const instantiationData = load(this.prefix);
-      const loadedActivePageMutex = loadActivePage(this.prefix);
+      const instantiationData = load(this._prefix);
+      const loadedActivePageMutex = loadActivePage(this._prefix);
 
-      let instances: OrderedMap<string, PageInstance<any, any, any>> | undefined = undefined;
+      let instances: Instances | undefined = undefined;
       let activePageMutex: string | undefined = undefined;
 
       if (instantiationData && instantiationData.length > 0) {
-        instances = OrderedMap<string, PageInstance<any, any, any>>(
-          instantiationData.map(insData => {
-            if (this.pages.hasPage(insData.path)) {
-              const pageInstance = this.pages.buildInstance(insData);
+        instances = { pageOrder: [], pages: {} };
 
-              if (pageInstance.mutex === loadedActivePageMutex) {
-                activePageMutex = loadedActivePageMutex;
-              }
+        instantiationData.forEach(insData => {
+          if (this._pages.hasPage(insData.path)) {
+            const pageInstance = this._pages.buildInstance(insData);
 
-              return [pageInstance.mutex, pageInstance];
+            if (pageInstance.mutex === loadedActivePageMutex) {
+              activePageMutex = loadedActivePageMutex;
             }
 
-            return;
-          }).filter(Boolean),
-        );
+            instances!.pageOrder.push(pageInstance.mutex);
+            instances!.pages[pageInstance.mutex] = pageInstance;
+          }
+        });
       }
 
-      if (instances && instances.size > 0) {
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.instances = instances;
-        newNav.activePageMutex = activePageMutex;
+      if (instances && instances.pageOrder.length > 0) {
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._instances = instances;
+        newNav._activePageMutex = activePageMutex;
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_CLEAR_PAGES.is(this.prefix, action)) {
-      clear(this.prefix);
-      return <this>new Navigator(this.pages, this.prefix);
+    if (NAVIGATION_CLEAR_PAGES.is(this._prefix, action)) {
+      clear(this._prefix);
+      return <this>new Navigator(this._pages, this._prefix);
     }
 
     if ((<any>action)[DEISOLATE_KEY]) {
       let modified = false;
 
-      const newInstances = this.instances.withMutations(i => {
-        this.instances.forEach((pageInstance: PageInstance<any, any, any>) => {
-          const newInstance = pageInstance.reduce(action);
-          if (newInstance !== pageInstance) {
-            modified = true;
-            i.set(pageInstance.mutex, newInstance);
-          }
-        });
+      const newInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
+
+      orderedPages(this._instances).forEach(instance => {
+        const newInstance = instance.reduce(action);
+        if (newInstance !== instance) {
+          modified = true;
+        }
+        newInstances.pages[instance.mutex] = newInstance;
       });
 
       if (modified) {
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.activePageMutex = this.activePageMutex;
-        newNav.instances = newInstances;
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._activePageMutex = this._activePageMutex;
+        newNav._instances = newInstances;
         return newNav;
       }
       return this;
     }
 
-    if (this.activePageMutex && this.instances.has(this.activePageMutex)) {
-      const target = this.instances.get(this.activePageMutex);
+    if (this._activePageMutex && this._instances.pages[this._activePageMutex]) {
+      const target = this._instances.pages[this._activePageMutex];
       const newTarget = target.reduce(action);
       if (target !== newTarget) {
-        const newNav = <this>new Navigator(this.pages, this.prefix);
-        newNav.activePageMutex = this.activePageMutex;
-        newNav.instances = this.instances.set(this.activePageMutex, newTarget);
+        const newNav = <this>new Navigator(this._pages, this._prefix);
+        newNav._activePageMutex = this._activePageMutex;
+        newNav._instances = {
+          pageOrder: this._instances.pageOrder,
+          pages: { ...this._instances.pages, [this._activePageMutex]: newTarget },
+        };
         return newNav;
       }
       return this;
@@ -284,11 +338,11 @@ export class Navigator implements Reducible {
   }
 
   public transit(dispatch: Dispatch, mutex: string | undefined) {
-    dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this.prefix, mutex));
+    dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this._prefix, mutex));
   }
 
-  public open(dispatch: Dispatch, instantiationData: PageInstantiationData<any>) {
-    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(this.prefix, instantiationData));
+  public open(dispatch: Dispatch, instantiationData: PageOpenOptions) {
+    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(this._prefix, instantiationData));
   }
 
   public replace(
@@ -296,18 +350,18 @@ export class Navigator implements Reducible {
     toRemoveMutex: string,
     toInsertData: PageInstantiationData<any>,
   ) {
-    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this.prefix, { toRemoveMutex, toInsertData }));
+    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this._prefix, { toRemoveMutex, toInsertData }));
   }
 
   public close(dispatch: Dispatch, mutex: string) {
-    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this.prefix, mutex));
+    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this._prefix, mutex));
   }
 
   public load(dispatch: Dispatch) {
-    dispatch(NAVIGATION_LOAD_PAGES.create.unicast(this.prefix));
+    dispatch(NAVIGATION_LOAD_PAGES.create.unicast(this._prefix));
   }
 
   public clear(dispatch: Dispatch) {
-    dispatch(NAVIGATION_CLEAR_PAGES.create.unicast(this.prefix));
+    dispatch(NAVIGATION_CLEAR_PAGES.create.unicast(this._prefix));
   }
 }
