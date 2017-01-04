@@ -6,18 +6,10 @@ import Set from './data/Set';
 import Record from './data/Record';
 import UniqueReducible from './UniqueReducible';
 import {
-  CLAY_DATA_DECAY,
   CLAY_REACTIVE_REFRESH,
   CLAY_REACTIVE_SET_INITIALIZED,
   CLAY_REACTIVE_SET_COUNT,
 } from './actions';
-
-const AUTO_REFRESH_TRANSPARENT_KEY = '@@auto_refresh_transparent';
-
-export function autoRefreshTransparent<A extends Action<any, any>>(action: A): A {
-  (<any>action)[AUTO_REFRESH_TRANSPARENT_KEY] = true;
-  return action;
-}
 
 export default class Reactive<TSet extends Set<TRecord, T>, TRecord extends Record<T>, T>
   extends UniqueReducible {

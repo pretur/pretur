@@ -1,5 +1,5 @@
 import { createTargetedActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
-import { I18nBundle } from 'pretur.i18n';
+import { ValidationError } from 'pretur.validation';
 
 export interface RelationInjectrionPayload {
   inexistent: boolean;
@@ -10,14 +10,11 @@ export interface RelationInjectrionPayload {
 export const CLAY_DATA_CLEAR: TargetedActionDescriptor<void, void>
   = createTargetedActionDescriptor<void, void>('CLAY_DATA_CLEAR');
 
-export const CLAY_DATA_DECAY: TargetedActionDescriptor<void, void>
-  = createTargetedActionDescriptor<void, void>('CLAY_DATA_DECAY');
-
 export const CLAY_DATA_SET_VALUE: TargetedActionDescriptor<any, void>
   = createTargetedActionDescriptor<any, void>('CLAY_DATA_SET_VALUE');
 
-export const CLAY_DATA_SET_ERROR: TargetedActionDescriptor<I18nBundle, void>
-  = createTargetedActionDescriptor<I18nBundle, void>('CLAY_DATA_SET_ERROR');
+export const CLAY_DATA_SET_ERROR: TargetedActionDescriptor<ValidationError, void>
+  = createTargetedActionDescriptor<ValidationError, void>('CLAY_DATA_SET_ERROR');
 
 export const CLAY_DATA_RESET: TargetedActionDescriptor<any[], void>
   = createTargetedActionDescriptor<any[], void>('CLAY_DATA_RESET');

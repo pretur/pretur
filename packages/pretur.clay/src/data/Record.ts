@@ -1,19 +1,43 @@
 import { I18nBundle } from 'pretur.i18n';
-import { Dispatch } from 'pretur.redux';
+import { Reducible, Dispatch } from 'pretur.redux';
 import { Synchronizer } from 'pretur.sync';
 import { CLAY_DATA_CLEAR } from './actions';
-import StatusReporter from './StatusReporter';
+import nextId from '../nextId';
+import Value from './Value';
+import Set from './Set';
 
-abstract class Record<T> extends StatusReporter {
-  private originalRecord: this;
+export type RecordTag = 'normal' | 'new' | 'removed';
 
-  constructor(synchronized?: boolean) {
-    super(synchronized);
-    this.originalRecord = this;
-  }
+export type Schema<T> = {
+  [P in keyof T]: [typeof Set | typeof Record, Schema<T[P]>] | typeof Value;
+};
 
-  public get original(): this {
-    return this.originalRecord;
+export type Fields<T> = {
+  [P in keyof T]: Record<T[P], Fields<T[P]>> | Set<any> | Value<T[P]>;
+};
+
+export class Record<T, F extends Fields<T>> implements Reducible {
+  public readonly uniqueId: number;
+  public readonly original: Record<T, F>;
+  public readonly tag: RecordTag;
+  public readonly schema: Schema<T>;
+  public readonly fields: F;
+
+  constructor(
+    schema: Schema<T>,
+    fields?: Partial<T>,
+    tag: RecordTag = 'normal',
+    original?: Record<T, F>,
+    uniqueId?: number,
+  ) {
+    this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
+    this.original = original ? original : this;
+    this.tag = tag;
+    this.schema = schema;
+    this.fields = <F>{};
+    if (fields) {
+
+    }
   }
 
   public get error(): I18nBundle {
@@ -29,7 +53,7 @@ abstract class Record<T> extends StatusReporter {
       return this;
     }
 
-    const clone = this.originalRecord.clone();
+    const clone = this.original.clone();
     clone.statusInstance = this.statusInstance.setRemoved();
     return clone;
   }
@@ -39,7 +63,7 @@ abstract class Record<T> extends StatusReporter {
       return this;
     }
 
-    const clone = this.originalRecord.clone();
+    const clone = this.original.clone();
     clone.statusInstance = this.statusInstance.setUnremoved();
     return clone;
   }
@@ -50,7 +74,7 @@ abstract class Record<T> extends StatusReporter {
 
   protected cloneOverride(clone: this): void {
     super.cloneOverride(clone);
-    clone.originalRecord = this.originalRecord;
+    clone.original = this.original;
   }
 
   public abstract appendSynchronizationModels(synchronizer: Synchronizer): void;
@@ -59,5 +83,3 @@ abstract class Record<T> extends StatusReporter {
   protected abstract validate(): I18nBundle;
   protected abstract validateFields(): boolean;
 }
-
-export default Record;

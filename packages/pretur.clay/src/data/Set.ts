@@ -1,9 +1,8 @@
+import { isEqual } from 'lodash';
 import * as Bluebird from 'bluebird';
-import { OrderedMap, is } from 'immutable';
-import { Action, Dispatch } from 'pretur.redux';
-import { Query, Synchronizer, Fetcher } from 'pretur.sync';
-import StatusReporter from './StatusReporter';
-import Record from './Record';
+import { Reducible, Action, Dispatch } from 'pretur.redux';
+import { Query } from 'pretur.sync';
+import { Record, Schema } from './Record';
 import {
   CLAY_DATA_CLEAR,
   CLAY_DATA_RESET,
@@ -12,35 +11,32 @@ import {
   CLAY_DATA_UNREMOVE_ITEM,
 } from './actions';
 
-abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
-  private originalSet: this;
-  protected setItems: OrderedMap<number, TRecord>;
+class Set<T> implements Reducible {
+  private _original: this;
+  private _items: Record<T>[];
+  private _newItems: Record<T>[];
 
-  constructor(items?: T[], synchronized = true) {
-    super(synchronized);
-    this.originalSet = this;
+  constructor(items?: T[]) {
+    this._original = this;
 
     if (items) {
-      this.setItems = OrderedMap<number, TRecord>(items.map(values => {
-        const newItem = this.constructItem(true, values);
-        return [newItem.uniqueId, newItem];
-      }));
+      this._items = items.map(item => new Record<T>(item));
     } else {
-      this.setItems = OrderedMap<number, TRecord>();
+      this._items = [];
     }
   }
 
   public get original(): this {
-    return this.originalSet;
+    return this._original;
   }
 
   public get items(): OrderedMap<number, TRecord> {
-    return this.setItems;
+    return this._items;
   }
 
   public reduce(action: Action<any, any>): this {
     if (CLAY_DATA_CLEAR.is(this.uniqueId, action)) {
-      return this.originalSet;
+      return this._original;
     }
 
     if (CLAY_DATA_RESET.is(this.uniqueId, action)) {
@@ -63,22 +59,22 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
         clone.statusInstance = this.statusInstance.setModified();
       }
       const newItem = this.constructItem(false, action.payload);
-      clone.setItems = this.setItems.set(newItem.uniqueId, newItem);
+      clone.setItems = this._items.set(newItem.uniqueId, newItem);
       return clone;
     }
 
     if (CLAY_DATA_REMOVE_ITEM.is(this.uniqueId, action) && action.payload) {
       let newItems: OrderedMap<number, TRecord>;
 
-      const target = this.setItems.get(action.payload);
+      const target = this._items.get(action.payload);
       if (target.status.added) {
-        newItems = this.setItems.remove(action.payload);
+        newItems = this._items.remove(action.payload);
       } else {
-        newItems = this.setItems.set(action.payload, <TRecord>target.setRemoved());
+        newItems = this._items.set(action.payload, <TRecord>target.setRemoved());
       }
 
-      if (is(this.originalSet.setItems, newItems)) {
-        return this.originalSet;
+      if (is(this._original._items, newItems)) {
+        return this._original;
       }
 
       const clone = this.clone();
@@ -90,11 +86,11 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
     }
 
     if (CLAY_DATA_UNREMOVE_ITEM.is(this.uniqueId, action) && action.payload) {
-      const target = this.setItems.get(action.payload);
-      const newItems = this.setItems.set(action.payload, <TRecord>target.setUnremoved());
+      const target = this._items.get(action.payload);
+      const newItems = this._items.set(action.payload, <TRecord>target.setUnremoved());
 
-      if (is(this.originalSet.setItems, newItems)) {
-        return this.originalSet;
+      if (is(this._original._items, newItems)) {
+        return this._original;
       }
 
       const clone = this.clone();
@@ -104,9 +100,9 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
 
     let updated = false;
 
-    const newItems = this.setItems.withMutations(i => {
+    const newItems = this._items.withMutations(i => {
 
-      this.setItems.forEach((item: TRecord) => {
+      this._items.forEach((item: TRecord) => {
         if (item.status.removed) {
           return;
         }
@@ -122,8 +118,8 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
 
     if (updated) {
 
-      if (is(this.originalSet.setItems, newItems)) {
-        return this.originalSet;
+      if (is(this._original._items, newItems)) {
+        return this._original;
       }
 
       const clone = this.clone();
@@ -166,30 +162,29 @@ abstract class Set<TRecord extends Record<T>, T> extends StatusReporter {
   }
 
   public appendSynchronizationModels(synchronizer: Synchronizer): void {
-    this.setItems.forEach((item: TRecord) => item.appendSynchronizationModels(synchronizer));
+    this._items.forEach((item: TRecord) => item.appendSynchronizationModels(synchronizer));
   }
 
   public buildInsertModel(): T[] {
-    return this.setItems
+    return this._items
       .filter((item: TRecord) => item.status.added)
       .map((item: TRecord) => item.buildInsertModel())
       .toArray();
   }
 
   protected checkValidity(): boolean {
-    if (this.setItems.some((item: TRecord) => !item.valid)) {
+    if (this._items.some((item: TRecord) => !item.valid)) {
       return false;
     }
     return true;
   }
 
-  protected cloneOverride(clone: this): void {
+  private clone(clone: this): void {
     super.cloneOverride(clone);
-    clone.originalSet = this.originalSet;
-    clone.setItems = this.setItems;
+    clone._original = this._original;
+    clone._items = this._items;
   }
 
-  protected abstract constructItem(synchronized?: boolean, values?: T): TRecord;
 }
 
 export default Set;
