@@ -43,6 +43,6 @@
     "watchr": "^3.0.1"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20161231"
+    "typescript": "^2.2.0-dev.20170107"
   }
 }

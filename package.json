@@ -8,6 +8,7 @@
     "prepublish-all": "npm test",
     "publish-all": "node runFor.js --all npm -- publish",
     "bump": "lerna publish --skip-git",
+    "lerna": "lerna",
     "lint": "tslint -e \"packages/*/node_modules/**\" -e \"packages/*/lib/**\" \"packages/**/*.ts\" \"packages/**/*.tsx\"",
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register \"packages/**/*.spec.ts\"",
     "postinstall": "lerna bootstrap"
@@ -18,17 +19,17 @@
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
-    "@types/mocha": "^2.2.35",
-    "@types/node": "^6.0.55",
+    "@types/mocha": "^2.2.36",
+    "@types/node": "^6.0.58",
     "@types/react-addons-test-utils": "^0.14.16",
     "chai": "^3.5.0",
-    "lerna": "2.0.0-beta.31",
+    "lerna": "2.0.0-beta.32",
     "mocha": "^3.2.0",
-    "react-addons-test-utils": "^15.4.1",
+    "react-addons-test-utils": "^15.4.2",
     "ts-node": "^2.0.0",
-    "tslint": "^4.2.0",
+    "tslint": "^4.3.1",
     "tslint-eslint-rules": "^3.2.3",
     "tslint-microsoft-contrib": "^4.0.0",
-    "typescript": "^2.2.0-dev.20161231"
+    "typescript": "^2.2.0-dev.20170107"
   }
 }

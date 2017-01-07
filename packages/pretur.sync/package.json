@@ -40,6 +40,6 @@
     "tslib": "^1.4.0"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20161231"
+    "typescript": "^2.2.0-dev.20170107"
   }
 }
