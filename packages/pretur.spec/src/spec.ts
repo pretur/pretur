@@ -186,3 +186,17 @@ export class Spec<T> {
     return new Spec<T>(newModel);
   }
 }
+
+export interface SpecPool {
+  [model: string]: Spec<any>;
+}
+
+export function buildSpecPool(...specs: Spec<any>[]): SpecPool {
+  const pool: SpecPool = {};
+
+  for (const spec of specs) {
+    pool[spec.name] = spec;
+  }
+
+  return pool;
+}
