@@ -1,9 +1,9 @@
 import * as Bluebird from 'bluebird';
-import { ValueValidator, ValueValidationError } from '../validator';
+import { Validator, ValidationError } from '../validator';
 import * as IBANValidator from 'iban';
 
-export function iban(key: string): ValueValidator<string> {
-  return async function ibanValidator(str: string): Bluebird<ValueValidationError> {
+export function iban(key: string): Validator<string> {
+  return async function ibanValidator(str: string): Bluebird<ValidationError> {
     if (!str) {
       return;
     }

@@ -1,12 +1,12 @@
 import * as Bluebird from 'bluebird';
-import { ValueValidator, ValueValidationError } from '../validator';
+import { Validator, ValidationError } from '../validator';
 
 export function minimumLength(
   key: string,
   minimumLength: number,
   acceptEmpty = false,
-): ValueValidator<string> {
-  return async function minimumLengthValidator(str: string): Bluebird<ValueValidationError> {
+): Validator<string> {
+  return async function minimumLengthValidator(str: string): Bluebird<ValidationError> {
 
     if (acceptEmpty && !str) {
       return;

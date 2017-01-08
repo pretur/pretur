@@ -1,13 +1,13 @@
 import * as Bluebird from 'bluebird';
-import { ValueValidator, ValueValidationError } from '../validator';
+import { Validator, ValidationError } from '../validator';
 
 export function rangedNumber(
   key: string,
   from = Number.NEGATIVE_INFINITY,
   to = Number.POSITIVE_INFINITY,
   inclusiveFrom = true,
-  inclusiveTo = true): ValueValidator<number> {
-  return async function rangedNumberValidator(num: number): Bluebird<ValueValidationError> {
+  inclusiveTo = true): Validator<number> {
+  return async function rangedNumberValidator(num: number): Bluebird<ValidationError> {
     if (
       typeof num !== 'number' ||
       isNaN(num) ||

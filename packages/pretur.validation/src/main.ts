@@ -1,3 +1,3 @@
 export * from './validator';
-import * as valueValidators from './valueValidators';
-export { valueValidators };
+import * as validators from './validators';
+export { validators };

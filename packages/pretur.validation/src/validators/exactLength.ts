@@ -1,12 +1,12 @@
 import * as Bluebird from 'bluebird';
-import { ValueValidator, ValueValidationError } from '../validator';
+import { Validator, ValidationError } from '../validator';
 
 export function exactLength(
   key: string,
   length: number,
   acceptEmpty = false,
-): ValueValidator<string> {
-  return async function exactLengthValidator(str: string): Bluebird<ValueValidationError> {
+): Validator<string> {
+  return async function exactLengthValidator(str: string): Bluebird<ValidationError> {
 
     if (acceptEmpty && !str) {
       return;
