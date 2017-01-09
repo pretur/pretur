@@ -1,6 +1,6 @@
 {
   "name": "pretur.util",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "Utility type-safe methods",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",

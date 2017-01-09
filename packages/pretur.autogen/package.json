@@ -1,6 +1,6 @@
 {
   "name": "pretur.autogen",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "Handlebars based code generation helper",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",

@@ -1,6 +1,6 @@
 {
   "name": "pretur.validation",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "Validation library with good support for i18n",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -32,7 +32,7 @@
     "@types/iban": "0.0.28",
     "bluebird": "^3.4.7",
     "iban": "^0.0.7",
-    "pretur.i18n": "^0.9.3",
+    "pretur.i18n": "^0.10.0",
     "tslib": "^1.5.0"
   },
   "devDependencies": {
