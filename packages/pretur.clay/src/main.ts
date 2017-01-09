@@ -5,3 +5,4 @@ export * from './Record';
 export * from './Set';
 export * from './Value';
 export * from './Querier';
+export * from './mutations';
