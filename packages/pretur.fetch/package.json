@@ -28,13 +28,13 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.fetch",
   "dependencies": {
     "@types/bluebird": "^3.0.37",
-    "@types/node": "^6.0.55",
+    "@types/node": "^6.0.58",
     "bluebird": "^3.4.7",
     "node-fetch": "^1.6.3",
-    "tslib": "^1.4.0",
+    "tslib": "^1.5.0",
     "whatwg-fetch": "^2.0.1"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170107"
+    "typescript": "^2.2.0-dev.20170109"
   }
 }

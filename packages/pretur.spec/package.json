@@ -28,14 +28,14 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.spec",
   "dependencies": {
-    "@types/lodash": "^4.14.45",
-    "@types/node": "^6.0.55",
+    "@types/lodash": "^4.14.47",
+    "@types/node": "^6.0.58",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.9.3",
     "pretur.validation": "^0.9.3",
-    "tslib": "^1.4.0"
+    "tslib": "^1.5.0"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170107"
+    "typescript": "^2.2.0-dev.20170109"
   }
 }

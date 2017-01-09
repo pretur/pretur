@@ -30,19 +30,19 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.autogen",
   "dependencies": {
-    "@types/fs-extra": "0.0.35",
+    "@types/fs-extra": "0.0.37",
     "@types/handlebars": "^4.0.31",
     "@types/inflection": "^1.5.28",
-    "@types/lodash": "^4.14.45",
-    "@types/node": "^6.0.55",
+    "@types/lodash": "^4.14.47",
+    "@types/node": "^6.0.58",
     "fs-extra": "^1.0.0",
     "handlebars": "^4.0.6",
     "inflection": "^1.10.0",
     "lodash": "^4.17.4",
-    "tslib": "^1.4.0",
+    "tslib": "^1.5.0",
     "watchr": "^3.0.1"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170107"
+    "typescript": "^2.2.0-dev.20170109"
   }
 }
