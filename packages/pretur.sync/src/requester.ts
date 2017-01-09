@@ -38,8 +38,11 @@ export interface Requester {
   select<T>(query: Query<T>): Bluebird<SelectResult<T>>;
   refresh<T>(query: Query<T>, orchestrator: string): Bluebird<RefreshResult<T>>;
   operate<TData, TResult>(name: string, data?: TData): Bluebird<OperateResult<TResult>>;
+  insert<T>(options: InsertRequest<T>): Bluebird<InsertResult<T>>;
   insert<T>(model: string, data: T): Bluebird<InsertResult<T>>;
+  update<T>(options: UpdateRequest<T>): Bluebird<UpdateResult>;
   update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateResult>;
+  remove<T>(options: RemoveRequest<T>): Bluebird<RemoveResult>;
   remove<T>(model: string, identifiers: T): Bluebird<RemoveResult>;
   validate<T>(name: string, data: T): Bluebird<ValidateResult>;
   batchStart(): void;
@@ -237,15 +240,17 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function insert<T>(model: string, data: T): Bluebird<InsertResult<T>> {
+  function insert<T>(options: InsertRequest<T>): Bluebird<InsertResult<T>>;
+  function insert<T>(model: string, data: T): Bluebird<InsertResult<T>>;
+  function insert<T>(model: string | InsertRequest<T>, data?: T): Bluebird<InsertResult<T>> {
     return new Bluebird<InsertResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
         reject,
         request: <InsertRequest<T>>{
+          data: typeof model === 'string' ? data : model.data,
+          model: typeof model === 'string' ? model : model.model,
           type: 'insert',
-          model,
-          data,
           requestId,
         },
         resolve(response: FetchResponse<InsertResponse<T>>) {
@@ -280,16 +285,22 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateResult> {
+  function update<T>(options: UpdateRequest<T>): Bluebird<UpdateResult>;
+  function update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateResult>;
+  function update<T>(
+    model: string | UpdateRequest<T>,
+    attributes?: (keyof T)[],
+    data?: T,
+  ): Bluebird<UpdateResult> {
     return new Bluebird<UpdateResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
         reject,
         request: <UpdateRequest<T>>{
+          attributes: typeof model === 'string' ? attributes : model.attributes,
+          data: typeof model === 'string' ? data : model.data,
+          model: typeof model === 'string' ? model : model.model,
           type: 'update',
-          model,
-          attributes,
-          data,
           requestId,
         },
         resolve(response: FetchResponse<UpdateResponse>) {
@@ -323,15 +334,17 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function remove<T>(model: string, identifiers: T): Bluebird<RemoveResult> {
+  function remove<T>(options: RemoveRequest<T>): Bluebird<RemoveResult>;
+  function remove<T>(model: string, identifiers: T): Bluebird<RemoveResult>;
+  function remove<T>(model: string | RemoveRequest<T>, identifiers?: T): Bluebird<RemoveResult> {
     return new Bluebird<RemoveResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
         reject,
         request: <RemoveRequest<T>>{
+          identifiers: typeof model === 'string' ? identifiers : model.identifiers,
+          model: typeof model === 'string' ? model : model.model,
           type: 'remove',
-          model,
-          identifiers,
           requestId,
         },
         resolve(response: FetchResponse<RemoveResponse>) {
