@@ -5,13 +5,14 @@
   "scripts": {
     "for": "node runFor.js",
     "for-all": "node runFor.js --all",
+    "install-all": "npm run for-all npm -- install",
     "build-all": "npm run for-all npm -- run build",
     "bump": "lerna publish --skip-git",
     "lerna": "lerna",
     "lint": "tslint -e \"packages/*/node_modules/**\" -e \"packages/*/lib/**\" \"packages/**/*.ts\" \"packages/**/*.tsx\"",
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register \"packages/**/*.spec.ts\"",
-    "travis-test": "npm run build-all && npm run test",
-    "postinstall": "lerna bootstrap"
+    "travis-test": "npm run install-all && npm run build-all && npm run test",
+    "bootstrap": "lerna bootstrap"
   },
   "repository": {
     "type": "git",
