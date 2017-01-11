@@ -3,5 +3,7 @@ node_js:
   - "stable"
 sudo: false
 script:
-  - npm run travis-test
+  - npm run install-all 
+  - npm run build-all
+  - npm run test
   - npm run lint
