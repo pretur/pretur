@@ -1,8 +1,9 @@
 import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
-import { intersection, assign, noop } from 'lodash';
+import { intersection, assign, pick } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
 import { Spec } from 'pretur.spec';
+import { ModelDescriptor } from './descriptor';
 import { Pool } from './pool';
 import { InsertRequest, UpdateRequest, RemoveRequest } from 'pretur.sync';
 
@@ -21,7 +22,7 @@ export interface Insert<T> {
     item: InsertRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<number | void>;
+  ): Bluebird<Partial<T> | void>;
 }
 
 export interface Update<T> {
@@ -48,7 +49,7 @@ export interface Synchronizer<T> {
     item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<number | void>;
+  ): Bluebird<Partial<T> | void>;
 }
 
 export interface UnitializedSynchronizer<T> {
@@ -70,7 +71,7 @@ export interface BuildSynchronizerOptions<T> {
   insertErrorHandler?: ErrorHandler<InsertRequest<T>>;
   updateErrorHandler?: ErrorHandler<UpdateRequest<T>>;
   removeErrorHandler?: ErrorHandler<RemoveRequest<T>>;
-  insertInterceptor?: SynchronizationInterceptor<InsertRequest<T>, number | boolean>;
+  insertInterceptor?: SynchronizationInterceptor<InsertRequest<T>, Partial<T> | boolean>;
   updateInterceptor?: SynchronizationInterceptor<UpdateRequest<T>, boolean>;
   removeInterceptor?: SynchronizationInterceptor<RemoveRequest<T>, boolean>;
 }
@@ -81,12 +82,12 @@ export function buildSynchronizer<T>(
 ): UnitializedSynchronizer<T> {
   let pool: Pool = <any>undefined;
 
-  function synchronizer(
+  async function synchronizer(
     transaction: Sequelize.Transaction,
     item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<number | void> {
+  ): Bluebird<Partial<T> | void> {
 
     if (item.type === 'insert') {
       return insert(
@@ -127,7 +128,7 @@ export function buildSynchronizer<T>(
       );
     }
 
-    return Bluebird.reject(new Error('provided item is invalid'));
+    throw new Error('provided item is invalid');
   }
 
   function initialize(p: Pool) {
@@ -139,77 +140,78 @@ export function buildSynchronizer<T>(
 
 const INJECTED_MASTER_RESOLUTION_KEY = '__INJECTED_MASTER_RESOLUTION_KEY';
 
-function insert<T>(
+async function insert<T>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<InsertRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<InsertRequest<T>, number | boolean> | undefined,
+  interceptor: SynchronizationInterceptor<InsertRequest<T>, Partial<T> | boolean> | undefined,
   transaction: Sequelize.Transaction,
   item: InsertRequest<T>,
   rip: ResultItemAppender,
   context: any,
-): Bluebird<number | void> {
-  const model = pool.models[modelName];
+): Bluebird<Partial<T> | void> {
+  const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  function defaultInsertBehavior(): Bluebird<void | number> {
+  async function defaultInsertBehavior(): Bluebird<void | Partial<T>> {
     const data: T = assign({}, item.data);
-    const masters: Bluebird<any>[] = [];
 
-    model.spec.relations.master.forEach(master => {
-      const masterData = (<any>data)[master.alias];
-      if (masterData) {
-        const masterModel = pool.models[master.model];
+    if (!model.sequelizeModel) {
+      throw new Error(`model ${model.name} must have a sequelize model`);
+    }
 
-        if (!masterModel.synchronizer) {
-          throw new Error(`model ${masterModel.name} must have a synchronizer`);
-        }
-
-        masters.push(masterModel.synchronizer(
-          transaction,
-          <InsertRequest<any>>{
-            data: masterData,
-            model: masterModel.name,
-            requestId: item.requestId,
-            type: 'insert',
-            [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => (<any>data)[master.key] = id,
-          },
-          rip,
-          context,
-        ));
-
+    try {
+      for (const master of model.spec.relations.master) {
+        const masterData = data[<keyof T>master.alias];
         (<any>data)[master.alias] = undefined;
-      }
-    });
 
-    const modelCreationPromise = Bluebird.all(masters).then(() => {
-      if (!model.sequelizeModel) {
-        throw new Error(`model ${model.name} must have a sequelize model`);
+        if (masterData) {
+          const masterModel = pool.models[master.model];
+
+          if (!masterModel.synchronizer) {
+            throw new Error(`model ${masterModel.name} must have a synchronizer`);
+          }
+
+          await masterModel.synchronizer(
+            transaction,
+            <InsertRequest<any>>{
+              data: masterData,
+              model: masterModel.name,
+              requestId: item.requestId,
+              type: 'insert',
+              [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => data[<keyof T>master.key] = id,
+            },
+            rip,
+            context,
+          );
+        }
       }
 
-      return model.sequelizeModel.create(data, {
+      const instance = await model.sequelizeModel.create(data, {
         transaction,
         fields: model.allowedAttributes,
       });
-    });
 
-    const promise = modelCreationPromise.then(instance => {
-      if (!model.primaryKey) {
-        throw new Error(`model ${model.name} must have a primaryKey`);
-      }
+      const newData = instance.get({ plain: true });
 
       if ((<any>item)[INJECTED_MASTER_RESOLUTION_KEY]) {
-        (<any>item)[INJECTED_MASTER_RESOLUTION_KEY](instance[model.primaryKey]);
+
+        if (model.primaryKeys.length !== 1) {
+          throw new Error(
+            `model ${model.name} must have exactly one primaryKey for complex operations`,
+          );
+        }
+
+        (<any>item)[INJECTED_MASTER_RESOLUTION_KEY](newData[model.primaryKeys[0]]);
       }
 
-      const details: Bluebird<any>[] = [];
       const aliasModelMap = model.aliasModelMap;
       const aliasKeyMap = model.aliasKeyMap;
 
-      Object.keys(aliasModelMap).forEach(alias => {
+      for (const alias of Object.keys(aliasModelMap)) {
         const nested = (<any>data)[alias];
         const targetModel = pool.models[aliasModelMap[alias]];
 
@@ -217,26 +219,26 @@ function insert<T>(
           throw new Error(`model ${aliasModelMap[alias]} does not exist`);
         }
 
+        if (!targetModel.synchronizer) {
+          throw new Error(`model ${targetModel.name} must have a synchronizer`);
+        }
+
+        if (model.primaryKeys.length !== 1) {
+          throw new Error(
+            `model ${model.name} must have exactly one primaryKey for complex operations`,
+          );
+        }
+
         if (nested) {
 
           if (Array.isArray(nested)) {
-            nested.forEach(nestedItem => {
+            for (const nestedItem of nested) {
 
-              if (!targetModel.synchronizer) {
-                throw new Error(`model ${targetModel.name} must have a synchronizer`);
-              }
+              const nestedInsertData = assign({}, nestedItem, {
+                [aliasKeyMap[alias]]: newData[model.primaryKeys[0]],
+              });
 
-              if (!model.primaryKey) {
-                throw new Error(`model ${model.name} must have a primaryKey`);
-              }
-
-              const nestedInsertData = assign(
-                {},
-                nestedItem,
-                { [aliasKeyMap[alias]]: instance[model.primaryKey] },
-              );
-
-              details.push(targetModel.synchronizer(
+              await targetModel.synchronizer(
                 transaction,
                 <InsertRequest<any>>{
                   data: nestedInsertData,
@@ -246,26 +248,14 @@ function insert<T>(
                 },
                 rip,
                 context,
-              ));
+              );
+            }
+          } else {
+            const nestedInsertData = assign({}, nested, {
+              [aliasKeyMap[alias]]: newData[model.primaryKeys[0]],
             });
 
-          } else {
-
-            if (!targetModel.synchronizer) {
-              throw new Error(`model ${targetModel.name} must have a synchronizer`);
-            }
-
-            if (!model.primaryKey) {
-              throw new Error(`model ${model.name} must have a primaryKey`);
-            }
-
-            const nestedInsertData = assign(
-              {},
-              nested,
-              { [aliasKeyMap[alias]]: instance[model.primaryKey] },
-            );
-
-            details.push(targetModel.synchronizer(
+            await targetModel.synchronizer(
               transaction,
               <InsertRequest<any>>{
                 data: nestedInsertData,
@@ -275,51 +265,38 @@ function insert<T>(
               },
               rip,
               context,
-            ));
+            );
           }
         }
-      });
+      }
 
-      const finalPromise
-        = details.length > 0 ? Bluebird.all(details) : Bluebird.resolve(undefined!);
-
-      return finalPromise.then(() => {
-        if (!model.primaryKey) {
-          return;
-        }
-        const generatedId = instance[model.primaryKey];
-
-        if (typeof generatedId === 'number') {
-          return generatedId;
-        }
-
-        return;
-      });
-
-    });
-
-    if (typeof errorHandler === 'function') {
-      return promise.catch(error => errorHandler(item, error, rip));
+      if (model.primaryKeys.length > 0) {
+        return pick<Partial<T>, T>(newData, model.primaryKeys);
+      }
+    } catch (error) {
+      if (typeof errorHandler === 'function') {
+        return errorHandler(item, error, rip);
+      }
+      throw error;
     }
-
-    return promise;
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool, context).then(result => {
-      if (typeof result === 'number') {
-        return result;
-      }
-      if (result) {
-        return defaultInsertBehavior();
-      }
+    const interceptorResult = await interceptor(transaction, item, rip, pool, context);
+
+    if (typeof interceptorResult === 'object') {
+      return interceptorResult;
+    }
+
+    if (!interceptorResult) {
       return;
-    });
+    }
   }
+
   return defaultInsertBehavior();
 }
 
-function update<T>(
+async function update<T>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<UpdateRequest<T>> | undefined,
@@ -329,47 +306,52 @@ function update<T>(
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<void> {
-  const model = pool.models[modelName];
+  const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  function defaultUpdateBehavior(): Bluebird<void> {
+  async function defaultUpdateBehavior(): Bluebird<void> {
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
     }
 
-    if (!model.primaryKey) {
-      throw new Error(`model ${model.name} must have a primaryKey`);
+    if (model.primaryKeys.length === 0) {
+      throw new Error(`model ${model.name} must have at least one primaryKey`);
     }
 
-    const promise = model.sequelizeModel.update(item.data, {
-      transaction,
-      fields: buildUpdateAttributes(model.mutableAttributes, item.attributes),
-      validate: true,
-      where: { [model.primaryKey]: (<any>item.data)[model.primaryKey] },
-    }).then(noop);
+    const filters = pick<Partial<T>, T>(item.data, model.primaryKeys);
 
-    if (typeof errorHandler === 'function') {
-      return promise.catch(error => errorHandler(item, error, rip));
+    if (Object.keys(filters).length === 0) {
+      throw new Error(`a primaryKey field must be provided to narrow the update`);
     }
 
-    return promise;
+    try {
+      await model.sequelizeModel.update(item.data, {
+        transaction,
+        fields: buildUpdateAttributes(model.mutableAttributes, item.attributes),
+        validate: true,
+        where: <any>filters,
+      });
+    } catch (error) {
+      if (typeof errorHandler === 'function') {
+        return errorHandler(item, error, rip);
+      }
+      throw error;
+    }
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool, context).then(resume => {
-      if (resume) {
-        return defaultUpdateBehavior();
-      }
+    const resume = await interceptor(transaction, item, rip, pool, context);
+    if (!resume) {
       return;
-    });
+    }
   }
   return defaultUpdateBehavior();
 }
 
-function remove<T>(
+async function remove<T>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<RemoveRequest<T>> | undefined,
@@ -379,42 +361,42 @@ function remove<T>(
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<void> {
-  const model = pool.models[modelName];
+  const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  function defaultRemoveBehavior(): Bluebird<void> {
+  async function defaultRemoveBehavior(): Bluebird<void> {
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
     }
-    const attributes = intersection(Object.keys(item.identifiers), model.allowedAttributes);
-    const filteredIdentifiers: Sequelize.WhereOptions = {};
 
-    attributes.forEach(identifier => {
-      filteredIdentifiers[identifier] = (<any>item.identifiers)[identifier];
-    });
-
-    const promise = model.sequelizeModel.destroy({
-      transaction,
-      where: filteredIdentifiers,
-    }).then(noop);
-
-    if (typeof errorHandler === 'function') {
-      return promise.catch(error => errorHandler(item, error, rip));
+    if (model.primaryKeys.length === 0) {
+      throw new Error(`model ${model.name} must have at least one primaryKey`);
     }
 
-    return promise;
+    const identifiers = pick<Partial<T>, T>(item.identifiers, model.primaryKeys);
+
+    if (Object.keys(identifiers).length === 0) {
+      throw new Error(`a primaryKey field must be provided to narrow the delete`);
+    }
+
+    try {
+      await model.sequelizeModel.destroy({ transaction, where: <any>identifiers });
+    } catch (error) {
+      if (typeof errorHandler === 'function') {
+        return errorHandler(item, error, rip);
+      }
+      throw error;
+    }
   }
 
   if (typeof interceptor === 'function') {
-    return interceptor(transaction, item, rip, pool, context).then(resume => {
-      if (resume) {
-        return defaultRemoveBehavior();
-      }
-      return;
-    });
+    const resume = await interceptor(transaction, item, rip, pool, context);
+    if (!resume) {
+      return defaultRemoveBehavior();
+    }
   }
   return defaultRemoveBehavior();
 }

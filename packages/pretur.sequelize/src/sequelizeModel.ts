@@ -13,22 +13,25 @@ import {
   RangeType,
 } from 'pretur.spec';
 
-export interface UninitializedSequelizeModel<TInstance, TAttributes> {
-  sequelizeModel: Sequelize.Model<TInstance, TAttributes>;
+export type SequelizeInstance<T> = Sequelize.Instance<T> & T;
+export type SequelizeModel<T> = Sequelize.Model<SequelizeInstance<T>, T>;
+
+export interface UninitializedSequelizeModel<T> {
+  sequelizeModel: SequelizeModel<T>;
   initialize(pool: Pool): void;
 }
 
-export interface BuildSequelizeModelOptions<TInstance, TAttributes> {
-  attributeToFieldMap?: { [attribute: string]: string };
+export interface BuildSequelizeModelOptions<T> {
+  attributeToFieldMap?: {[P in keyof T]?: string };
   tableName?: string;
-  createDatabase?(sequelizeModel: Sequelize.Model<TInstance, TAttributes>): void;
+  createDatabase?(sequelizeModel: SequelizeModel<T>): void;
 }
 
-export function buildSequelizeModel<TInstance, TAttributes>(
-  spec: Spec<TAttributes>,
+export function buildSequelizeModel<T>(
+  spec: Spec<T>,
   sequelize: Sequelize.Sequelize,
-  options?: BuildSequelizeModelOptions<TInstance, TAttributes>,
-): UninitializedSequelizeModel<TInstance, TAttributes> {
+  options?: BuildSequelizeModelOptions<T>,
+): UninitializedSequelizeModel<T> {
   const attributes: { [attrib: string]: Sequelize.DefineAttributeColumnOptions } = {};
 
   spec.attributeArray.forEach(attrib =>
@@ -47,7 +50,7 @@ export function buildSequelizeModel<TInstance, TAttributes>(
       values: EnumType.is(attrib.type) ? attrib.type.values.map(v => v.name) : undefined,
     });
 
-  const defineOptions: Sequelize.DefineOptions<TInstance> = {
+  const defineOptions: Sequelize.DefineOptions<SequelizeInstance<T>> = {
     tableName: (options && options.tableName) || spec.name,
   };
 
@@ -55,7 +58,7 @@ export function buildSequelizeModel<TInstance, TAttributes>(
     defineOptions.indexes = spec.indexes.unique.map(fields => ({ unique: true, fields }));
   }
 
-  const model = sequelize.define<TInstance, TAttributes>(spec.name, attributes, defineOptions);
+  const model = sequelize.define<SequelizeInstance<T>, T>(spec.name, attributes, defineOptions);
 
   function initialize(pool: Pool) {
     spec.nonVirtualRelations.superclass.forEach(superclass => {

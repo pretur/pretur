@@ -4,6 +4,7 @@ import { intersection } from 'lodash';
 import { Query, SubQuery, QueryInclude } from 'pretur.sync';
 import { Spec } from 'pretur.spec';
 import { Pool } from './pool';
+import { SequelizeModel } from './sequelizeModel';
 
 export interface ResolveResult<T> {
   data: T[];
@@ -55,17 +56,17 @@ export function buildResolver<T>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>undefined;
 
-  function resolver(rawQuery: Query<T>, context: any): Bluebird<ResolveResult<T>> {
+  async function resolver(rawQuery: Query<T>, context: any): Bluebird<ResolveResult<T>> {
     let query = rawQuery;
 
     if (options && typeof options.queryTransformer === 'function') {
       query = options.queryTransformer(rawQuery);
     }
 
-    const model = pool.models[spec.name].sequelizeModel;
+    const model = <SequelizeModel<T>>pool.models[spec.name].sequelizeModel;
 
     if (!model) {
-      return Bluebird.reject(new Error(`${model} is not a valid model`));
+      throw new Error(`${model} is not a valid model`);
     }
 
     const findOptions: Sequelize.FindOptions = {};
@@ -78,12 +79,20 @@ export function buildResolver<T>(
     }
 
     if (query && (typeof query.byId === 'number' || typeof query.byId === 'string')) {
-      const promise = model.findById(query.byId, findOptions).then(data => ({ data: [data] }));
+      const instance = await model.findById(query.byId, findOptions);
+
+      if (!instance) {
+        return { data: [] };
+      }
+
+      const data = [instance.get({ plain: true })];
+
       if (options && options.intercept) {
         const intercept = options.intercept;
-        return promise.then(r => intercept(query, r, context));
+        return intercept(query, { data }, context);
       }
-      return promise;
+
+      return { data };
     }
 
     const order = buildOrder(query, pool, spec.name);
@@ -107,22 +116,26 @@ export function buildResolver<T>(
     }
 
     if (query && query.count) {
-      const promise = model.findAndCountAll(findOptions)
-        .then(({ rows, count }) => ({ count, data: rows }));
+      const { rows, count } = await model.findAndCountAll(findOptions);
+
+      const data = rows.map(row => row.get({ plain: true }));
 
       if (options && options.intercept) {
         const intercept = options.intercept;
-        return promise.then(r => intercept(query, r, context));
+        return intercept(query, { data, count }, context);
       }
-      return promise;
+
+      return { data, count };
     }
 
-    const promise = model.findAll(findOptions).then(data => ({ data }));
+    const rows = await model.findAll(findOptions);
+    const data = rows.map(row => row.get({ plain: true }));
     if (options && options.intercept) {
       const intercept = options.intercept;
-      return promise.then(r => intercept(query, r, context));
+      return intercept(query, { data }, context);
     }
-    return promise;
+
+    return { data };
   }
 
   function initialize(p: Pool) {
@@ -185,10 +198,10 @@ function buildWhere<T>(
         typeof model.fieldWhereBuilders[field] === 'function'
       ) {
         where[field] = model.fieldWhereBuilders[field](value);
-      // tslint:disable:no-null-keyword
+        // tslint:disable:no-null-keyword
       } else if (value === null) {
         where[field] = null!;
-      // tslint:enable:no-null-keyword
+        // tslint:enable:no-null-keyword
       } else if (Array.isArray(value)) {
         where[field] = { $in: value };
       } else {

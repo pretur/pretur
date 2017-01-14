@@ -3,59 +3,58 @@ import { intersection } from 'lodash';
 import { Spec } from 'pretur.spec';
 import { Resolver, UnitializedResolver } from './resolver';
 import { Synchronizer, UnitializedSynchronizer } from './synchronizer';
-import { UninitializedSequelizeModel } from './sequelizeModel';
+import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
 import { Pool } from './pool';
 
-export type FieldWhereClause = string | number |
+export type FieldWhereClause<T> = T |
   Sequelize.WhereOptions | Sequelize.WhereOptions |
   Sequelize.col | Sequelize.and | Sequelize.or |
-  Sequelize.WhereGeometryOptions | (string | number)[] | Object;
+  Sequelize.WhereGeometryOptions | T[] | object;
 
-export interface AliasModelMap {
-  [alias: string]: string;
-}
+export type AliasModelMap<T> = {
+  [P in keyof T]: string;
+};
 
-export interface AliasKeyMap {
-  [alias: string]: string;
-}
+export type AliasKeyMap<T> = {
+  [P in keyof T]: keyof T;
+};
 
 export type FieldWhereBuilders<T> = {
-  [P in keyof T]: (value: T[P]) => FieldWhereClause;
+  [P in keyof T]?: (value: T[P]) => FieldWhereClause<T[P]>;
 };
 
 export interface ModelDescriptor<T> {
   spec: Spec<T>;
   name: string;
-  primaryKey?: string;
-  sequelizeModel?: Sequelize.Model<any, any>;
-  resolver?: Resolver<any>;
-  synchronizer?: Synchronizer<any>;
-  aliasModelMap: AliasModelMap;
-  aliasKeyMap: AliasKeyMap;
-  allowedAttributes: string[];
-  mutableAttributes: string[];
-  defaultOrder: [string, 'ASC' | 'DESC'];
+  primaryKeys: (keyof T)[];
+  sequelizeModel?: SequelizeModel<T>;
+  resolver?: Resolver<T>;
+  synchronizer?: Synchronizer<T>;
+  aliasModelMap: AliasModelMap<T>;
+  aliasKeyMap: AliasKeyMap<T>;
+  allowedAttributes: (keyof T)[];
+  mutableAttributes: (keyof T)[];
+  defaultOrder: [keyof T, 'ASC' | 'DESC'];
   fieldWhereBuilders?: FieldWhereBuilders<T>;
-  sanitizeAttributes(attributes?: string[] | string): string[];
+  sanitizeAttributes(attributes?: (keyof T)[] | keyof T): (keyof T)[];
   initialize(pool: Pool): void;
 }
 
 export interface BuildModelDescriptorOptions<T> {
-  sequelizeModel?: UninitializedSequelizeModel<any, any>;
-  resolver?: UnitializedResolver<any>;
-  synchronizer?: UnitializedSynchronizer<any>;
-  defaultOrder?: [string, 'ASC' | 'DESC'];
+  sequelizeModel?: UninitializedSequelizeModel<T>;
+  resolver?: UnitializedResolver<T>;
+  synchronizer?: UnitializedSynchronizer<T>;
+  defaultOrder?: [keyof T, 'ASC' | 'DESC'];
   fieldWhereBuilders?: FieldWhereBuilders<T>;
-  allowedAttributes?: string[];
-  allowedMutableAttributes?: string[];
-  allowedUpdateAttributes?: string[];
+  allowedAttributes?: (keyof T)[];
+  allowedMutableAttributes?: (keyof T)[];
 }
 
 export function buildModelDescriptor<T>(
   spec: Spec<T>,
   options?: BuildModelDescriptorOptions<T>,
 ): ModelDescriptor<T> {
-  const primaryAttribute = spec.attributeArray.filter(a => a.primary)[0];
+  const primaryKeys = spec.attributeArray.filter(a => a.primary).map(a => a.name);
 
   const sequelizeModel
     = (options && options.sequelizeModel && options.sequelizeModel.sequelizeModel) || undefined;
@@ -69,15 +68,15 @@ export function buildModelDescriptor<T>(
       m[r.alias] = r.model;
       return m;
     },
-    <AliasModelMap>{},
+    <AliasModelMap<T>>{},
   );
 
   const aliasKeyMap = spec.relationArray.reduce(
     (m, r) => {
-      m[r.alias] = r.key;
+      m[<keyof T>r.alias] = <keyof T>r.key;
       return m;
     },
-    <AliasKeyMap>{},
+    <AliasKeyMap<T>>{},
   );
 
   const allowedAttributes
@@ -87,10 +86,10 @@ export function buildModelDescriptor<T>(
     || spec.attributeArray.filter(a => a.mutable).map(a => a.name);
 
   const defaultOrder = (options && options.defaultOrder)
-    || (primaryAttribute && [primaryAttribute.name, 'ASC'])
+    || (primaryKeys[0] && [primaryKeys[0], 'ASC'])
     || undefined;
 
-  function sanitizeAttributes(attributes?: string[] | string): string[] {
+  function sanitizeAttributes(attributes?: (keyof T)[] | keyof T): (keyof T)[] {
     if (Array.isArray(attributes)) {
       return intersection(attributes, allowedAttributes);
     } else if (typeof attributes === 'string') {
@@ -125,6 +124,6 @@ export function buildModelDescriptor<T>(
     initialize,
     fieldWhereBuilders: (options && options.fieldWhereBuilders),
     name: spec.name,
-    primaryKey: primaryAttribute ? primaryAttribute.name : undefined,
+    primaryKeys: primaryKeys,
   };
 }

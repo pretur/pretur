@@ -12,12 +12,12 @@ export interface ModelDescriptorMap {
 export interface Pool {
   models: ModelDescriptorMap;
   resolve<T>(query: Query<T>, context: any): Bluebird<ResolveResult<T>>;
-  sync(
+  sync<T>(
     transaction: Sequelize.Transaction,
-    item: InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>,
+    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<number | void>;
+  ): Bluebird<Partial<T> | void>;
 }
 
 export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
@@ -31,42 +31,45 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     ),
   };
 
-  pool.resolve = function resolve<T>(query: Query<T>, context: any): Bluebird<ResolveResult<T>> {
+  pool.resolve = async function resolve<T>(
+    query: Query<T>,
+    context: any,
+  ): Bluebird<ResolveResult<T>> {
     if (!query || !query.model) {
-      return Bluebird.reject(new Error('query or query.model was not specified.'));
+      throw new Error('query or query.model was not specified.');
     }
 
     const model = pool.models[query.model];
 
     if (!model) {
-      return Bluebird.reject(new Error(`${query.model} is not a valid model`));
+      throw new Error(`${query.model} is not a valid model`);
     }
 
     if (!model.resolver) {
-      return Bluebird.reject(new Error(`${query.model} has no resolver`));
+      throw new Error(`${query.model} has no resolver`);
     }
 
     return model.resolver(query, context);
   };
 
-  pool.sync = function sync(
+  pool.sync = async function sync<T>(
     transaction: Sequelize.Transaction,
-    item: InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>,
+    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<number | void> {
+  ): Bluebird<Partial<T> | void> {
     if (!item.model) {
-      return Bluebird.reject(new Error('item.model was not specified.'));
+      throw new Error('item.model was not specified.');
     }
 
     const model = pool.models[item.model];
 
     if (!model) {
-      return Bluebird.reject(new Error(`${item.model} is not a valid model`));
+      throw new Error(`${item.model} is not a valid model`);
     }
 
     if (!model.synchronizer) {
-      return Bluebird.reject(new Error(`${item.model} has no synchronizer`));
+      throw new Error(`${item.model} has no synchronizer`);
     }
 
     return model.synchronizer(transaction, item, rip, context);
