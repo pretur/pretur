@@ -23,20 +23,20 @@ export interface OperateRequest<T> extends RequestBase {
 export interface InsertRequest<T> extends RequestBase {
   type: 'insert';
   model: string;
-  data: T;
+  data: Partial<T>;
 }
 
 export interface UpdateRequest<T> extends RequestBase {
   type: 'update';
   model: string;
   attributes: (keyof T)[];
-  data: T;
+  data: Partial<T>;
 }
 
 export interface RemoveRequest<T> extends RequestBase {
   type: 'remove';
   model: string;
-  identifiers: T;
+  identifiers: Partial<T>;
 }
 
 export interface ValidateRequest<T> extends RequestBase {

@@ -122,8 +122,8 @@ export function buildModelDescriptor<T>(
     defaultOrder,
     sanitizeAttributes,
     initialize,
+    primaryKeys,
     fieldWhereBuilders: (options && options.fieldWhereBuilders),
     name: spec.name,
-    primaryKeys: primaryKeys,
   };
 }
