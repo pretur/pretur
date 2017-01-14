@@ -30,7 +30,7 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.clay",
   "dependencies": {
     "@types/bluebird": "^3.0.37",
-    "@types/lodash": "^4.14.47",
+    "@types/lodash": "^4.14.50",
     "bluebird": "^3.4.7",
     "immutable": "^3.8.1",
     "lodash": "^4.17.4",
@@ -43,6 +43,6 @@
     "tslib": "^1.5.0"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170109"
+    "typescript": "^2.2.0-dev.20170114"
   }
 }
