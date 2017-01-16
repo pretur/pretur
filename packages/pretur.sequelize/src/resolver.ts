@@ -7,7 +7,7 @@ import { Pool } from './pool';
 import { SequelizeModel } from './sequelizeModel';
 
 export interface ResolveResult<T> {
-  data: T[];
+  data: Partial<T>[];
   count?: number;
 }
 

@@ -13,8 +13,8 @@ import {
   RangeType,
 } from 'pretur.spec';
 
-export type SequelizeInstance<T> = Sequelize.Instance<T> & T;
-export type SequelizeModel<T> = Sequelize.Model<SequelizeInstance<T>, T>;
+export type SequelizeInstance<T> = Sequelize.Instance<Partial<T>> & Partial<T>;
+export type SequelizeModel<T> = Sequelize.Model<SequelizeInstance<T>, Partial<T>>;
 
 export interface UninitializedSequelizeModel<T> {
   sequelizeModel: SequelizeModel<T>;

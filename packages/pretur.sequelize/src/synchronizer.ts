@@ -271,7 +271,7 @@ async function insert<T>(
       }
 
       if (model.primaryKeys.length > 0) {
-        return pick<Partial<T>, T>(newData, model.primaryKeys);
+        return pick<Partial<T>, Partial<T>>(newData, model.primaryKeys);
       }
     } catch (error) {
       if (typeof errorHandler === 'function') {
