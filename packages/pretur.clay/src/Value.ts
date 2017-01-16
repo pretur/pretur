@@ -14,11 +14,11 @@ export class Value<T> implements Clay {
   public readonly uniqueId: number;
   public readonly original: this;
   public readonly state: State;
-  public readonly value: T | undefined;
+  public readonly value: T;
   public readonly error: ValidationError;
 
   constructor(
-    value?: T,
+    value: T,
     error?: ValidationError,
     state: State = 'normal',
     original?: Value<T>,
