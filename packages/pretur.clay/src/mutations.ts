@@ -14,7 +14,7 @@ export function applyMutations(
   requester: Requester,
   mutations: MutationRequest[],
 ): Bluebird<Result[]> {
-  requester.batchStart();
+  requester.batchMutateStart();
 
   const promises: Bluebird<Result>[] = [];
 
@@ -32,20 +32,25 @@ export function applyMutations(
     }
   }
 
-  requester.batchEnd();
+  requester.batchMutateEnd();
 
   return Bluebird.all(promises);
 }
 
-export function buildMutationsExtractor(specPool: SpecPool, owner: Owner):
-  (clay: Set<Record<any>> | Record<any>, model: string) => MutationRequest[] {
+export interface MutationsExtractor {
+  extractInsertData(clay: Record<any> | Set<Record<any>>, model: string): object;
+  extractUpdateData(clay: Record<any>, model: string): { attributes: string[], data: object };
+  extractRemoveIdentifiers(clay: Record<any>, model: string): object;
+  mutations(clay: Set<Record<any>> | Record<any>, model: string): MutationRequest[];
+}
 
-  function buildNestedInsertModel(clay: Record<any> | Set<Record<any>>, model: string): object {
+export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): MutationsExtractor {
+  function extractInsertData(clay: Record<any> | Set<Record<any>>, model: string): object {
     if (clay instanceof Set) {
       const items: any[] = [];
 
       for (const item of clay.items) {
-        items.push(buildNestedInsertModel(item, model));
+        items.push(extractInsertData(item, model));
       }
 
       return items;
@@ -78,14 +83,62 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner):
 
     for (const relation of ownedTargetRelations) {
       if ((<Clay>clay.fields[relation.alias]).modified) {
-        data[relation.alias] = buildNestedInsertModel(clay.fields[relation.alias], relation.model);
+        data[relation.alias] = extractInsertData(clay.fields[relation.alias], relation.model);
       }
     }
 
     return data;
   }
 
-  return function mutations(clay: Set<Record<any>> | Record<any>, model: string) {
+  function extractUpdateData(
+    clay: Record<any>,
+    model: string,
+  ): { attributes: string[], data: object } {
+    const spec = specPool[model];
+
+    const primaries = spec.attributeArray
+      .filter(attrib => attrib.primary)
+      .map(attrib => attrib.name);
+
+    const data: any = {};
+    const attributes: string[] = [];
+
+    for (const primary of primaries) {
+      data[primary] = toPlain(clay.fields[primary]);
+    }
+
+    const mutables = spec.attributeArray
+      .filter(attrib => attrib.mutable && ownersIntersect(attrib.owner || [], owner))
+      .map(attrib => attrib.name);
+
+    for (const mutable of mutables) {
+      const attribute = <Clay>clay.fields[mutable];
+      if (attribute && attribute.modified) {
+        attributes.push(mutable);
+        data[mutable] = toPlain(attribute);
+      }
+    }
+
+    return { attributes, data };
+  }
+
+  function extractRemoveIdentifiers(clay: Record<any>, model: string): object {
+    const spec = specPool[model];
+
+    const primaries = spec.attributeArray
+      .filter(attrib => attrib.primary)
+      .map(attrib => attrib.name);
+
+    const identifiers: any = {};
+
+    for (const primary of primaries) {
+      identifiers[primary] = toPlain(clay.fields[primary]);
+    }
+
+    return identifiers;
+  }
+
+  function mutations(clay: Set<Record<any>> | Record<any>, model: string) {
     const requests: MutationRequest[] = [];
     const spec = specPool[model];
 
@@ -94,52 +147,22 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner):
         requests.push(...mutations(item, model));
       }
     } else {
-      const primaries = spec.attributeArray
-        .filter(attrib => attrib.primary)
-        .map(attrib => attrib.name);
-
       if (clay.state === 'removed') {
-        const identifiers: any = {};
-
-        for (const primary of primaries) {
-          identifiers[primary] = toPlain(clay.fields[primary]);
-        }
-
         requests.push(<RemoveRequest<any>>{
           model,
-          identifiers,
+          identifiers: extractRemoveIdentifiers(clay, model),
           type: 'remove',
         });
       } else if (clay.state === 'new') {
         requests.push(<InsertRequest<any>>{
           model,
-          data: buildNestedInsertModel(clay, model),
+          data: extractInsertData(clay, model),
           type: 'insert',
         });
       } else {
-        const data: any = {};
-        const attributes: string[] = [];
-
-        for (const primary of primaries) {
-          data[primary] = toPlain(clay.fields[primary]);
-        }
-
-        const mutables = spec.attributeArray
-          .filter(attrib => attrib.mutable && ownersIntersect(attrib.owner || [], owner))
-          .map(attrib => attrib.name);
-
-        for (const mutable of mutables) {
-          const attribute = <Clay>clay.fields[mutable];
-          if (attribute && attribute.modified) {
-            attributes.push(mutable);
-            data[mutable] = toPlain(attribute);
-          }
-        }
-
         requests.push(<UpdateRequest<any>>{
           model,
-          attributes,
-          data,
+          ...extractUpdateData(clay, model),
           type: 'update',
         });
 
@@ -155,5 +178,12 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner):
     }
 
     return requests;
+  }
+
+  return {
+    extractInsertData,
+    extractUpdateData,
+    extractRemoveIdentifiers,
+    mutations,
   };
 }
