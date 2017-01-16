@@ -157,7 +157,7 @@ async function insert<T>(
   }
 
   async function defaultInsertBehavior(): Bluebird<void | Partial<T>> {
-    const data: T = assign({}, item.data);
+    const data: Partial<T> = assign({}, item.data);
 
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
@@ -321,7 +321,7 @@ async function update<T>(
       throw new Error(`model ${model.name} must have at least one primaryKey`);
     }
 
-    const filters = pick<Partial<T>, T>(item.data, model.primaryKeys);
+    const filters = pick<Partial<T>, Partial<T>>(item.data, model.primaryKeys);
 
     if (Object.keys(filters).length === 0) {
       throw new Error(`a primaryKey field must be provided to narrow the update`);
@@ -376,7 +376,7 @@ async function remove<T>(
       throw new Error(`model ${model.name} must have at least one primaryKey`);
     }
 
-    const identifiers = pick<Partial<T>, T>(item.identifiers, model.primaryKeys);
+    const identifiers = pick<Partial<T>, Partial<T>>(item.identifiers, model.primaryKeys);
 
     if (Object.keys(identifiers).length === 0) {
       throw new Error(`a primaryKey field must be provided to narrow the delete`);

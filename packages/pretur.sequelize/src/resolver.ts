@@ -12,11 +12,11 @@ export interface ResolveResult<T> {
 }
 
 export interface Resolver<T> {
-  (query: Query<T>, context: any): Bluebird<ResolveResult<T>>;
+  (query?: Partial<Query<T>>, context?: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface CustomResolver<T> {
-  (query: Query<T>, pool: Pool, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T> | undefined, pool: Pool, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface UnitializedResolver<T> {
@@ -25,12 +25,12 @@ export interface UnitializedResolver<T> {
 }
 
 export interface ResolveInterceptor<T> {
-  (query: Query<T>, result: ResolveResult<T>, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T> | undefined, result: ResolveResult<T>, context: any): Bluebird<ResolveResult<T>>;
 }
 
 export interface BuildResolverOptions<T> {
   intercept?: ResolveInterceptor<T>;
-  queryTransformer?(query: Query<T>): Query<T>;
+  queryTransformer?(query: Query<T> | undefined): Query<T>;
 }
 
 export function buildCustomResolver<T>(
@@ -56,7 +56,7 @@ export function buildResolver<T>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>undefined;
 
-  async function resolver(rawQuery: Query<T>, context: any): Bluebird<ResolveResult<T>> {
+  async function resolver(rawQuery?: Query<T>, context?: any): Bluebird<ResolveResult<T>> {
     let query = rawQuery;
 
     if (options && typeof options.queryTransformer === 'function') {
@@ -145,7 +145,11 @@ export function buildResolver<T>(
   return { resolver, initialize };
 }
 
-function buildOrder<T>(query: Query<T>, pool: Pool, model: string): any[] | undefined {
+function buildOrder<T>(
+  query: Query<T> | undefined,
+  pool: Pool,
+  model: string,
+): any[] | undefined {
   const defaultOrder = pool.models[model].defaultOrder;
   const parameters: any[] = [];
 
@@ -175,7 +179,7 @@ function buildOrder<T>(query: Query<T>, pool: Pool, model: string): any[] | unde
 }
 
 function buildWhere<T>(
-  query: Query<T> | SubQuery<T>,
+  query: Query<T> | SubQuery<T> | undefined,
   pool: Pool,
   modelName: string,
 ): Sequelize.WhereOptions | undefined {
@@ -222,7 +226,7 @@ function buildWhere<T>(
 }
 
 function buildInclude<T>(
-  query: Query<T>,
+  query: Query<T> | undefined,
   pool: Pool,
   model: string,
 ): Sequelize.IncludeOptions[] | undefined {
