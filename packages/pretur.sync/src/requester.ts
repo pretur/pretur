@@ -10,7 +10,7 @@ import {
   UpdateRequest,
   RemoveRequest,
   ValidateRequest,
-  BatchRequest,
+  BatchMutateRequest,
   Request,
 } from './request';
 import {
@@ -30,7 +30,7 @@ import {
   UpdateResponse,
   RemoveResponse,
   ValidateResponse,
-  BatchResponse,
+  BatchMutateResponse,
   Response,
 } from './response';
 
@@ -45,8 +45,8 @@ export interface Requester {
   remove<T>(options: RemoveRequest<T>): Bluebird<RemoveResult>;
   remove<T>(model: string, identifiers: T): Bluebird<RemoveResult>;
   validate<T>(name: string, data: T): Bluebird<ValidateResult>;
-  batchStart(): void;
-  batchEnd(): void;
+  batchMutateStart(): void;
+  batchMutateEnd(): void;
   flush(): void;
   cancel(): void;
 }
@@ -59,8 +59,15 @@ interface RequestQueueItem {
   cancel(): void;
 }
 
+interface BatchableRequestQueueItem {
+  request: (InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>);
+  resolve<T>(result: FetchResponse<T>): void;
+  reject(error: any): void;
+  cancel(): void;
+}
+
 interface BatchRequestMetadata {
-  queue: RequestQueueItem[];
+  queue: BatchableRequestQueueItem[];
   requestId: number;
 }
 
@@ -144,12 +151,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           });
         },
       };
-      if (currentBatch) {
-        currentBatch.queue.push(request);
-      } else {
-        queue.push(request);
-        debouncedSend();
-      }
+      queue.push(request);
+      debouncedSend();
     });
   }
 
@@ -184,18 +187,10 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           });
         },
       };
-      if (currentBatch) {
-        const removedRefreshRequests
-          = lodashRemove(currentBatch.queue, req => req.orchestrator === orchestrator);
-        removedRefreshRequests.forEach(req => req.cancel());
-        currentBatch.queue.push(request);
-      } else {
-        const removedRefreshRequests
-          = lodashRemove(queue, req => req.orchestrator === orchestrator);
-        removedRefreshRequests.forEach(req => req.cancel());
-        queue.push(request);
-        debouncedSend();
-      }
+      const removedRefreshRequests = lodashRemove(queue, req => req.orchestrator === orchestrator);
+      removedRefreshRequests.forEach(req => req.cancel());
+      queue.push(request);
+      debouncedSend();
     });
   }
 
@@ -231,12 +226,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           });
         },
       };
-      if (currentBatch) {
-        currentBatch.queue.push(request);
-      } else {
-        queue.push(request);
-        debouncedSend();
-      }
+      queue.push(request);
+      debouncedSend();
     });
   }
 
@@ -245,7 +236,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   function insert<T>(model: string | InsertRequest<T>, data?: T): Bluebird<InsertResult<T>> {
     return new Bluebird<InsertResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: RequestQueueItem = {
+      const request: BatchableRequestQueueItem = {
         reject,
         request: <InsertRequest<T>>{
           data: typeof model === 'string' ? data : model.data,
@@ -294,7 +285,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   ): Bluebird<UpdateResult> {
     return new Bluebird<UpdateResult>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: RequestQueueItem = {
+      const request: BatchableRequestQueueItem = {
         reject,
         request: <UpdateRequest<T>>{
           attributes: typeof model === 'string' ? attributes : model.attributes,
@@ -339,7 +330,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   function remove<T>(model: string | RemoveRequest<T>, identifiers?: T): Bluebird<RemoveResult> {
     return new Bluebird<RemoveResult>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: RequestQueueItem = {
+      const request: BatchableRequestQueueItem = {
         reject,
         request: <RemoveRequest<T>>{
           identifiers: typeof model === 'string' ? identifiers : model.identifiers,
@@ -411,16 +402,12 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           });
         },
       };
-      if (currentBatch) {
-        currentBatch.queue.push(request);
-      } else {
-        queue.push(request);
-        debouncedSend();
-      }
+      queue.push(request);
+      debouncedSend();
     });
   }
 
-  function batchStart() {
+  function batchMutateStart() {
     if (!currentBatch) {
       currentBatch = {
         queue: [],
@@ -429,17 +416,17 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     }
   }
 
-  function batchEnd() {
+  function batchMutateEnd() {
     if (currentBatch) {
       const previousBatch = currentBatch;
       currentBatch = undefined;
       queue.push({
-        request: <BatchRequest>{
+        request: <BatchMutateRequest>{
           queue: previousBatch.queue.map(item => item.request),
           requestId: previousBatch.requestId,
-          type: 'batch',
+          type: 'batchMutate',
         },
-        resolve(response: FetchResponse<BatchResponse>) {
+        resolve(response: FetchResponse<BatchMutateResponse>) {
           for (const item of previousBatch.queue) {
             item.resolve({
               body: find(response.body.queue, res => res.requestId === item.request.requestId),
@@ -473,7 +460,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
 
   function flush() {
     if (currentBatch) {
-      batchEnd();
+      batchMutateEnd();
     }
     if (!requestRunning) {
       debouncedSend.flush();
@@ -490,8 +477,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     update,
     remove,
     validate,
-    batchStart,
-    batchEnd,
+    batchMutateStart,
+    batchMutateEnd,
     cancel,
     flush,
   };

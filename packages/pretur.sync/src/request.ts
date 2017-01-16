@@ -39,15 +39,15 @@ export interface RemoveRequest<T> extends RequestBase {
   identifiers: Partial<T>;
 }
 
+export interface BatchMutateRequest extends RequestBase {
+  type: 'batchMutate';
+  queue: (InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>)[];
+}
+
 export interface ValidateRequest<T> extends RequestBase {
   type: 'validate';
   name: string;
   data: T;
-}
-
-export interface BatchRequest extends RequestBase {
-  type: 'batch';
-  queue: Request[];
 }
 
 export type Request =
@@ -57,5 +57,5 @@ export type Request =
   | InsertRequest<any>
   | UpdateRequest<any>
   | RemoveRequest<any>
-  | ValidateRequest<any>
-  | BatchRequest;
+  | BatchMutateRequest
+  | ValidateRequest<any>;

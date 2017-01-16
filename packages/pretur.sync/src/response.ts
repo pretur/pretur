@@ -54,17 +54,17 @@ export interface RemoveResponse extends ResponseBase {
   errors?: I18nBundle[];
 }
 
+export interface BatchMutateResponse extends ResponseBase {
+  type: 'batchMutate';
+  queue: (InsertResponse<any> | UpdateResponse | RemoveResponse)[];
+}
+
 export interface ValidateResponse extends ResponseBase {
   type: 'validate';
   name: string;
   validationError: ValidationError;
   warnings?: I18nBundle[];
   errors?: I18nBundle[];
-}
-
-export interface BatchResponse extends ResponseBase {
-  type: 'batch';
-  queue: Response[];
 }
 
 export type Response =
@@ -74,5 +74,5 @@ export type Response =
   | InsertResponse<any>
   | UpdateResponse
   | RemoveResponse
-  | ValidateResponse
-  | BatchResponse;
+  | BatchMutateResponse
+  | ValidateResponse;
