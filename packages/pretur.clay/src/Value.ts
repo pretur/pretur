@@ -59,7 +59,7 @@ export class Value<T> implements Clay {
       const error = action.payload.resetError ? undefined : this.error;
 
       if (
-        this.original.value === action.payload.value &&
+        isEqual(this.original.value, action.payload.value) &&
         this.original.state === this.state &&
         isEqual(this.original.error, error)
       ) {
@@ -75,7 +75,7 @@ export class Value<T> implements Clay {
       }
 
       if (
-        this.original.value === this.value &&
+        isEqual(this.original.value, this.value) &&
         this.original.state === this.state &&
         isEqual(this.original.error, action.payload)
       ) {
@@ -91,7 +91,7 @@ export class Value<T> implements Clay {
       }
 
       if (
-        this.original.value === this.value &&
+        isEqual(this.original.value, this.value) &&
         this.original.state === action.payload &&
         isEqual(this.original.error, action.payload)
       ) {
