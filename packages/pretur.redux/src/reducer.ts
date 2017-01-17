@@ -42,7 +42,7 @@ export interface Mutator<TState> {
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-export function createMutatorReducer<TState, TProps extends keyof TState>(
+export function createMutatorReducer<TState>(
   initialState: TState,
   mutator: Mutator<TState>,
 ): Reducer<TState> {
@@ -50,7 +50,7 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
     let modified = false;
 
     let set: TState | undefined = undefined!;
-    let unset: TProps[] | undefined = <any>undefined;
+    let unset: (keyof TState)[] | undefined = <any>undefined;
     let reset: TState | undefined = undefined;
 
     function setter<TProps extends keyof TState>(prop: TProps, value: TState[TProps]) {
@@ -62,7 +62,7 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
         set[prop] = value;
 
         if (unset) {
-          const unsetIndex = unset.indexOf(prop);
+          const unsetIndex = unset.indexOf(<keyof TState>prop);
           if (unsetIndex !== -1) {
             unset.splice(unsetIndex, 1);
           }
@@ -71,7 +71,7 @@ export function createMutatorReducer<TState, TProps extends keyof TState>(
       }
     }
 
-    function unsetter(prop: TProps) {
+    function unsetter(prop: keyof TState) {
       if (hasOwn.call(state, prop)) {
         modified = true;
         if (!unset) {
