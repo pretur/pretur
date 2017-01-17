@@ -52,19 +52,21 @@ export class Value<T> implements Clay {
     }
 
     if (CLAY_SET_VALUE.is(this.uniqueId, action)) {
-      if (this.value === action.payload) {
+      if (!action.payload || this.value === action.payload.value) {
         return this;
       }
 
+      const error = action.payload.resetError ? undefined : this.error;
+
       if (
-        this.original.value === action.payload &&
+        this.original.value === action.payload.value &&
         this.original.state === this.state &&
-        isEqual(this.original.error, this.error)
+        isEqual(this.original.error, error)
       ) {
         return <this>this.original;
       }
 
-      return <this>new Value(action.payload, this.error, this.state, this.original, this.uniqueId);
+      return <this>new Value(action.payload.value, error, this.state, this.original, this.uniqueId);
     }
 
     if (CLAY_SET_ERROR.is(this.uniqueId, action)) {
@@ -110,8 +112,8 @@ export class Value<T> implements Clay {
     dispatch(CLAY_REPLACE.create.unicast(this.uniqueId, by));
   }
 
-  public setValue(dispatch: Dispatch, value: T): void {
-    dispatch(CLAY_SET_VALUE.create.unicast(this.uniqueId, value));
+  public setValue(dispatch: Dispatch, value: T, resetError = true): void {
+    dispatch(CLAY_SET_VALUE.create.unicast(this.uniqueId, { value, resetError }));
   }
 
   public setError(dispatch: Dispatch, error: ValidationError): void {

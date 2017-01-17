@@ -3,6 +3,11 @@ import { QueryFilters, QueryPagination, QueryOrder } from 'pretur.sync';
 import { ValidationError } from 'pretur.validation';
 import { State } from './clay';
 
+export interface SetValuePayload {
+  value: any;
+  resetError: boolean;
+}
+
 export interface SetFieldPayload {
   field: string;
   value: any;
@@ -19,8 +24,8 @@ export const CLAY_CLEAR: TargetedActionDescriptor<void, void>
 export const CLAY_REPLACE: TargetedActionDescriptor<any, void>
   = createTargetedActionDescriptor<any, void>('CLAY_REPLACE');
 
-export const CLAY_SET_VALUE: TargetedActionDescriptor<any, void>
-  = createTargetedActionDescriptor<any, void>('CLAY_SET_VALUE');
+export const CLAY_SET_VALUE: TargetedActionDescriptor<SetValuePayload, void>
+  = createTargetedActionDescriptor<SetValuePayload, void>('CLAY_SET_VALUE');
 
 export const CLAY_SET_ERROR: TargetedActionDescriptor<ValidationError, void>
   = createTargetedActionDescriptor<ValidationError, void>('CLAY_SET_ERROR');
