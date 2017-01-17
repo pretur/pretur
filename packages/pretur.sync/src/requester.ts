@@ -95,7 +95,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     queue = [];
     requestRunning = true;
     fetch<Response[]>({
-      body: pendingQueue,
+      body: pendingQueue.map(item => item.request),
       json: true,
       method: 'POST',
       url: endPoint,
