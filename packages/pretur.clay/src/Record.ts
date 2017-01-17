@@ -141,6 +141,20 @@ export class Record<T> implements Clay {
         return this.original;
       }
 
+      if (
+        typeof action.meta === 'boolean' &&
+        action.meta === true &&
+        action.payload === 'removed'
+      ) {
+        return <this>new Record(
+          this.original.fields,
+          this.original.error,
+          action.payload,
+          this.original,
+          this.uniqueId,
+        );
+      }
+
       return <this>new Record(
         this.fields,
         this.error,
@@ -208,9 +222,9 @@ export class Record<T> implements Clay {
     dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, state));
   }
 
-  public remove(dispatch: Dispatch): void {
+  public remove(dispatch: Dispatch, reset = true): void {
     if (this.state === 'normal') {
-      dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, 'removed'));
+      dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, 'removed', <any>reset));
     }
 
     if (this.state === 'new') {
