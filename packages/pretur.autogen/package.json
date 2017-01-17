@@ -35,7 +35,7 @@
     "@types/inflection": "^1.5.28",
     "@types/lodash": "^4.14.50",
     "@types/node": "^7.0.0",
-    "fs-extra": "^1.0.0",
+    "fs-extra": "^2.0.0",
     "handlebars": "^4.0.6",
     "inflection": "^1.10.0",
     "lodash": "^4.17.4",
@@ -43,6 +43,6 @@
     "watchr": "^3.0.1"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170114"
+    "typescript": "^2.2.0-dev.20170116"
   }
 }
