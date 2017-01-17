@@ -10,10 +10,14 @@ export type MutationRequest =
   | UpdateRequest<any>
   | RemoveRequest<any>;
 
-export function applyMutations(
+export async function applyMutations(
   requester: Requester,
   mutations: MutationRequest[],
-): Bluebird<Result[]> {
+): Bluebird<Result[] | false> {
+  if (mutations.length === 0) {
+    return false;
+  }
+
   requester.batchMutateStart();
 
   const promises: Bluebird<Result>[] = [];
@@ -82,7 +86,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
       .filter(relation => ownersIntersect(relation.owner || [], owner));
 
     for (const relation of ownedTargetRelations) {
-      if ((<Clay>clay.fields[relation.alias]).modified) {
+      if (clay.fields[relation.alias] && (<Clay>clay.fields[relation.alias]).modified) {
         data[relation.alias] = extractInsertData(clay.fields[relation.alias], relation.model);
       }
     }
@@ -143,8 +147,10 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     const spec = specPool[model];
 
     if (clay instanceof Set) {
-      for (const item of clay.items) {
-        requests.push(...mutations(item, model));
+      if (clay.modified) {
+        for (const item of clay.items) {
+          requests.push(...mutations(item, model));
+        }
       }
     } else {
       if (clay.state === 'removed') {
@@ -159,18 +165,21 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
           data: extractInsertData(clay, model),
           type: 'insert',
         });
-      } else {
-        requests.push(<UpdateRequest<any>>{
-          model,
-          ...extractUpdateData(clay, model),
-          type: 'update',
-        });
+      } else if (clay.modified) {
+        const updateData = extractUpdateData(clay, model);
+        if (updateData.attributes.length > 0) {
+          requests.push(<UpdateRequest<any>>{
+            model,
+            ...updateData,
+            type: 'update',
+          });
+        }
 
         const nonVirtualOwnedRelations = spec.nonVirtualRelationArray
           .filter(relation => ownersIntersect(relation.owner || [], owner));
 
         for (const relation of nonVirtualOwnedRelations) {
-          if ((<Clay>clay.fields[relation.alias]).modified) {
+          if (clay.fields[relation.alias] && (<Clay>clay.fields[relation.alias]).modified) {
             requests.push(...mutations(clay.fields[relation.alias], relation.model));
           }
         }
