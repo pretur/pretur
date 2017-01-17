@@ -4,6 +4,8 @@ import { Reducible, Dispatch } from 'pretur.redux';
 import { Value } from './Value';
 import { Record } from './Record';
 import { Set } from './Set';
+import { Querier } from './Querier';
+import { CLAY_REFRESH } from './actions';
 
 let id = 0;
 export function nextId() {
@@ -22,6 +24,15 @@ export interface Clay extends Reducible {
   readonly valid: boolean;
   setError(dispatch: Dispatch, error: ValidationError): void;
   setState(dispatch: Dispatch, state: State): void;
+}
+
+export function refresh<T>(
+  dispatch: Dispatch,
+  set: Set<T>,
+  querier: Querier<any>,
+  payload: { data: Set<T>; count: number },
+): void {
+  dispatch(CLAY_REFRESH.create.multicast([set.uniqueId, querier.uniqueId], payload));
 }
 
 export function from(value: any): Clay {

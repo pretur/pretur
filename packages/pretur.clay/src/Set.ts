@@ -9,6 +9,7 @@ import {
   CLAY_SET_STATE,
   CLAY_ADD,
   CLAY_REMOVE,
+  CLAY_REFRESH,
 } from './actions';
 
 function itemsEqual<T>(items1: T[], items2: T[]): boolean {
@@ -73,6 +74,10 @@ export class Set<T> implements Clay {
 
     if (CLAY_REPLACE.is(this.uniqueId, action)) {
       return action.payload;
+    }
+
+    if (CLAY_REFRESH.is(this.uniqueId, action)) {
+      return action.payload && action.payload.data;
     }
 
     if (CLAY_SET_ERROR.is(this.uniqueId, action)) {

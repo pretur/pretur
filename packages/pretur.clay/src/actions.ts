@@ -13,9 +13,14 @@ export interface SetFieldPayload {
   value: any;
 }
 
-export interface ExtraPayload {
+export interface SetExtraPayload {
   extra: any;
   resetPagination: boolean;
+}
+
+export interface RefreshPayload {
+  data: any;
+  count: any;
 }
 
 export const CLAY_CLEAR: TargetedActionDescriptor<void, void>
@@ -42,6 +47,9 @@ export const CLAY_ADD: TargetedActionDescriptor<any, void>
 export const CLAY_REMOVE: TargetedActionDescriptor<number, void>
   = createTargetedActionDescriptor<number, void>('CLAY_REMOVE');
 
+export const CLAY_REFRESH: TargetedActionDescriptor<RefreshPayload, void>
+  = createTargetedActionDescriptor<RefreshPayload, void>('CLAY_REFRESH');
+
 export const CLAY_SET_QUERY_ATTRIBUTES: TargetedActionDescriptor<string[], void>
   = createTargetedActionDescriptor<string[], void>('CLAY_SET_QUERY_ATTRIBUTES');
 
@@ -54,8 +62,8 @@ export const CLAY_SET_QUERY_PAGINATION: TargetedActionDescriptor<QueryPagination
 export const CLAY_SET_QUERY_ORDER: TargetedActionDescriptor<QueryOrder, void>
   = createTargetedActionDescriptor<QueryOrder, void>('CLAY_SET_QUERY_ORDER');
 
-export const CLAY_SET_QUERY_EXTRA: TargetedActionDescriptor<ExtraPayload, void>
-  = createTargetedActionDescriptor<ExtraPayload, void>('CLAY_SET_QUERY_EXTRA');
+export const CLAY_SET_QUERY_EXTRA: TargetedActionDescriptor<SetExtraPayload, void>
+  = createTargetedActionDescriptor<SetExtraPayload, void>('CLAY_SET_QUERY_EXTRA');
 
 export const CLAY_SET_QUERIEIR_COUNT: TargetedActionDescriptor<number, void>
   = createTargetedActionDescriptor<number, void>('CLAY_SET_QUERIEIR_COUNT');

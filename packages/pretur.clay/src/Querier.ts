@@ -3,6 +3,7 @@ import { Reducible, Action, Dispatch } from 'pretur.redux';
 import { Query, QueryFilters, Ordering } from 'pretur.sync';
 import { nextId } from './clay';
 import {
+  CLAY_REFRESH,
   CLAY_SET_QUERY_ATTRIBUTES,
   CLAY_SET_QUERY_FILTERS,
   CLAY_SET_QUERY_PAGINATION,
@@ -116,6 +117,14 @@ export class Querier<T> implements Reducible {
       }
 
       return <this>new Querier(this.query, action.payload, this.uniqueId);
+    }
+
+    if (CLAY_REFRESH.is(this.uniqueId, action)) {
+      if (!action.payload || this.count === action.payload.count) {
+        return this;
+      }
+
+      return <this>new Querier(this.query, action.payload.count, this.uniqueId);
     }
 
     return this;
