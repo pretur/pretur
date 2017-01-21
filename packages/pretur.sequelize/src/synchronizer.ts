@@ -5,7 +5,12 @@ import { I18nBundle } from 'pretur.i18n';
 import { Spec } from 'pretur.spec';
 import { ModelDescriptor } from './descriptor';
 import { Pool } from './pool';
-import { InsertRequest, UpdateRequest, RemoveRequest } from 'pretur.sync';
+import {
+  InsertMutateRequest,
+  UpdateMutateRequest,
+  RemoveMutateRequest,
+  MutateRequest,
+} from 'pretur.sync';
 
 export interface ResultItemAppender {
   appendError(error: I18nBundle): void;
@@ -19,7 +24,7 @@ export interface ErrorHandler<T> {
 export interface Insert<T> {
   (
     transaction: Sequelize.Transaction,
-    item: InsertRequest<T>,
+    item: InsertMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<Partial<T> | void>;
@@ -28,7 +33,7 @@ export interface Insert<T> {
 export interface Update<T> {
   (
     transaction: Sequelize.Transaction,
-    item: UpdateRequest<T>,
+    item: UpdateMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<void>;
@@ -37,7 +42,7 @@ export interface Update<T> {
 export interface Remove<T> {
   (
     transaction: Sequelize.Transaction,
-    item: RemoveRequest<T>,
+    item: RemoveMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<void>;
@@ -46,7 +51,7 @@ export interface Remove<T> {
 export interface Synchronizer<T> {
   (
     transaction: Sequelize.Transaction,
-    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
+    item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<Partial<T> | void>;
@@ -68,12 +73,12 @@ export interface SynchronizationInterceptor<T, R> {
 }
 
 export interface BuildSynchronizerOptions<T> {
-  insertErrorHandler?: ErrorHandler<InsertRequest<T>>;
-  updateErrorHandler?: ErrorHandler<UpdateRequest<T>>;
-  removeErrorHandler?: ErrorHandler<RemoveRequest<T>>;
-  insertInterceptor?: SynchronizationInterceptor<InsertRequest<T>, Partial<T> | boolean>;
-  updateInterceptor?: SynchronizationInterceptor<UpdateRequest<T>, boolean>;
-  removeInterceptor?: SynchronizationInterceptor<RemoveRequest<T>, boolean>;
+  insertErrorHandler?: ErrorHandler<InsertMutateRequest<T>>;
+  updateErrorHandler?: ErrorHandler<UpdateMutateRequest<T>>;
+  removeErrorHandler?: ErrorHandler<RemoveMutateRequest<T>>;
+  insertInterceptor?: SynchronizationInterceptor<InsertMutateRequest<T>, Partial<T> | boolean>;
+  updateInterceptor?: SynchronizationInterceptor<UpdateMutateRequest<T>, boolean>;
+  removeInterceptor?: SynchronizationInterceptor<RemoveMutateRequest<T>, boolean>;
 }
 
 export function buildSynchronizer<T>(
@@ -84,12 +89,12 @@ export function buildSynchronizer<T>(
 
   async function synchronizer(
     transaction: Sequelize.Transaction,
-    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
+    item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<Partial<T> | void> {
 
-    if (item.type === 'insert') {
+    if (item.action === 'insert') {
       return insert(
         pool,
         spec.name,
@@ -102,7 +107,7 @@ export function buildSynchronizer<T>(
       );
     }
 
-    if (item.type === 'update') {
+    if (item.action === 'update') {
       return update(
         pool,
         spec.name,
@@ -115,7 +120,7 @@ export function buildSynchronizer<T>(
       );
     }
 
-    if (item.type === 'remove') {
+    if (item.action === 'remove') {
       return remove(
         pool,
         spec.name,
@@ -143,10 +148,10 @@ const INJECTED_MASTER_RESOLUTION_KEY = '__INJECTED_MASTER_RESOLUTION_KEY';
 async function insert<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<InsertRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<InsertRequest<T>, Partial<T> | boolean> | undefined,
+  errorHandler: ErrorHandler<InsertMutateRequest<T>> | undefined,
+  interceptor: SynchronizationInterceptor<InsertMutateRequest<T>, Partial<T> | boolean> | undefined,
   transaction: Sequelize.Transaction,
-  item: InsertRequest<T>,
+  item: InsertMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<Partial<T> | void> {
@@ -177,11 +182,12 @@ async function insert<T>(
 
           await masterModel.synchronizer(
             transaction,
-            <InsertRequest<any>>{
+            <InsertMutateRequest<any>>{
+              action: 'insert',
               data: masterData,
               model: masterModel.name,
               requestId: item.requestId,
-              type: 'insert',
+              type: 'mutate',
               [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => data[<keyof T>master.key] = id,
             },
             rip,
@@ -240,11 +246,12 @@ async function insert<T>(
 
               await targetModel.synchronizer(
                 transaction,
-                <InsertRequest<any>>{
+                <InsertMutateRequest<any>>{
+                  action: 'insert',
                   data: nestedInsertData,
                   model: aliasModelMap[alias],
                   requestId: item.requestId,
-                  type: 'insert',
+                  type: 'mutate',
                 },
                 rip,
                 context,
@@ -257,11 +264,12 @@ async function insert<T>(
 
             await targetModel.synchronizer(
               transaction,
-              <InsertRequest<any>>{
+              <InsertMutateRequest<any>>{
+                action: 'insert',
                 data: nestedInsertData,
                 model: aliasModelMap[alias],
                 requestId: item.requestId,
-                type: 'insert',
+                type: 'mutate',
               },
               rip,
               context,
@@ -299,10 +307,10 @@ async function insert<T>(
 async function update<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<UpdateRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<UpdateRequest<T>, boolean> | undefined,
+  errorHandler: ErrorHandler<UpdateMutateRequest<T>> | undefined,
+  interceptor: SynchronizationInterceptor<UpdateMutateRequest<T>, boolean> | undefined,
   transaction: Sequelize.Transaction,
-  item: UpdateRequest<T>,
+  item: UpdateMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<void> {
@@ -354,10 +362,10 @@ async function update<T>(
 async function remove<T>(
   pool: Pool,
   modelName: string,
-  errorHandler: ErrorHandler<RemoveRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<RemoveRequest<T>, boolean> | undefined,
+  errorHandler: ErrorHandler<RemoveMutateRequest<T>> | undefined,
+  interceptor: SynchronizationInterceptor<RemoveMutateRequest<T>, boolean> | undefined,
   transaction: Sequelize.Transaction,
-  item: RemoveRequest<T>,
+  item: RemoveMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
 ): Bluebird<void> {

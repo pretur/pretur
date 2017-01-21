@@ -1,6 +1,6 @@
 import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
-import { Query, InsertRequest, UpdateRequest, RemoveRequest } from 'pretur.sync';
+import { Query, MutateRequest } from 'pretur.sync';
 import { ResolveResult } from './resolver';
 import { ModelDescriptor } from './descriptor';
 import { ResultItemAppender } from './synchronizer';
@@ -14,7 +14,7 @@ export interface Pool {
   resolve<T>(query: Query<T>, context: any): Bluebird<ResolveResult<T>>;
   sync<T>(
     transaction: Sequelize.Transaction,
-    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
+    item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<Partial<T> | void>;
@@ -54,7 +54,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
 
   pool.sync = async function sync<T>(
     transaction: Sequelize.Transaction,
-    item: InsertRequest<T> | UpdateRequest<T> | RemoveRequest<T>,
+    item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
   ): Bluebird<Partial<T> | void> {

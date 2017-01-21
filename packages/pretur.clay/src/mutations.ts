@@ -1,18 +1,13 @@
 import * as Bluebird from 'bluebird';
 import { SpecPool, Owner, ownersIntersect } from 'pretur.spec';
-import { InsertRequest, UpdateRequest, RemoveRequest, Requester, Result } from 'pretur.sync';
+import { MutateRequest, Requester, Result } from 'pretur.sync';
 import { Set } from './Set';
 import { Record } from './Record';
 import { toPlain, Clay } from './clay';
 
-export type MutationRequest =
-  | InsertRequest<any>
-  | UpdateRequest<any>
-  | RemoveRequest<any>;
-
 export async function applyMutations(
   requester: Requester,
-  mutations: MutationRequest[],
+  mutations: MutateRequest<any>[],
 ): Bluebird<Result[] | false> {
   if (mutations.length === 0) {
     return false;
@@ -23,15 +18,19 @@ export async function applyMutations(
   const promises: Bluebird<Result>[] = [];
 
   for (const mutation of mutations) {
-    switch (mutation.type) {
+    if (mutation.type !== 'mutate') {
+      continue;
+    }
+
+    switch (mutation.action) {
       case 'insert':
-        promises.push(requester.insert(mutation));
+        promises.push(requester.insert<any>(mutation));
         break;
       case 'update':
-        promises.push(requester.update(mutation));
+        promises.push(requester.update<any>(mutation));
         break;
       case 'remove':
-        promises.push(requester.remove(mutation));
+        promises.push(requester.remove<any>(mutation));
         break;
     }
   }
@@ -45,7 +44,7 @@ export interface MutationsExtractor {
   extractInsertData(clay: Record<any> | Set<Record<any>>, model: string): object;
   extractUpdateData(clay: Record<any>, model: string): { attributes: string[], data: object };
   extractRemoveIdentifiers(clay: Record<any>, model: string): object;
-  mutations(clay: Set<Record<any>> | Record<any>, model: string): MutationRequest[];
+  mutations(clay: Set<Record<any>> | Record<any>, model: string): MutateRequest<any>[];
 }
 
 export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): MutationsExtractor {
@@ -143,7 +142,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
   }
 
   function mutations(clay: Set<Record<any>> | Record<any>, model: string) {
-    const requests: MutationRequest[] = [];
+    const requests: MutateRequest<any>[] = [];
     const spec = specPool[model];
 
     if (clay instanceof Set) {
@@ -154,24 +153,27 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
       }
     } else {
       if (clay.state === 'removed') {
-        requests.push(<RemoveRequest<any>>{
+        requests.push(<MutateRequest<any>>{
           model,
+          action: 'remove',
           identifiers: extractRemoveIdentifiers(clay, model),
-          type: 'remove',
+          type: 'mutate',
         });
       } else if (clay.state === 'new') {
-        requests.push(<InsertRequest<any>>{
+        requests.push(<MutateRequest<any>>{
           model,
+          action: 'insert',
           data: extractInsertData(clay, model),
-          type: 'insert',
+          type: 'mutate',
         });
       } else if (clay.modified) {
         const updateData = extractUpdateData(clay, model);
         if (updateData.attributes.length > 0) {
-          requests.push(<UpdateRequest<any>>{
+          requests.push(<MutateRequest<any>>{
             model,
             ...updateData,
-            type: 'update',
+            action: 'update',
+            type: 'mutate',
           });
         }
 
