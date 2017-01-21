@@ -1,49 +1,50 @@
 import * as Bluebird from 'bluebird';
-import { debounce, find, compact, remove as lodashRemove } from 'lodash';
+import { debounce, find, compact } from 'lodash';
 import { Query } from './query';
 import { fetch, FetchResponse } from './fetch';
 import {
   SelectRequest,
-  RefreshRequest,
   OperateRequest,
-  InsertRequest,
-  UpdateRequest,
-  RemoveRequest,
+  InsertMutateRequest,
+  UpdateMutateRequest,
+  RemoveMutateRequest,
+  MutateRequest,
   ValidateRequest,
   BatchMutateRequest,
   Request,
 } from './request';
 import {
   SelectResult,
-  RefreshResult,
   OperateResult,
-  InsertResult,
-  UpdateResult,
-  RemoveResult,
+  InsertMutateResult,
+  UpdateMutateResult,
+  RemoveMutateResult,
   ValidateResult,
 } from './result';
 import {
   SelectResponse,
-  RefreshResponse,
   OperateResponse,
-  InsertResponse,
-  UpdateResponse,
-  RemoveResponse,
+  InsertMutateResponse,
+  UpdateMutateResponse,
+  RemoveMutateResponse,
   ValidateResponse,
   BatchMutateResponse,
   Response,
 } from './response';
 
+export type InsertOptions<T> = { data: Partial<T>, model: string };
+export type UpdateOptions<T> = { data: Partial<T>, attributes: (keyof T)[], model: string };
+export type RemoveOptions<T> = { identifiers: Partial<T>, model: string };
+
 export interface Requester {
   select<T>(query: Query<T>): Bluebird<SelectResult<T>>;
-  refresh<T>(query: Query<T>, orchestrator: string): Bluebird<RefreshResult<T>>;
   operate<TData, TResult>(name: string, data?: TData): Bluebird<OperateResult<TResult>>;
-  insert<T>(options: InsertRequest<T>): Bluebird<InsertResult<T>>;
-  insert<T>(model: string, data: T): Bluebird<InsertResult<T>>;
-  update<T>(options: UpdateRequest<T>): Bluebird<UpdateResult>;
-  update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateResult>;
-  remove<T>(options: RemoveRequest<T>): Bluebird<RemoveResult>;
-  remove<T>(model: string, identifiers: T): Bluebird<RemoveResult>;
+  insert<T>(options: InsertOptions<T>): Bluebird<InsertMutateResult<T>>;
+  insert<T>(model: string, data: Partial<T>): Bluebird<InsertMutateResult<T>>;
+  update<T>(options: UpdateOptions<T>): Bluebird<UpdateMutateResult>;
+  update<T>(model: string, attributes: (keyof T)[], data: Partial<T>): Bluebird<UpdateMutateResult>;
+  remove<T>(options: RemoveOptions<T>): Bluebird<RemoveMutateResult>;
+  remove<T>(model: string, identifiers: Partial<T>): Bluebird<RemoveMutateResult>;
   validate<T>(name: string, data: T): Bluebird<ValidateResult>;
   batchMutateStart(): void;
   batchMutateEnd(): void;
@@ -60,7 +61,7 @@ interface RequestQueueItem {
 }
 
 interface BatchableRequestQueueItem {
-  request: (InsertRequest<any> | UpdateRequest<any> | RemoveRequest<any>);
+  request: MutateRequest<any>;
   resolve<T>(result: FetchResponse<T>): void;
   reject(error: any): void;
   cancel(): void;
@@ -70,6 +71,13 @@ interface BatchRequestMetadata {
   queue: BatchableRequestQueueItem[];
   requestId: number;
 }
+
+const unknownErrorBase = {
+  cancelled: true,
+  ok: false,
+  status: 0,
+  statusText: 'UNKNOWN_ERROR',
+};
 
 export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Requester {
   let _uniqueId = 0;
@@ -146,49 +154,11 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         cancel() {
           resolve({
-            cancelled: true,
+            ...unknownErrorBase,
             type: 'select',
           });
         },
       };
-      queue.push(request);
-      debouncedSend();
-    });
-  }
-
-  function refresh<T>(query: Query<T>, orchestrator: string): Bluebird<RefreshResult<T>> {
-    return new Bluebird<RefreshResult<T>>((resolve, reject) => {
-      const requestId = uniqueId();
-      const request: RequestQueueItem = {
-        reject,
-        orchestrator,
-        request: <RefreshRequest<T>>{
-          type: 'refresh',
-          query,
-          requestId,
-        },
-        resolve(response: FetchResponse<RefreshResponse<T>>) {
-          resolve({
-            cancelled: false,
-            count: response.body.count,
-            data: response.body.data,
-            errors: response.body.errors,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            type: 'refresh',
-            warnings: response.body.warnings,
-          });
-        },
-        cancel() {
-          resolve({
-            cancelled: true,
-            type: 'refresh',
-          });
-        },
-      };
-      const removedRefreshRequests = lodashRemove(queue, req => req.orchestrator === orchestrator);
-      removedRefreshRequests.forEach(req => req.cancel());
       queue.push(request);
       debouncedSend();
     });
@@ -220,8 +190,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         cancel() {
           resolve({
+            ...unknownErrorBase,
             name,
-            cancelled: true,
             type: 'operate',
           });
         },
@@ -231,20 +201,21 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function insert<T>(options: InsertRequest<T>): Bluebird<InsertResult<T>>;
-  function insert<T>(model: string, data: T): Bluebird<InsertResult<T>>;
-  function insert<T>(model: string | InsertRequest<T>, data?: T): Bluebird<InsertResult<T>> {
-    return new Bluebird<InsertResult<T>>((resolve, reject) => {
+  function insert<T>(options: InsertOptions<T>): Bluebird<InsertMutateResult<T>>;
+  function insert<T>(model: string, data: Partial<T>): Bluebird<InsertMutateResult<T>>;
+  function insert<T>(model: string | InsertOptions<T>, data?: T): Bluebird<InsertMutateResult<T>> {
+    return new Bluebird<InsertMutateResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
         reject,
-        request: <InsertRequest<T>>{
+        request: <InsertMutateRequest<T>>{
+          action: 'insert',
           data: typeof model === 'string' ? data : model.data,
           model: typeof model === 'string' ? model : model.model,
-          type: 'insert',
+          type: 'mutate',
           requestId,
         },
-        resolve(response: FetchResponse<InsertResponse<T>>) {
+        resolve(response: FetchResponse<InsertMutateResponse<T>>) {
           resolve({
             cancelled: false,
             errors: response.body.errors,
@@ -260,7 +231,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         cancel() {
           resolve({
-            cancelled: true,
+            ...unknownErrorBase,
             transactionFailed: false,
             type: 'insert',
             validationError: undefined,
@@ -276,25 +247,26 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function update<T>(options: UpdateRequest<T>): Bluebird<UpdateResult>;
-  function update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateResult>;
+  function update<T>(options: UpdateOptions<T>): Bluebird<UpdateMutateResult>;
+  function update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateMutateResult>;
   function update<T>(
-    model: string | UpdateRequest<T>,
+    model: string | UpdateOptions<T>,
     attributes?: (keyof T)[],
     data?: T,
-  ): Bluebird<UpdateResult> {
-    return new Bluebird<UpdateResult>((resolve, reject) => {
+  ): Bluebird<UpdateMutateResult> {
+    return new Bluebird<UpdateMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
         reject,
-        request: <UpdateRequest<T>>{
+        request: <UpdateMutateRequest<T>>{
+          action: 'update',
           attributes: typeof model === 'string' ? attributes : model.attributes,
           data: typeof model === 'string' ? data : model.data,
           model: typeof model === 'string' ? model : model.model,
-          type: 'update',
+          type: 'mutate',
           requestId,
         },
-        resolve(response: FetchResponse<UpdateResponse>) {
+        resolve(response: FetchResponse<UpdateMutateResponse>) {
           resolve({
             cancelled: false,
             errors: response.body.errors,
@@ -309,7 +281,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         cancel() {
           resolve({
-            cancelled: true,
+            ...unknownErrorBase,
             transactionFailed: false,
             type: 'update',
             validationError: undefined,
@@ -325,20 +297,24 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function remove<T>(options: RemoveRequest<T>): Bluebird<RemoveResult>;
-  function remove<T>(model: string, identifiers: T): Bluebird<RemoveResult>;
-  function remove<T>(model: string | RemoveRequest<T>, identifiers?: T): Bluebird<RemoveResult> {
-    return new Bluebird<RemoveResult>((resolve, reject) => {
+  function remove<T>(options: RemoveOptions<T>): Bluebird<RemoveMutateResult>;
+  function remove<T>(model: string, identifiers: T): Bluebird<RemoveMutateResult>;
+  function remove<T>(
+    model: string | RemoveOptions<T>,
+    identifiers?: T,
+  ): Bluebird<RemoveMutateResult> {
+    return new Bluebird<RemoveMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
         reject,
-        request: <RemoveRequest<T>>{
+        request: <RemoveMutateRequest<T>>{
+          action: 'remove',
           identifiers: typeof model === 'string' ? identifiers : model.identifiers,
           model: typeof model === 'string' ? model : model.model,
-          type: 'remove',
+          type: 'mutate',
           requestId,
         },
-        resolve(response: FetchResponse<RemoveResponse>) {
+        resolve(response: FetchResponse<RemoveMutateResponse>) {
           resolve({
             cancelled: false,
             errors: response.body.errors,
@@ -353,7 +329,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         cancel() {
           resolve({
-            cancelled: true,
+            ...unknownErrorBase,
             transactionFailed: false,
             type: 'remove',
             validationError: undefined,
@@ -395,8 +371,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         cancel() {
           resolve({
+            ...unknownErrorBase,
             name,
-            cancelled: true,
             type: 'validate',
             validationError: undefined,
           });
@@ -471,7 +447,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
 
   return {
     select,
-    refresh,
     operate,
     insert,
     update,

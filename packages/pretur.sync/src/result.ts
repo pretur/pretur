@@ -2,27 +2,29 @@ import { I18nBundle } from 'pretur.i18n';
 import { ValidationError } from 'pretur.validation';
 
 export interface ResultBase {
-  ok?: boolean;
-  status?: number;
-  statusText?: string;
+  cancelled: boolean;
+  ok: boolean;
+  status: number;
+  statusText: string;
+  warnings?: I18nBundle[];
+  errors?: I18nBundle[];
+}
+
+export interface MutateResultBase extends ResultBase {
+  transactionFailed: boolean;
+  validationError: ValidationError;
 }
 
 export interface SelectResult<T> extends ResultBase {
   type: 'select';
-  cancelled: boolean;
   data?: T[];
   count?: number;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
 }
 
-export interface RefreshResult<T> extends ResultBase {
-  type: 'refresh';
-  cancelled: boolean;
-  data?: T[];
-  count?: number;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
+export interface ValidateResult extends ResultBase {
+  type: 'validate';
+  name: string;
+  validationError: ValidationError;
 }
 
 export interface OperateResult<T> extends ResultBase {
@@ -30,52 +32,28 @@ export interface OperateResult<T> extends ResultBase {
   cancelled: boolean;
   name: string;
   data?: T;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
 }
 
-export interface InsertResult<T> extends ResultBase {
+export interface InsertMutateResult<T> extends MutateResultBase {
   type: 'insert';
-  cancelled: boolean;
-  transactionFailed: boolean;
   generatedId?: Partial<T>;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
 }
 
-export interface UpdateResult extends ResultBase {
+export interface UpdateMutateResult extends MutateResultBase {
   type: 'update';
-  cancelled: boolean;
-  transactionFailed: boolean;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
 }
 
-export interface RemoveResult extends ResultBase {
+export interface RemoveMutateResult extends MutateResultBase {
   type: 'remove';
-  cancelled: boolean;
-  transactionFailed: boolean;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
 }
 
-export interface ValidateResult extends ResultBase {
-  type: 'validate';
-  name: string;
-  cancelled: boolean;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
+export type MutateResult<T> =
+  | InsertMutateResult<T>
+  | UpdateMutateResult
+  | RemoveMutateResult;
 
 export type Result =
   | SelectResult<any>
-  | RefreshResult<any>
   | OperateResult<any>
-  | InsertResult<any>
-  | UpdateResult
-  | RemoveResult
+  | MutateResult<any>
   | ValidateResult;

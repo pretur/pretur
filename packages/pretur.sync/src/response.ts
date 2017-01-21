@@ -3,76 +3,60 @@ import { ValidationError } from 'pretur.validation';
 
 export interface ResponseBase {
   requestId: number;
+  warnings?: I18nBundle[];
+  errors?: I18nBundle[];
+}
+
+export interface MutateResponseBase extends ResponseBase {
+  type: 'mutate';
+  transactionFailed: boolean;
+  validationError: ValidationError;
 }
 
 export interface SelectResponse<T> extends ResponseBase {
   type: 'select';
   data?: T[];
   count?: number;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
-
-export interface RefreshResponse<T> extends ResponseBase {
-  type: 'refresh';
-  data?: T[];
-  count?: number;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
-
-export interface OperateResponse<T> extends ResponseBase {
-  type: 'operate';
-  name: string;
-  data?: T;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
-
-export interface InsertResponse<T> extends ResponseBase {
-  type: 'insert';
-  transactionFailed: boolean;
-  generatedId?: Partial<T>;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
-
-export interface UpdateResponse extends ResponseBase {
-  type: 'update';
-  transactionFailed: boolean;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
-
-export interface RemoveResponse extends ResponseBase {
-  type: 'remove';
-  transactionFailed: boolean;
-  validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
-}
-
-export interface BatchMutateResponse extends ResponseBase {
-  type: 'batchMutate';
-  queue: (InsertResponse<any> | UpdateResponse | RemoveResponse)[];
 }
 
 export interface ValidateResponse extends ResponseBase {
   type: 'validate';
   name: string;
   validationError: ValidationError;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
+}
+
+export interface OperateResponse<T> extends ResponseBase {
+  type: 'operate';
+  name: string;
+  data?: T;
+}
+
+export interface InsertMutateResponse<T> extends MutateResponseBase {
+  action: 'insert';
+  generatedId?: Partial<T>;
+}
+
+export interface UpdateMutateResponse extends MutateResponseBase {
+  action: 'update';
+}
+
+export interface RemoveMutateResponse extends MutateResponseBase {
+  action: 'remove';
+}
+
+export type MutateResponse<T> =
+  | InsertMutateResponse<T>
+  | UpdateMutateResponse
+  | RemoveMutateResponse;
+
+export interface BatchMutateResponse extends ResponseBase {
+  type: 'batchMutate';
+  queue: MutateResponse<any>[];
 }
 
 export type Response =
   | SelectResponse<any>
-  | RefreshResponse<any>
   | OperateResponse<any>
-  | InsertResponse<any>
-  | UpdateResponse
-  | RemoveResponse
+  | MutateResponse<any>
   | BatchMutateResponse
   | ValidateResponse;
