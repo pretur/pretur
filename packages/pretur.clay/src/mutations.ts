@@ -1,6 +1,6 @@
 import * as Bluebird from 'bluebird';
 import { SpecPool, Owner, ownersIntersect } from 'pretur.spec';
-import { MutateRequest, Requester, Result } from 'pretur.sync';
+import { MutateRequest, Requester, MutateResult } from 'pretur.sync';
 import { Set } from './Set';
 import { Record } from './Record';
 import { toPlain, Clay } from './clay';
@@ -8,14 +8,14 @@ import { toPlain, Clay } from './clay';
 export async function applyMutations(
   requester: Requester,
   mutations: MutateRequest<any>[],
-): Bluebird<Result[] | false> {
+): Bluebird<{ results: MutateResult<any>[], applied: boolean }> {
   if (mutations.length === 0) {
-    return false;
+    return { results: [], applied: false };
   }
 
   requester.batchMutateStart();
 
-  const promises: Bluebird<Result>[] = [];
+  const promises: Bluebird<MutateResult<any>>[] = [];
 
   for (const mutation of mutations) {
     if (mutation.type !== 'mutate') {
@@ -37,7 +37,23 @@ export async function applyMutations(
 
   requester.batchMutateEnd();
 
-  return Bluebird.all(promises);
+  const results = await Bluebird.all(promises);
+  let applied = true;
+
+  for (const result of results) {
+    if (
+      !result.ok ||
+      result.cancelled ||
+      result.transactionFailed ||
+      result.validationError ||
+      (result.errors && result.errors.length > 0)
+    ) {
+      applied = false;
+      break;
+    }
+  }
+
+  return { results, applied };
 }
 
 export interface MutationsExtractor {
