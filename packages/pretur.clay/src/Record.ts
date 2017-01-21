@@ -174,10 +174,10 @@ export class Record<T> implements Clay {
 
       if (newFields[key] !== (<any>this.fields)[key]) {
         modified = true;
+      }
 
-        if (newFields[key] !== (<Clay>(<any>newFields)[key]).original) {
-          original = false;
-        }
+      if (newFields[key] !== (<any>this.original.fields)[key]) {
+        original = false;
       }
     }
 

@@ -156,15 +156,15 @@ export class Set<T> implements Clay {
     let modified = false;
     const newItems: T[] = [];
 
-    for (const item of this.items) {
-      const newItem = <T><any>(<Clay><any>item).reduce(action);
+    for (let i = 0; i < this.items.length; i++) {
+      const newItem = <T><any>(<Clay><any>this.items[i]).reduce(action);
 
-      if (item !== newItem) {
+      if (this.items[i] !== newItem) {
         modified = true;
+      }
 
-        if (newItem !== <any>(<Clay><any>newItem).original) {
-          original = false;
-        }
+      if (newItem !== this.original.items[i]) {
+        original = false;
       }
 
       newItems.push(newItem);
