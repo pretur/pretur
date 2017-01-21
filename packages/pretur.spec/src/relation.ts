@@ -207,6 +207,7 @@ function inheritors<TSource, TTarget>(
   appendAttribute(model, {
     mutable: true,
     name: options.typeIdentifierFieldName,
+    owner: model.owner,
     required: !!options.typeIdentifierRequired,
     type: typeEnum,
     validator: options.typeIdentifierValidator,
@@ -241,6 +242,7 @@ function master<TSource, TTarget>(model: Model<TSource>, options: MasterOptions<
   appendAttribute(model, {
     mutable: true,
     name: options.foreignKey,
+    owner: options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
@@ -278,6 +280,7 @@ function injective<TSource, TTarget>(
   appendAttribute(model, {
     mutable: false,
     name: options.foreignKey,
+    owner: options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
@@ -300,6 +303,7 @@ function recursive<T>(model: Model<T>, options: RecursiveOptions<T>) {
   appendAttribute(model, {
     mutable: true,
     name: options.key,
+    owner: model.owner,
     required: false,
     type: options.keyType || DataTypes.INTEGER(),
     validator: options.validator,
