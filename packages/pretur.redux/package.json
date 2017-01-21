@@ -35,10 +35,10 @@
     "lodash": "^4.17.4",
     "redux": "^3.6.0",
     "redux-logger": "^2.7.4",
-    "redux-thunk": "^2.1.0",
+    "redux-thunk": "^2.2.0",
     "tslib": "^1.5.0"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170116"
+    "typescript": "^2.2.0-dev.20170121"
   }
 }

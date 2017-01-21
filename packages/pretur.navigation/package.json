@@ -30,7 +30,7 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.navigation",
   "dependencies": {
     "@types/lodash": "^4.14.50",
-    "@types/react": "^15.0.0",
+    "@types/react": "^15.0.1",
     "local-storage": "^1.4.2",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.10.0",
@@ -42,6 +42,6 @@
   },
   "devDependencies": {
     "@types/react-addons-test-utils": "^0.14.16",
-    "typescript": "^2.2.0-dev.20170116"
+    "typescript": "^2.2.0-dev.20170121"
   }
 }

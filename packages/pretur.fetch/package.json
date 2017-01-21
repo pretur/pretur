@@ -32,9 +32,9 @@
     "bluebird": "^3.4.7",
     "node-fetch": "^1.6.3",
     "tslib": "^1.5.0",
-    "whatwg-fetch": "^2.0.1"
+    "whatwg-fetch": "^2.0.2"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170116"
+    "typescript": "^2.2.0-dev.20170121"
   }
 }
