@@ -78,8 +78,17 @@ export function buildResolver<T>(
       findOptions.include = include;
     }
 
-    if (query && (typeof query.byId === 'number' || typeof query.byId === 'string')) {
-      const instance = await model.findById(query.byId, findOptions);
+    if (query && query.byId) {
+      const where = <any>{};
+
+      for (const pk of pool.models[spec.name].primaryKeys) {
+        if (query.byId[pk] === undefined) {
+          throw new Error(`byId must contain every primary key. ${pk} is missing`);
+        }
+        where[pk] = query.byId[pk];
+      }
+
+      const instance = await model.findOne({ ...findOptions, where });
 
       if (!instance) {
         return { data: [] };
