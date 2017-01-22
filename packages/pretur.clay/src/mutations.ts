@@ -84,7 +84,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
 
     for (const attribute of nonAutoIncrementedOwnedAttributes) {
       const value = <Clay>clay.fields[attribute];
-      if (value && value.modified) {
+      if (value) {
         data[attribute] = toPlain(value);
       }
     }
@@ -101,7 +101,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
       .filter(relation => ownersIntersect(relation.owner || [], owner));
 
     for (const relation of ownedTargetRelations) {
-      if (clay.fields[relation.alias] && (<Clay>clay.fields[relation.alias]).modified) {
+      if (clay.fields[relation.alias]) {
         data[relation.alias] = extractInsertData(clay.fields[relation.alias], relation.model);
       }
     }
