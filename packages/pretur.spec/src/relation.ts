@@ -59,6 +59,7 @@ export interface MasterOptions<TSource, TTarget> {
   validator?: string;
   owner?: Owner;
   targetOwner?: Owner;
+  keyOwner?: Owner;
 }
 
 export interface InjectiveOptions<TSource, TTarget> {
@@ -73,6 +74,7 @@ export interface InjectiveOptions<TSource, TTarget> {
   validator?: string;
   owner?: Owner;
   targetOwner?: Owner;
+  keyOwner?: Owner;
 }
 
 export interface RecursiveOptions<T> {
@@ -242,7 +244,7 @@ function master<TSource, TTarget>(model: Model<TSource>, options: MasterOptions<
   appendAttribute(model, {
     mutable: true,
     name: options.foreignKey,
-    owner: options.owner || model.owner,
+    owner: options.keyOwner || options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
@@ -280,7 +282,7 @@ function injective<TSource, TTarget>(
   appendAttribute(model, {
     mutable: false,
     name: options.foreignKey,
-    owner: options.owner || model.owner,
+    owner: options.keyOwner || options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
     validator: options.validator,
