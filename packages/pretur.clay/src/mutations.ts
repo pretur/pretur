@@ -162,10 +162,8 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     const spec = specPool[model];
 
     if (clay instanceof Set) {
-      if (clay.modified) {
-        for (const item of clay.items) {
-          requests.push(...mutations(item, model));
-        }
+      for (const item of clay.items) {
+        requests.push(...mutations(item, model));
       }
     } else {
       if (clay.state === 'removed') {
@@ -182,7 +180,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
           data: extractInsertData(clay, model),
           type: 'mutate',
         });
-      } else if (clay.modified) {
+      } else {
         const updateData = extractUpdateData(clay, model);
         if (updateData.attributes.length > 0) {
           requests.push(<MutateRequest<any>>{
@@ -197,7 +195,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
           .filter(relation => ownersIntersect(relation.owner || [], owner));
 
         for (const relation of nonVirtualOwnedRelations) {
-          if (clay.fields[relation.alias] && (<Clay>clay.fields[relation.alias]).modified) {
+          if (clay.fields[relation.alias]) {
             requests.push(...mutations(clay.fields[relation.alias], relation.model));
           }
         }
