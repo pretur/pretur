@@ -221,21 +221,20 @@ async function insert<T>(
         const nested = (<any>data)[alias];
         const targetModel = pool.models[aliasModelMap[alias]];
 
-        if (!targetModel) {
-          throw new Error(`model ${aliasModelMap[alias]} does not exist`);
-        }
-
-        if (!targetModel.synchronizer) {
-          throw new Error(`model ${targetModel.name} must have a synchronizer`);
-        }
-
-        if (model.primaryKeys.length !== 1) {
-          throw new Error(
-            `model ${model.name} must have exactly one primaryKey for complex operations`,
-          );
-        }
-
         if (nested) {
+          if (!targetModel) {
+            throw new Error(`model ${aliasModelMap[alias]} does not exist`);
+          }
+
+          if (!targetModel.synchronizer) {
+            throw new Error(`model ${targetModel.name} must have a synchronizer`);
+          }
+
+          if (model.primaryKeys.length !== 1) {
+            throw new Error(
+              `model ${model.name} must have exactly one primaryKey for complex operations`,
+            );
+          }
 
           if (Array.isArray(nested)) {
             for (const nestedItem of nested) {
