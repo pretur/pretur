@@ -192,8 +192,6 @@ describe('relation', () => {
         expect(main.attributes[index].type).to.be.instanceof(EnumType);
         expect((<EnumType<string>>main.attributes[index].type).name)
           .to.be.equals(typeEnumName);
-        expect((<EnumType<string>>main.attributes[index].type).typeName)
-          .to.be.equals(enumValueNames.map(t => `'${t}'`).join(' | '));
         expect((<EnumType<string>>main.attributes[index].type).values.map(v => v.name))
           .to.deep.equal(enumValueNames);
       }
@@ -214,23 +212,6 @@ describe('relation', () => {
             });
 
             assetEnumType(main, 0, 'type', 'MainSubclassType', ['a', 'b', 'c']);
-          },
-        ],
-        [
-          'should add the type enum with required and validator',
-          (main, inheritor, append) => {
-            append({
-              aliasOnSubclasses: 'main',
-              inheritors: [inheritor<Child1>('Child1', 'a', 'A')],
-              sharedExistingUniqueField: 'id',
-              typeIdentifierFieldName: 'type',
-              typeIdentifierRequired: true,
-              typeIdentifierValidator: 'VALIDATOR',
-            });
-
-            assetEnumType(main, 0, 'type', 'MainSubclassType', ['a']);
-            expect(main.attributes[0].required).to.be.true;
-            expect(main.attributes[0].validator).to.be.equals('VALIDATOR');
           },
         ],
         [
@@ -362,7 +343,6 @@ describe('relation', () => {
           required: true,
           target: mockUninitializedStateModel(master),
           targetOwner: 'owner2',
-          validator: 'VALIDATOR',
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -389,7 +369,6 @@ describe('relation', () => {
         expect(detail.attributes[0].name).to.be.equals('someId');
         expect(detail.attributes[0].type).to.be.instanceof(StringType);
         expect(detail.attributes[0].required).to.be.equals(true);
-        expect(detail.attributes[0].validator).to.be.equals('VALIDATOR');
       });
 
     });
@@ -442,7 +421,6 @@ describe('relation', () => {
           required: true,
           target: mockUninitializedStateModel(master),
           targetOwner: 'owner2',
-          validator: 'VALIDATION',
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -469,7 +447,6 @@ describe('relation', () => {
         expect(injected.attributes[0].name).to.be.equals('someId');
         expect(injected.attributes[0].type).to.be.instanceof(StringType);
         expect(injected.attributes[0].required).to.be.equals(true);
-        expect(injected.attributes[0].validator).to.be.equals('VALIDATION');
       });
 
     });
@@ -511,7 +488,6 @@ describe('relation', () => {
           keyType: DataTypes.STRING(),
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
-          validator: 'VALIDATE',
         });
 
         expect(master.relations[0].owner).to.be.equals('owner');
@@ -527,7 +503,6 @@ describe('relation', () => {
         expect(master.attributes[0].name).to.be.equals('someId');
         expect(master.attributes[0].type).to.be.instanceof(StringType);
         expect(master.attributes[0].required).to.be.equals(false);
-        expect(master.attributes[0].validator).to.be.equals('VALIDATE');
       });
 
     });

@@ -65,20 +65,6 @@ describe('model', () => {
       expect(model.model.indexes.unique[2]).to.deep.equal(['e', 'f', 'g']);
     });
 
-    it('should properly call the builder with valid validator setter', () => {
-      const model = createModel(
-        { name: 'a', owner: undefined! },
-        ({ validator }) => {
-          expect(validator).to.be.a('function');
-          validator('VALIDATE');
-        },
-      );
-
-      model.initialize();
-
-      expect(model.model.validator).to.be.equals('VALIDATE');
-    });
-
   });
 
 });

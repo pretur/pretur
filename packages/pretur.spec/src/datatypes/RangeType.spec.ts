@@ -8,13 +8,7 @@ describe('RangeType', () => {
 
   it('should correctly instantiate and identify a range datatype', () => {
     const d = RangeType.create(DataTypes.DATE());
-    expect(d.typeName).to.be.equals('[Date, Date]');
     expect(RangeType.is(d)).to.be.true;
-  });
-
-  it('should properly override the typeName', () => {
-    const d = RangeType.create(DataTypes.DATE(), 'any[]');
-    expect(d.typeName).to.be.equals('any[]');
   });
 
   it('should throw if subtype is not valid', () => {

@@ -13,7 +13,6 @@ function mockModel(name: string): Model<any> {
     join: false,
     owner: undefined!,
     relations: [],
-    validator: undefined!,
     virtual: false,
   };
 }
@@ -53,19 +52,16 @@ describe('spec', () => {
     expect(spec.owner).to.be.undefined;
     expect(spec.virtual).to.be.equals(false);
     expect(spec.join).to.be.equals(false);
-    expect(spec.validator).to.be.undefined;
 
     model.name = 'c';
     model.owner = 'b';
     model.virtual = true;
     model.join = true;
-    model.validator = 'VALIDATOR';
 
     expect(spec.name).to.be.equals('c');
     expect(spec.owner).to.be.equals('b');
     expect(spec.virtual).to.be.equals(true);
     expect(spec.join).to.be.equals(true);
-    expect(spec.validator).to.be.equals('VALIDATOR');
 
     expect(spec.attributeArray).to.be.equals(model.attributes);
     expect(spec.indexes).to.be.equals(model.indexes);

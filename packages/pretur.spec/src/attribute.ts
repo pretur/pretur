@@ -14,7 +14,6 @@ export interface Attribute<T, K extends keyof T> {
   autoIncrement?: boolean;
   mutable?: boolean;
   defaultValue?: T[K];
-  validator?: string;
 }
 
 function getCommonDefaults(owner: Owner): Attribute<any, string> {
@@ -35,7 +34,6 @@ export interface PrimaryKeyOptions<T, K extends keyof T> {
   type?: IntegerType | StringType;
   autoIncrement?: boolean;
   mutable?: boolean;
-  validator?: string;
 }
 
 function getPrimaryKeyDefaults(owner: Owner): Attribute<any, string> {
@@ -68,10 +66,6 @@ export function validateAttribute(attribute: Attribute<any, string>) {
     if (attribute.primary && (attribute.unique || attribute.required)) {
       throw new Error(`primary means unique and required. Providing both is redundant.`);
     }
-
-    if (attribute.validator && typeof attribute.validator !== 'string') {
-      throw new Error(`Attribute ${attribute.name} has non string validator.`);
-    }
   }
 }
 
@@ -89,7 +83,7 @@ export function appendAttribute<T>(model: Model<T>, ...attributes: Attribute<T, 
 
     if (chain(model.attributes).map('name').includes(attribute.name).value()) {
       throw new Error(
-        `Attribute ${attribute.name} of type ${attribute.type.typeName} was added twice.`,
+        `Attribute ${attribute.name} of type ${attribute.type.toString()} was added twice.`,
       );
     }
 

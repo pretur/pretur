@@ -6,9 +6,8 @@ export interface EnumValue<TKey extends string> {
 }
 
 export default class EnumType<TKey extends string> extends AbstractType {
-  private _name: string;
-  private _values: EnumValue<TKey>[];
-  private _typeName: string;
+  public readonly name: string;
+  public readonly values: EnumValue<TKey>[];
 
   public static is(obj: any): obj is EnumType<string> {
     return obj instanceof EnumType;
@@ -17,51 +16,31 @@ export default class EnumType<TKey extends string> extends AbstractType {
   public static create<TKey extends string>(
     name: string,
     values: ([TKey, string] | EnumValue<TKey>)[],
-    typeName?: string,
   ): EnumType<TKey> {
-    return new EnumType<TKey>(name, values, typeName);
+    return new EnumType<TKey>(name, values);
   }
 
-  public get name(): string {
-    return this._name;
-  }
-
-  public get values(): EnumValue<TKey>[] {
-    return this._values;
-  }
-
-  public get typeName(): string {
-    return this._typeName;
-  }
-
-  private constructor(
-    name: string,
-    values: ([TKey, string] | EnumValue<TKey>)[],
-    typeName = 'string',
-  ) {
+  constructor(enumName: string, values: ([TKey, string] | EnumValue<TKey>)[]) {
     super();
-
-    this._name = name;
-    this._typeName = typeName;
-
-    this._values = values
+    this.name = enumName;
+    this.values = values
       .map(value => Array.isArray(value) ? ({ i18nKey: value[1], name: value[0] }) : value)
-      .filter(v => v);
+      .filter(Boolean);
 
     if (process.env.NODE_ENV !== 'production') {
-      if (this._values.length === 0) {
-        throw new Error(`enum ${name} contains no value.`);
+      if (this.values.length === 0) {
+        throw new Error(`enum ${enumName} contains no value.`);
       }
 
-      this._values.forEach(pair => {
-        if (typeof pair.name !== 'string') {
+      for (const { name } of this.values) {
+        if (typeof name !== 'string') {
           throw new Error(`enum ${name} has a value with no name.`);
         }
 
-        if (this._values.filter(p => p.name === pair.name).length > 1) {
-          throw new Error(`enum ${name} has duplicate value names of ${pair.name}.`);
+        if (this.values.filter(p => p.name === name).length > 1) {
+          throw new Error(`enum ${name} has duplicate value names of ${name}.`);
         }
-      });
+      }
     }
 
   }

@@ -4,26 +4,17 @@ import IntegerType from './IntegerType';
 import DoubleType from './DoubleType';
 
 export default class RangeType extends AbstractType {
-  private _typeName: string;
-  private _subtype: AbstractType;
-
-  public get typeName(): string {
-    return this._typeName;
-  }
-
-  public get subType(): AbstractType {
-    return this._subtype;
-  }
+  public readonly subtype: AbstractType;
 
   public static is(obj: any): obj is RangeType {
     return obj instanceof RangeType;
   }
 
-  public static create(subType: AbstractType, typeName?: string): RangeType {
-    return new RangeType(subType, typeName);
+  public static create(subType: AbstractType): RangeType {
+    return new RangeType(subType);
   }
 
-  private constructor(subType: AbstractType, typeName?: string) {
+  constructor(subType: AbstractType) {
     super();
 
     if (process.env.NODE_ENV !== 'production') {
@@ -38,14 +29,11 @@ export default class RangeType extends AbstractType {
           break;
         default:
           throw new Error(`Only Date, Integer and Double are allowed for Range types.` +
-            `${subType.typeName} cannot be used in a range.`);
+            `${subType.toString()} cannot be used in a range.`);
       }
 
     }
 
-    const defaultTypeName = `[${subType.typeName}, ${subType.typeName}]`;
-
-    this._subtype = subType;
-    this._typeName = typeName || defaultTypeName;
+    this.subtype = subType;
   }
 }

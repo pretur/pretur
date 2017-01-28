@@ -43,7 +43,6 @@ export interface InheritorsOptions<TSource, TTarget> {
   typeIdentifierFieldName: keyof TSource;
   typeIdentifierEnumTypeName?: string;
   typeIdentifierRequired?: boolean;
-  typeIdentifierValidator?: string;
   inheritors: Inheritor<TSource, TTarget>[];
 }
 
@@ -56,7 +55,6 @@ export interface MasterOptions<TSource, TTarget> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  validator?: string;
   owner?: Owner;
   targetOwner?: Owner;
   keyOwner?: Owner;
@@ -71,7 +69,6 @@ export interface InjectiveOptions<TSource, TTarget> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  validator?: string;
   owner?: Owner;
   targetOwner?: Owner;
   keyOwner?: Owner;
@@ -83,7 +80,6 @@ export interface RecursiveOptions<T> {
   keyType?: AbstractType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  validator?: string;
 }
 
 export function appendRelation<T>(model: Model<T>, ...relations: Relation[]): void {
@@ -203,7 +199,6 @@ function inheritors<TSource, TTarget>(
   const typeEnum = DataTypes.ENUM(
     options.typeIdentifierEnumTypeName || model.name + 'SubclassType',
     typeEnumValues,
-    typeEnumValues.map(t => `'${t.name}'`).join(' | '),
   );
 
   appendAttribute(model, {
@@ -212,7 +207,6 @@ function inheritors<TSource, TTarget>(
     owner: model.owner,
     required: !!options.typeIdentifierRequired,
     type: typeEnum,
-    validator: options.typeIdentifierValidator,
   });
 }
 
@@ -247,7 +241,6 @@ function master<TSource, TTarget>(model: Model<TSource>, options: MasterOptions<
     owner: options.keyOwner || options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
-    validator: options.validator,
   });
 }
 
@@ -285,7 +278,6 @@ function injective<TSource, TTarget>(
     owner: options.keyOwner || options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
-    validator: options.validator,
   });
 }
 
@@ -308,7 +300,6 @@ function recursive<T>(model: Model<T>, options: RecursiveOptions<T>) {
     owner: model.owner,
     required: false,
     type: options.keyType || DataTypes.INTEGER(),
-    validator: options.validator,
   });
 }
 

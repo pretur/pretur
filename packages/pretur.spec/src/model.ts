@@ -25,7 +25,6 @@ export interface Model<T> {
   attributes: Attribute<T, keyof T>[];
   indexes: Indexes;
   relations: Relation[];
-  validator?: string;
 }
 
 export interface CreateModelOptions {
@@ -37,7 +36,6 @@ export interface CreateModelOptions {
 export interface ModelBuilder<T> {
   attribute: AttributeBuilder<T>;
   relation: RelationsBuilder<T>;
-  validator(validator: string): void;
   multicolumnUniqueIndex(...fields: (keyof T)[]): void;
 }
 
@@ -58,10 +56,6 @@ export function createModel<T>(
   const builder = <ModelBuilder<T>>{
     attribute: createAttributeBuilder(model),
     relation: createRelationBuilder(model),
-
-    validator(validator: string) {
-      model.validator = validator;
-    },
 
     multicolumnUniqueIndex(...fields: string[]) {
       model.indexes.unique.push(fields);

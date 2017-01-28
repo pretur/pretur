@@ -87,10 +87,6 @@ export class Spec<T> {
     return this.model.join;
   }
 
-  public get validator(): string | undefined {
-    return this.model.validator;
-  }
-
   public get attributes(): AttributeMap<T> {
     const map = <AttributeMap<T>>{};
     this.model.attributes.forEach(attrib => map[attrib.name] = attrib);

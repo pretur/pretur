@@ -1,5 +1,3 @@
-abstract class AbstractType {
-  public abstract get typeName(): string;
-}
+abstract class AbstractType { }
 
 export default AbstractType;
