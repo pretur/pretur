@@ -11,6 +11,7 @@ export interface ResultBase {
 }
 
 export interface MutateResultBase extends ResultBase {
+  type: 'mutate';
   transactionFailed: boolean;
   validationError: ValidationError;
 }
@@ -35,16 +36,16 @@ export interface OperateResult<T> extends ResultBase {
 }
 
 export interface InsertMutateResult<T> extends MutateResultBase {
-  type: 'insert';
+  action: 'insert';
   generatedId?: Partial<T>;
 }
 
 export interface UpdateMutateResult extends MutateResultBase {
-  type: 'update';
+  action: 'update';
 }
 
 export interface RemoveMutateResult extends MutateResultBase {
-  type: 'remove';
+  action: 'remove';
 }
 
 export type MutateResult<T> =

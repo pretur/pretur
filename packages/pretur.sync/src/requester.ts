@@ -217,6 +217,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         resolve(response: FetchResponse<InsertMutateResponse<T>>) {
           resolve({
+            action: 'insert',
             cancelled: false,
             errors: response.body.errors,
             generatedId: response.body.generatedId,
@@ -224,7 +225,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             status: response.status,
             statusText: response.statusText,
             transactionFailed: response.body.transactionFailed,
-            type: 'insert',
+            type: 'mutate',
             validationError: response.body.validationError,
             warnings: response.body.warnings,
           });
@@ -232,8 +233,9 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         cancel() {
           resolve({
             ...unknownErrorBase,
+            action: 'insert',
             transactionFailed: false,
-            type: 'insert',
+            type: 'mutate',
             validationError: undefined,
           });
         },
@@ -268,13 +270,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         resolve(response: FetchResponse<UpdateMutateResponse>) {
           resolve({
+            action: 'update',
             cancelled: false,
             errors: response.body.errors,
             ok: response.ok,
             status: response.status,
             statusText: response.statusText,
             transactionFailed: response.body.transactionFailed,
-            type: 'update',
+            type: 'mutate',
             validationError: response.body.validationError,
             warnings: response.body.warnings,
           });
@@ -282,8 +285,9 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         cancel() {
           resolve({
             ...unknownErrorBase,
+            action: 'update',
             transactionFailed: false,
-            type: 'update',
+            type: 'mutate',
             validationError: undefined,
           });
         },
@@ -316,13 +320,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         resolve(response: FetchResponse<RemoveMutateResponse>) {
           resolve({
+            action: 'remove',
             cancelled: false,
             errors: response.body.errors,
             ok: response.ok,
             status: response.status,
             statusText: response.statusText,
             transactionFailed: response.body.transactionFailed,
-            type: 'remove',
+            type: 'mutate',
             validationError: response.body.validationError,
             warnings: response.body.warnings,
           });
@@ -330,8 +335,9 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         cancel() {
           resolve({
             ...unknownErrorBase,
+            action: 'remove',
             transactionFailed: false,
-            type: 'remove',
+            type: 'mutate',
             validationError: undefined,
           });
         },
