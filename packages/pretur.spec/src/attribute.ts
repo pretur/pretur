@@ -114,7 +114,11 @@ export function createAttributeBuilder<T>(model: Model<T>): AttributeBuilder<T> 
 
   ab.primaryKey
     = function buildPrimaryKey<K extends keyof T>(options?: PrimaryKeyOptions<T, K>): void {
-      if (options && StringType.is(options.type) && !('autoIncrement' in options)) {
+      if (
+        options &&
+        StringType.is(<AbstractType>options.type) &&
+        !options.hasOwnProperty('autoIncrement')
+      ) {
         options.autoIncrement = false;
       }
       appendAttribute(model, pkDefaults, <Attribute<T, K>>options);

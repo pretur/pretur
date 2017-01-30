@@ -1,7 +1,7 @@
 import AbstractType from './AbstractType';
 
 export default class IntegerType extends AbstractType {
-  public static is(obj: any): obj is IntegerType {
+  public static is(obj: AbstractType): obj is IntegerType {
     return obj instanceof IntegerType;
   }
 

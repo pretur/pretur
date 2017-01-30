@@ -6,7 +6,7 @@ import DoubleType from './DoubleType';
 export default class RangeType extends AbstractType {
   public readonly subtype: AbstractType;
 
-  public static is(obj: any): obj is RangeType {
+  public static is(obj: AbstractType): obj is RangeType {
     return obj instanceof RangeType;
   }
 

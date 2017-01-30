@@ -1,7 +1,7 @@
 import AbstractType from './AbstractType';
 
 export default class BooleanType extends AbstractType {
-  public static is(obj: any): obj is BooleanType {
+  public static is(obj: AbstractType): obj is BooleanType {
     return obj instanceof BooleanType;
   }
 

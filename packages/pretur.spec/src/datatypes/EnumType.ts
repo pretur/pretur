@@ -9,7 +9,7 @@ export default class EnumType<TKey extends string> extends AbstractType {
   public readonly name: string;
   public readonly values: EnumValue<TKey>[];
 
-  public static is(obj: any): obj is EnumType<string> {
+  public static is(obj: AbstractType): obj is EnumType<string> {
     return obj instanceof EnumType;
   }
 
