@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf lib && tsc",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -30,8 +30,8 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.sync",
   "dependencies": {
     "@types/bluebird": "^3.0.37",
-    "@types/lodash": "^4.14.50",
-    "@types/node": "^7.0.0",
+    "@types/lodash": "^4.14.52",
+    "@types/node": "^7.0.5",
     "bluebird": "^3.4.7",
     "lodash": "^4.17.4",
     "pretur.fetch": "^0.10.0",
@@ -40,6 +40,7 @@
     "tslib": "^1.5.0"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170121"
+    "rimraf": "^2.5.4",
+    "typescript": "^2.2.0-dev.20170207"
   }
 }

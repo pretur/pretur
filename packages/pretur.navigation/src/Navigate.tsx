@@ -17,13 +17,12 @@ export interface NagivateProps {
 
 export function Navigate(
   {navigator}: NagivateProps,
-): React.ReactElement<NavigatePassedProps<any>> {
+): React.ReactElement<NavigatePassedProps<any>> | null {
   if (!navigator.active) {
     // tslint:disable-next-line:no-null-keyword
-    return null!;
+    return null;
   }
-  const Component
-    = navigator.active.descriptor.component as React.ComponentClass<NavigatePassedProps<any>>;
+  const Component = navigator.active.descriptor.component;
   return (
     <Component
       mutex={navigator.active.mutex}
@@ -31,6 +30,6 @@ export function Navigate(
       state={navigator.active.state}
       title={navigator.active.title}
       navigator={navigator}
-      />
+    />
   );
 }

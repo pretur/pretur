@@ -19,17 +19,17 @@
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
-    "@types/mocha": "^2.2.37",
-    "@types/node": "^7.0.0",
-    "@types/react-addons-test-utils": "^0.14.16",
+    "@types/mocha": "^2.2.39",
+    "@types/node": "^7.0.5",
+    "@types/react-addons-test-utils": "^0.14.17",
     "chai": "^3.5.0",
-    "lerna": "2.0.0-beta.32",
+    "lerna": "2.0.0-beta.36",
     "mocha": "^3.2.0",
     "react-addons-test-utils": "^15.4.2",
     "ts-node": "^2.0.0",
-    "tslint": "^4.3.1",
-    "tslint-eslint-rules": "^3.2.3",
+    "tslint": "^4.4.2",
+    "tslint-eslint-rules": "^3.3.0",
     "tslint-microsoft-contrib": "^4.0.0",
-    "typescript": "^2.2.0-dev.20170121"
+    "typescript": "^2.2.0-dev.20170207"
   }
 }

@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf lib && tsc",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -33,16 +33,17 @@
     "@types/fs-extra": "0.0.37",
     "@types/handlebars": "^4.0.31",
     "@types/inflection": "^1.5.28",
-    "@types/lodash": "^4.14.50",
-    "@types/node": "^7.0.0",
+    "@types/lodash": "^4.14.52",
+    "@types/node": "^7.0.5",
     "fs-extra": "^2.0.0",
     "handlebars": "^4.0.6",
-    "inflection": "^1.10.0",
+    "inflection": "^1.12.0",
     "lodash": "^4.17.4",
     "tslib": "^1.5.0",
     "watchr": "^3.0.1"
   },
   "devDependencies": {
-    "typescript": "^2.2.0-dev.20170121"
+    "rimraf": "^2.5.4",
+    "typescript": "^2.2.0-dev.20170207"
   }
 }
