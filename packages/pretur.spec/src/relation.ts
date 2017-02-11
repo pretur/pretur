@@ -205,7 +205,7 @@ function inheritors<TSource, TTarget>(
     mutable: true,
     name: options.typeIdentifierFieldName,
     owner: model.owner,
-    required: !!options.typeIdentifierRequired,
+    required: options.typeIdentifierRequired || false,
     type: typeEnum,
   });
 }

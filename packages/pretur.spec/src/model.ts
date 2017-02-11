@@ -50,7 +50,7 @@ export function createModel<T>(
     name: options.name,
     owner: options.owner,
     relations: [],
-    virtual: !!options.virtual,
+    virtual: options.virtual || false,
   };
 
   const builder = <ModelBuilder<T>>{

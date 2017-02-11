@@ -88,7 +88,7 @@ export function createJoinModel<TJoin, TSecond, TFirst>(
     name: options.name,
     owner: options.owner,
     relations: [],
-    virtual: !!options.virtual,
+    virtual: options.virtual || false,
   };
 
   const builder = <JoinModelBuilder<TJoin>>{
@@ -146,7 +146,7 @@ export function createJoinModel<TJoin, TSecond, TFirst>(
     required: true,
     through: model.name,
     type: 'MANY_TO_MANY',
-    virtual: !!options.virtual,
+    virtual: options.virtual === true ? true : secondJoinee.model.virtual,
   });
 
   appendRelation(secondJoinee.model.model, {
@@ -159,7 +159,7 @@ export function createJoinModel<TJoin, TSecond, TFirst>(
     required: true,
     through: model.name,
     type: 'MANY_TO_MANY',
-    virtual: !!options.virtual,
+    virtual: options.virtual === true ? true : firstJoinee.model.virtual,
   });
 
   function initialize(): Spec<TJoin> {
@@ -174,7 +174,7 @@ export function createJoinModel<TJoin, TSecond, TFirst>(
     join: true,
     name: options.name,
     owner: options.owner,
-    virtual: !!options.virtual,
+    virtual: options.virtual || false,
     initialize,
   };
 }
