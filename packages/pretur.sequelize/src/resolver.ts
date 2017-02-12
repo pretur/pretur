@@ -30,7 +30,7 @@ export interface ResolveInterceptor<T> {
 
 export interface BuildResolverOptions<T> {
   intercept?: ResolveInterceptor<T>;
-  queryTransformer?(query: Query<T> | undefined): Query<T>;
+  queryTransformer?(query: Query<T> | undefined): Query<T> | undefined;
 }
 
 export function buildCustomResolver<T>(
