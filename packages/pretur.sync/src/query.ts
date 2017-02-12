@@ -20,6 +20,7 @@ export type QueryInclude<T> = {
 };
 
 export interface SubQuery<T> {
+  extra?: any;
   include?: QueryInclude<T>;
   filters?: QueryFilters<T>;
   attributes?: (keyof T)[];
