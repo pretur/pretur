@@ -18,18 +18,18 @@
     "url": "git+https://github.com/pretur/pretur"
   },
   "devDependencies": {
-    "@types/chai": "^3.4.34",
+    "@types/chai": "^3.4.35",
     "@types/mocha": "^2.2.39",
     "@types/node": "^7.0.5",
     "@types/react-addons-test-utils": "^0.14.17",
     "chai": "^3.5.0",
-    "lerna": "2.0.0-beta.36",
+    "lerna": "2.0.0-beta.37",
     "mocha": "^3.2.0",
     "react-addons-test-utils": "^15.4.2",
-    "ts-node": "^2.0.0",
+    "ts-node": "^2.1.0",
     "tslint": "^4.4.2",
-    "tslint-eslint-rules": "^3.3.0",
+    "tslint-eslint-rules": "^3.4.0",
     "tslint-microsoft-contrib": "^4.0.0",
-    "typescript": "^2.2.0-dev.20170207"
+    "typescript": "^2.3.0-dev.20170219"
   }
 }

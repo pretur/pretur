@@ -1,6 +1,6 @@
 {
   "name": "pretur.redux",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Redux bindings",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -39,7 +39,7 @@
     "tslib": "^1.5.0"
   },
   "devDependencies": {
-    "rimraf": "^2.5.4",
-    "typescript": "^2.2.0-dev.20170207"
+    "rimraf": "^2.6.0",
+    "typescript": "^2.3.0-dev.20170219"
   }
 }
