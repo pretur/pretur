@@ -116,6 +116,10 @@ export class Navigator implements Reducible {
     return orderedPages(this._instances);
   }
 
+  public pageFromMutex(mutex: string | undefined): PageInstance<any, any, any> | undefined {
+    return typeof mutex === 'string' ? this._instances.pages[mutex] : undefined;
+  }
+
   public reduce(action: Action<any, any>): this {
     if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
       if (!action.payload) {
