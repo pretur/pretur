@@ -362,6 +362,15 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'f', 'a/d/e'], '2');
       });
 
+      it('should peroperly transit to the target index', () => {
+        nav.transit(dispatch, 0);
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '1');
+        nav.transit(dispatch, 2);
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+        nav.transit(dispatch, 1);
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '2');
+      });
+
     });
 
     describe('clear', () => {

@@ -1,7 +1,7 @@
 import { createTargetedActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
 import { PageReplaceOptions, PageOpenOptions } from './navigator';
 
-export const NAVIGATION_TRANSIT_TO_PAGE: TargetedActionDescriptor<string, void>
+export const NAVIGATION_TRANSIT_TO_PAGE: TargetedActionDescriptor<string | number, void>
   = createTargetedActionDescriptor<string, void>('NAVIGATION_TRANSIT_TO_PAGE');
 
 export const NAVIGATION_OPEN_PAGE: TargetedActionDescriptor<PageOpenOptions, void>

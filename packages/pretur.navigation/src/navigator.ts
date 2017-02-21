@@ -122,22 +122,29 @@ export class Navigator implements Reducible {
 
   public reduce(action: Action<any, any>): this {
     if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
-      if (!action.payload) {
+      if (typeof action.payload !== 'number' && typeof action.payload !== 'string') {
         saveActivePage(this._prefix, undefined);
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
         return newNav;
       }
+      let mutex: string | undefined;
 
-      if (this._instances.pages[action.payload]) {
+      if (typeof action.payload === 'string' && this._instances.pages[action.payload]) {
+        mutex = action.payload;
+      } else {
+        mutex = this._instances.pageOrder[Number(action.payload)];
+      }
 
-        if (this._instances.pages[action.payload].descriptor.persistent !== false) {
-          saveActivePage(this._prefix, action.payload);
+      if (mutex) {
+
+        if (this._instances.pages[mutex].descriptor.persistent !== false) {
+          saveActivePage(this._prefix, mutex);
         }
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
-        newNav._activePageMutex = action.payload;
+        newNav._activePageMutex = mutex;
         return newNav;
       }
 
@@ -226,7 +233,7 @@ export class Navigator implements Reducible {
         mutex = this._instances.pageOrder[Number(action.payload)];
       }
 
-      if (mutex && this._instances.pages) {
+      if (mutex) {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._activePageMutex = this._activePageMutex;
 
@@ -350,7 +357,7 @@ export class Navigator implements Reducible {
     return this;
   }
 
-  public transit(dispatch: Dispatch, mutex: string | undefined) {
+  public transit(dispatch: Dispatch, mutex: string | number | undefined) {
     dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this._prefix, mutex));
   }
 
