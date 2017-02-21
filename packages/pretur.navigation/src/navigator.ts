@@ -215,9 +215,18 @@ export class Navigator implements Reducible {
     }
 
     if (NAVIGATION_CLOSE_PAGE.is(this._prefix, action)) {
-      const mutex = action.payload;
+      if (typeof action.payload !== 'number' && typeof action.payload !== 'string') {
+        return this;
+      }
+      let mutex: string | undefined;
 
-      if (mutex && this._instances.pages[mutex]) {
+      if (typeof action.payload === 'string' && this._instances.pages[action.payload]) {
+        mutex = action.payload;
+      } else {
+        mutex = this._instances.pageOrder[Number(action.payload)];
+      }
+
+      if (mutex && this._instances.pages) {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._activePageMutex = this._activePageMutex;
 
@@ -357,7 +366,7 @@ export class Navigator implements Reducible {
     dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this._prefix, { toRemoveMutex, toInsertData }));
   }
 
-  public close(dispatch: Dispatch, mutex: string) {
+  public close(dispatch: Dispatch, mutex: string | number) {
     dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this._prefix, mutex));
   }
 
