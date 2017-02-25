@@ -67,6 +67,7 @@ export interface InjectiveOptions<TSource, TTarget> {
   foreignKey: keyof TSource;
   foreignKeyType?: AbstractType;
   required?: boolean;
+  unique?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   owner?: Owner;
@@ -278,6 +279,7 @@ function injective<TSource, TTarget>(
     owner: options.keyOwner || options.owner || model.owner,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
+    unique: typeof options.unique === 'boolean' ? options.unique : true,
   });
 }
 

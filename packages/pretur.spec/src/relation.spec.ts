@@ -402,6 +402,7 @@ describe('relation', () => {
         expect(injected.attributes[0].mutable).to.be.false;
         expect(injected.attributes[0].name).to.be.equals('masterId');
         expect(injected.attributes[0].type).to.be.instanceof(IntegerType);
+        expect(injected.attributes[0].unique).to.be.equals(true);
       });
 
       it('should properly override the properties of relations and the fk attribute', () => {
@@ -421,6 +422,7 @@ describe('relation', () => {
           required: true,
           target: mockUninitializedStateModel(master),
           targetOwner: 'owner2',
+          unique: false,
         });
 
         expect(master.relations[0].owner).to.be.equals('owner2');
@@ -447,6 +449,7 @@ describe('relation', () => {
         expect(injected.attributes[0].name).to.be.equals('someId');
         expect(injected.attributes[0].type).to.be.instanceof(StringType);
         expect(injected.attributes[0].required).to.be.equals(true);
+        expect(injected.attributes[0].unique).to.be.equals(false);
       });
 
     });
