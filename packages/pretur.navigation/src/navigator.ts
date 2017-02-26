@@ -20,17 +20,11 @@ export function deisolate<A extends Action<any, any>>(action: A): A {
   return action;
 }
 
-export interface PageReplaceOptions {
+export interface PageReplaceOptions extends PageInstantiationData<any> {
   toRemoveMutex: string;
-  toInsertData: PageInstantiationData<any>;
 }
 
-export interface PageOpenOptions {
-  path: string;
-  mutex: string;
-  parent?: string;
-  reducerBuilderData?: any;
-  titleData?: any;
+export interface PageOpenOptions extends PageInstantiationData<any> {
   insertAfterMutex?: string;
 }
 
@@ -62,30 +56,31 @@ function openPage(instances: Instances, options: PageOpenOptions, pages: Pages):
   const insertAfterIndex = indexOf(newInstances.pageOrder, insertAfterMutex);
 
   if (insertAfterIndex !== -1) {
-    newInstances.pageOrder.splice(insertAfterIndex + 1, 0, options.mutex);
+    newInstances.pageOrder.splice(insertAfterIndex + 1, 0, instantiationData.mutex);
   } else {
-    newInstances.pageOrder.push(options.mutex);
+    newInstances.pageOrder.push(instantiationData.mutex);
   }
 
-  newInstances.pages[options.mutex] = newPage;
+  newInstances.pages[instantiationData.mutex] = newPage;
 
   return newInstances;
 }
 
 function replacePage(instances: Instances, options: PageReplaceOptions, pages: Pages): Instances {
-  const toRemoveIndex = indexOf(instances.pageOrder, options.toRemoveMutex);
+  const { toRemoveMutex, ...instantiationData } = options;
+  const toRemoveIndex = indexOf(instances.pageOrder, toRemoveMutex);
 
   if (toRemoveIndex === -1) {
-    return openPage(instances, options.toInsertData, pages);
+    return openPage(instances, instantiationData, pages);
   }
 
-  const newPage = pages.buildInstance(options.toInsertData);
+  const newPage = pages.buildInstance(instantiationData);
 
   const newPageOrder = [...instances.pageOrder];
-  newPageOrder.splice(toRemoveIndex, 1, options.toInsertData.mutex);
+  newPageOrder.splice(toRemoveIndex, 1, instantiationData.mutex);
 
-  const newPages = <InstanceMap>omit(instances.pages, options.toRemoveMutex);
-  newPages[options.toInsertData.mutex] = newPage;
+  const newPages = <InstanceMap>omit(instances.pages, toRemoveMutex);
+  newPages[instantiationData.mutex] = newPage;
 
   return { pageOrder: newPageOrder, pages: newPages };
 }
@@ -102,6 +97,14 @@ export class Navigator implements Reducible {
     this._prefix = prefix;
   }
 
+  public get all(): PageInstance<any, any, any>[] {
+    return orderedPages(this._instances);
+  }
+
+  public get roots(): PageInstance<any, any, any>[] {
+    return this.all.filter(page => !page.parent);
+  }
+
   public get active(): PageInstance<any, any, any> | undefined {
     if (!this._activePageMutex) {
       return;
@@ -113,8 +116,52 @@ export class Navigator implements Reducible {
     return this._activePageMutex;
   }
 
-  public get all(): PageInstance<any, any, any>[] {
-    return orderedPages(this._instances);
+  public get activeRootMutex(): string | undefined {
+    if (!this._activePageMutex || !this._instances.pages[this._activePageMutex]) {
+      return;
+    }
+
+    if (this._instances.pages[this._activePageMutex].parent) {
+      return this._instances.pages[this._activePageMutex].parent;
+    }
+
+    return this._activePageMutex;
+  }
+
+  public get activeRootIndex(): number {
+    if (!this._activePageMutex || !this._instances.pages[this._activePageMutex]) {
+      return -1;
+    }
+
+    const parentMutex = this._instances.pages[this._activePageMutex].parent;
+
+    if (!parentMutex) {
+      return this.roots.map(page => page.mutex).indexOf(this._activePageMutex);
+    }
+
+    return this.roots.map(page => page.mutex).indexOf(parentMutex);
+  }
+
+  public get indexAsChildOfActiveRoot(): number {
+    if (!this._activePageMutex || !this._instances.pages[this._activePageMutex]) {
+      return -1;
+    }
+
+    const parentMutex = this._instances.pages[this._activePageMutex].parent;
+
+    if (!parentMutex) {
+      return -1;
+    }
+
+    return this.childrenOf(parentMutex).map(page => page.mutex).indexOf(this._activePageMutex);
+  }
+
+  public hasChildren(mutex: string): boolean {
+    return this.all.some(page => page.parent === mutex);
+  }
+
+  public childrenOf(mutex: string): PageInstance<any, any, any>[] {
+    return this.all.filter(page => page.parent === mutex);
   }
 
   public pageFromMutex(mutex: string | undefined): PageInstance<any, any, any> | undefined {
@@ -189,34 +236,34 @@ export class Navigator implements Reducible {
         return this;
       }
 
-      const { toInsertData } = action.payload;
+      const { mutex, path } = action.payload;
 
-      if (this._instances.pages[toInsertData.mutex]) {
+      if (this._instances.pages[mutex]) {
 
-        if (this._instances.pages[toInsertData.mutex].descriptor.persistent !== false) {
-          saveActivePage(this._prefix, toInsertData.mutex);
+        if (this._instances.pages[mutex].descriptor.persistent !== false) {
+          saveActivePage(this._prefix, mutex);
         }
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
-        newNav._activePageMutex = toInsertData.mutex;
+        newNav._activePageMutex = mutex;
         return newNav;
       }
 
-      if (this._pages.hasPage(toInsertData.path)) {
+      if (this._pages.hasPage(path)) {
         const newInstances = replacePage(this._instances, action.payload, this._pages);
 
-        if (this._pages.getPage(toInsertData.path).persistent !== false) {
+        if (this._pages.getPage(path).persistent !== false) {
           save(this._prefix, orderedPages(newInstances)
             .filter(instance => instance.descriptor.persistent !== false)
             .map(instance => instance.instantiationData),
           );
-          saveActivePage(this._prefix, toInsertData.mutex);
+          saveActivePage(this._prefix, mutex);
         }
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = newInstances;
-        newNav._activePageMutex = toInsertData.mutex;
+        newNav._activePageMutex = mutex;
         return newNav;
       }
       return this;
@@ -369,9 +416,12 @@ export class Navigator implements Reducible {
   public replace(
     dispatch: Dispatch,
     toRemoveMutex: string,
-    toInsertData: PageInstantiationData<any>,
+    instantiationData: PageInstantiationData<any>,
   ) {
-    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this._prefix, { toRemoveMutex, toInsertData }));
+    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(
+      this._prefix,
+      { toRemoveMutex, ...instantiationData },
+    ));
   }
 
   public close(dispatch: Dispatch, mutex: string) {

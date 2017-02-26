@@ -536,6 +536,31 @@ describe('Navigator', () => {
 
   });
 
+  describe('roots', () => {
+
+    it('should return an empty map', () => {
+      expect(navigator.roots.map(instance => instance.path)).to.deep.equal([]);
+    });
+
+    it('should return all open root pages in correct order', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+      nav.open(dispatch, { mutex: '2', path: 'a/d/e', parent: '1' });
+      nav.open(dispatch, { mutex: '3', path: 'f', parent: '1' });
+      nav.open(dispatch, { mutex: '4', path: 'a/d/e' });
+      nav.open(dispatch, { mutex: '2', path: 'a/d/e', parent: '1' });
+      nav.open(dispatch, { mutex: '3', path: 'f', parent: '4' });
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+
+      expect(nav.roots.map(instance => instance.mutex)).to.deep.equal(['1', '4', '5']);
+      expect(nav.roots.map(instance => instance.path)).to.deep.equal(['a/d/e', 'a/d/e', 'f']);
+    });
+
+  });
+
   describe('active', () => {
 
     it('should return undefined when there are no active pages', () => {
@@ -560,7 +585,7 @@ describe('Navigator', () => {
       expect(navigator.activeMutex).to.be.undefined;
     });
 
-    it('should return the current active page\' mutex', () => {
+    it('should return the current active page\'s mutex', () => {
       persist.clear('ADMIN');
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
@@ -568,6 +593,255 @@ describe('Navigator', () => {
       nav.open(dispatch, { mutex: '5', path: 'f' });
 
       expect(nav.activeMutex).to.be.equals('5');
+    });
+
+  });
+
+  describe('activeRootMutex', () => {
+
+    it('should return undefined when there are no active pages', () => {
+      expect(navigator.activeRootMutex).to.be.undefined;
+    });
+
+    it('should return the current active page\'s mutex when current page is root', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+
+      nav.transit(dispatch, '5');
+
+      expect(nav.activeRootMutex).to.be.equals('5');
+    });
+
+    it('should return the parent mutex of current active page', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+
+      nav.transit(dispatch, '6');
+
+      expect(nav.activeMutex).to.be.equals('6');
+      expect(nav.activeRootMutex).to.be.equals('5');
+    });
+
+  });
+
+  describe('activeRootIndex', () => {
+
+    it('should return -1 when there are no active pages', () => {
+      expect(navigator.activeRootIndex).to.be.equals(-1);
+    });
+
+    it('should return the current active page\'s index when current page is root', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'a/d/e', parent: '8' });
+
+      nav.transit(dispatch, '5');
+      expect(nav.activeRootIndex).to.be.equals(0);
+
+      nav.transit(dispatch, '8');
+      expect(nav.activeRootIndex).to.be.equals(1);
+    });
+
+    it('should return the parent root index of current active page', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '11', path: 'f' });
+
+      nav.transit(dispatch, '6');
+
+      expect(nav.activeMutex).to.be.equals('6');
+      expect(nav.activeRootIndex).to.be.equals(0);
+
+      nav.transit(dispatch, '9');
+
+      expect(nav.activeMutex).to.be.equals('9');
+      expect(nav.activeRootIndex).to.be.equals(1);
+
+      nav.transit(dispatch, '11');
+
+      expect(nav.activeMutex).to.be.equals('11');
+      expect(nav.activeRootIndex).to.be.equals(2);
+    });
+
+  });
+
+  describe('indexAsChildOfActiveRoot', () => {
+
+    it('should return -1 when there are no active pages', () => {
+      expect(navigator.indexAsChildOfActiveRoot).to.be.equals(-1);
+    });
+
+    it('should return -1 when the current page is not a child', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'a/d/e', parent: '8' });
+
+      nav.transit(dispatch, '5');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(-1);
+
+      nav.transit(dispatch, '8');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(-1);
+    });
+
+    it('should return the index relative to it\'s siblings when active page is a child', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '10', path: 'f' });
+      nav.open(dispatch, { mutex: '11', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '12', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '13', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '14', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '15', path: 'a/d/e', parent: '8' });
+
+      nav.transit(dispatch, '6');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(0);
+
+      nav.transit(dispatch, '9');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(3);
+
+      nav.transit(dispatch, '12');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(1);
+
+      nav.transit(dispatch, '13');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(2);
+
+      nav.transit(dispatch, '15');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(4);
+
+    });
+
+  });
+
+  describe('hasChildren', () => {
+
+    it('should return true when there are one or more children', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+
+      expect(nav.hasChildren('5')).to.be.true;
+      expect(nav.hasChildren('8')).to.be.true;
+    });
+
+    it('should return false when there are no children', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'f' });
+
+      expect(nav.hasChildren('10')).to.be.false;
+      expect(nav.hasChildren('11')).to.be.false;
+    });
+
+  });
+
+  describe('childrenOf', () => {
+
+    it('should return the list of children when there are one or more children', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+
+      expect(nav.childrenOf('5').map(page => page.mutex)).to.deep.equal(['6', '7']);
+      expect(nav.childrenOf('8').map(page => page.mutex)).to.deep.equal(['9']);
+    });
+
+    it('should return empty array when there are no children', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'f' });
+
+      expect(nav.childrenOf('10')).to.deep.equal([]);
+      expect(nav.childrenOf('11')).to.deep.equal([]);
+    });
+
+  });
+
+  describe('pageFromMutex', () => {
+
+    it('should return the page identified by mutex', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'f' });
+
+      expect(nav.pageFromMutex('6')).not.to.be.undefined;
+      expect(nav.pageFromMutex('6')!.path).be.equals('a/d/e');
+      expect(nav.pageFromMutex('8')).not.to.be.undefined;
+      expect(nav.pageFromMutex('8')!.path).be.equals('f');
+      expect(nav.pageFromMutex('10')).not.to.be.undefined;
+      expect(nav.pageFromMutex('10')!.path).be.equals('f');
+      expect(nav.pageFromMutex('11')).to.be.undefined;
     });
 
   });
