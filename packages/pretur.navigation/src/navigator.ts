@@ -357,7 +357,7 @@ export class Navigator implements Reducible {
     return this;
   }
 
-  public transit(dispatch: Dispatch, mutex: string | number | undefined) {
+  public transit(dispatch: Dispatch, mutex: string | undefined) {
     dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this._prefix, mutex));
   }
 
@@ -373,7 +373,7 @@ export class Navigator implements Reducible {
     dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(this._prefix, { toRemoveMutex, toInsertData }));
   }
 
-  public close(dispatch: Dispatch, mutex: string | number) {
+  public close(dispatch: Dispatch, mutex: string) {
     dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this._prefix, mutex));
   }
 

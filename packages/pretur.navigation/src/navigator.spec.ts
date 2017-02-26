@@ -244,16 +244,6 @@ describe('Navigator', () => {
         check(nav, ['f'], '4');
       });
 
-      it('should close the page if target is specified by index', () => {
-        nav.close(dispatch, 1);
-        check(nav, ['a/d/e', 'a/d/e', 'f'], '4');
-        nav.close(dispatch, 0);
-        check(nav, ['a/d/e', 'f'], '4');
-        nav.close(dispatch, 0);
-        nav.close(dispatch, 2);
-        check(nav, ['f'], '4');
-      });
-
       it('should leave store unchanged when closing non persistent pages', () => {
         nav.open(dispatch, { mutex: '5', path: 'a/g/e' });
         nav.open(dispatch, { mutex: '6', path: 'a/g/e' });
@@ -359,15 +349,6 @@ describe('Navigator', () => {
         nav.transit(dispatch, '3');
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
         nav.transit(dispatch, '2');
-        check(nav, ['a/d/e', 'f', 'a/d/e'], '2');
-      });
-
-      it('should peroperly transit to the target index', () => {
-        nav.transit(dispatch, 0);
-        check(nav, ['a/d/e', 'f', 'a/d/e'], '1');
-        nav.transit(dispatch, 2);
-        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
-        nav.transit(dispatch, 1);
         check(nav, ['a/d/e', 'f', 'a/d/e'], '2');
       });
 
