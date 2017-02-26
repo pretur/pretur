@@ -60,6 +60,7 @@ export interface PageDescriptor<TProps, TState, TReducerBuilderData> {
 export interface PageInstantiationData<TReducerBuilderData> {
   path: string;
   mutex: string;
+  parent?: string;
   reducerBuilderData?: TReducerBuilderData;
   titleData?: any;
 }

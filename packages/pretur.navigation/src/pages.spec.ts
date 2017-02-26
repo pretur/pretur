@@ -89,13 +89,16 @@ describe('Pages', () => {
     const pages = new Pages(tree);
     const ins1 = pages.buildInstance({ mutex: '1', path: 'a/b/c' });
     const ins2 = pages.buildInstance({ mutex: '2', path: 'a/d/e' });
-    const ins3 = pages.buildInstance({ mutex: '3', path: 'f' });
-    expect(ins1.descriptor.path).to.be.equals('a/b/c');
-    expect(ins2.descriptor.path).to.be.equals('a/d/e');
-    expect(ins3.descriptor.path).to.be.equals('f');
+    const ins3 = pages.buildInstance({ mutex: '3', path: 'f', parent: '2' });
+    expect(ins1.path).to.be.equals('a/b/c');
+    expect(ins2.path).to.be.equals('a/d/e');
+    expect(ins3.path).to.be.equals('f');
     expect(ins1.mutex).to.be.equals('1');
     expect(ins2.mutex).to.be.equals('2');
     expect(ins3.mutex).to.be.equals('3');
+    expect(ins1.parent).to.be.undefined;
+    expect(ins2.parent).to.be.undefined;
+    expect(ins3.parent).to.be.equals('2');
   });
 
   it('should fail to build a page from an unknown path', () => {

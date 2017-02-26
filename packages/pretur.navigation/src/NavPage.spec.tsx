@@ -11,7 +11,7 @@ const component: React.StatelessComponent<NavPagePassedProps<number>> = props =>
   return <input type="number" value={String(props.state)} />;
 };
 
-const reducerBuilder: any = () => (s = 3, {value}: { value: any }) => value ? value : s;
+const reducerBuilder: any = () => (s = 3, { value }: { value: any }) => value ? value : s;
 
 const tree: PageTreeRoot = {
   'a': {
@@ -53,6 +53,7 @@ describe('NavPage', () => {
 
     expect(output.type).to.be.equals(component);
     expect(output.props.mutex).to.be.equals('1');
+    expect(output.props.parent).to.be.undefined;
     expect(output.props.path).to.be.equals('a/d/e');
     expect(output.props.state).to.be.equals(3);
     expect(output.props.title.key).to.be.equals('E');
@@ -63,7 +64,7 @@ describe('NavPage', () => {
     let nav = navigator;
     const dispatch: any = (a: any) => nav = nav.reduce(a);
 
-    nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+    nav.open(dispatch, { mutex: '1', path: 'a/d/e', parent: '2' });
 
     const renderer = createRenderer();
     renderer.render(<NavPage navigator={nav} mutex="1" />);
@@ -71,6 +72,7 @@ describe('NavPage', () => {
 
     expect(output.type).to.be.equals(component);
     expect(output.props.mutex).to.be.equals('1');
+    expect(output.props.parent).to.be.equals('2');
     expect(output.props.path).to.be.equals('a/d/e');
     expect(output.props.state).to.be.equals(3);
     expect(output.props.title.key).to.be.equals('E');

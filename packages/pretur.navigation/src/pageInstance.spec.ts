@@ -20,7 +20,7 @@ const desciptor = {
   // tslint:disable-next-line:no-null-keyword
   component: () => null!,
   path: 'admin',
-  reducerBuilder: ({rank, fail}: ReducerBuilderData) => (s = { B: rank }, a: any): State => {
+  reducerBuilder: ({ rank, fail }: ReducerBuilderData) => (s = { B: rank }, a: any): State => {
     if (!fail) {
       if (a.type === 'INC') {
         return { B: rank + (a.payload || 0) };
@@ -34,6 +34,7 @@ const desciptor = {
 
 const instance = new PageInstance<Prop, State, ReducerBuilderData>(desciptor, {
   mutex: '1',
+  parent: '2',
   path: 'admin',
   reducerBuilderData: <ReducerBuilderData>{ rank: 1 },
   titleData: { NAME: 'jim' },
@@ -43,6 +44,10 @@ describe('PageInstance', () => {
 
   it('should contain the correct mutex', () => {
     expect(instance.mutex).to.be.equals('1');
+  });
+
+  it('should contain the correct parent', () => {
+    expect(instance.parent).to.be.equals('2');
   });
 
   it('should contain the correct path', () => {

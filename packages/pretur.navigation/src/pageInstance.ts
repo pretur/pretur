@@ -36,12 +36,16 @@ export class PageInstance<TProps, TState, TReducerBuilderData> implements Reduci
     };
   }
 
+  public get path(): string {
+    return this.params.descriptor.path;
+  }
+
   public get mutex(): string {
     return this.params.instantiationData.mutex;
   }
 
-  public get path(): string {
-    return this.params.descriptor.path;
+  public get parent(): string | undefined {
+    return this.params.instantiationData.parent;
   }
 
   public get title(): I18nBundle {

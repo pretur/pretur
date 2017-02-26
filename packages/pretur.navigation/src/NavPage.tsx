@@ -5,6 +5,7 @@ import { Navigator } from './navigator';
 
 export interface NavPagePassedProps<TState> {
   mutex: string;
+  parent: string | undefined;
   path: string;
   state: TState;
   title: I18nBundle;
@@ -17,7 +18,7 @@ export interface NavPageProps {
 }
 
 export function NavPage(
-  {navigator, mutex}: NavPageProps,
+  { navigator, mutex }: NavPageProps,
 ): React.ReactElement<NavPagePassedProps<any>> {
   const page = navigator.pageFromMutex(mutex) || navigator.active;
   if (!page) {
@@ -28,6 +29,7 @@ export function NavPage(
   return (
     <Component
       mutex={page.mutex}
+      parent={page.parent}
       path={page.path}
       state={page.state}
       title={page.title}

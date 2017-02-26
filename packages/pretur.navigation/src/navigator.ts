@@ -28,6 +28,7 @@ export interface PageReplaceOptions {
 export interface PageOpenOptions {
   path: string;
   mutex: string;
+  parent?: string;
   reducerBuilderData?: any;
   titleData?: any;
   insertAfterMutex?: string;
