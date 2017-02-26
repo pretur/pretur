@@ -30,17 +30,17 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.sync",
   "dependencies": {
     "@types/bluebird": "^3.0.37",
-    "@types/lodash": "^4.14.52",
+    "@types/lodash": "^4.14.53",
     "@types/node": "^7.0.5",
     "bluebird": "^3.4.7",
     "lodash": "^4.17.4",
     "pretur.fetch": "^0.13.0",
     "pretur.i18n": "^0.13.0",
     "pretur.validation": "^0.13.0",
-    "tslib": "^1.5.0"
+    "tslib": "^1.6.0"
   },
   "devDependencies": {
-    "rimraf": "^2.6.0",
-    "typescript": "^2.3.0-dev.20170219"
+    "rimraf": "^2.6.1",
+    "typescript": "^2.3.0-dev.20170225"
   }
 }
