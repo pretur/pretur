@@ -87,6 +87,73 @@ describe('Navigator', () => {
         check(nav, ['a/d/e'], '1');
       });
 
+      it('should insert a page after a given index and set active page to it', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '4', path: 'f', insertAfterMutex: '2' });
+
+        check(nav, ['a/d/e', 'f', 'f', 'a/d/e'], '4');
+
+        nav.open(dispatch, { mutex: '5', path: 'f', parent: '3', insertAfterMutex: '3' });
+
+        check(nav, ['a/d/e', 'f', 'f', 'a/d/e', 'f'], '5');
+
+        nav.open(dispatch, { mutex: '6', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '7', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'f', 'a/d/e', 'f', 'a/d/e', 'a/d/e'], '7');
+
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '3', insertAfterMutex: '6' });
+
+        check(nav, ['a/d/e', 'f', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '8');
+      });
+
+      it('should throw when opening a page with invalid parent', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        expect(() => nav.open(dispatch, { mutex: '3', path: 'a/d/e', parent: '2' })).to.throw();
+      });
+
+      it('should throw when opening a page as a child of itself', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        expect(() => nav.open(dispatch, { mutex: '2', path: 'a/d/e', parent: '2' })).to.throw();
+      });
+
+      it('should throw when trying to nest more than one level', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'a/d/e', parent: '1' });
+        expect(() => nav.open(dispatch, { mutex: '3', path: 'a/d/e', parent: '2' })).to.throw();
+      });
+
+      it('should throw when trying to insert a page before parent', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+        expect(() =>
+          nav.open(dispatch, { mutex: '4', path: 'f', parent: '3', insertAfterMutex: '2' }),
+        ).to.throw();
+      });
+
       it('should ignore pages with unknown path', () => {
         persist.clear('ADMIN');
         let nav = navigator;
@@ -113,8 +180,9 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
 
         nav.open(dispatch, { mutex: '4', path: 'a/g/e' });
+        nav.open(dispatch, { mutex: '5', path: 'f', parent: '4' });
 
-        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/g/e'], '4', false);
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/g/e', 'f'], '5', false);
         checkStore(nav, ['a/d/e', 'f', 'a/d/e'], '3');
       });
 
@@ -124,7 +192,7 @@ describe('Navigator', () => {
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
-        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '2', path: 'f', parent: '1' });
         nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
 
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
@@ -146,6 +214,28 @@ describe('Navigator', () => {
         nav.replace(dispatch, '2', { mutex: '1', path: 'a/d/e' });
 
         check(nav, ['a/d/e'], '1');
+      });
+
+      it('should throw when replacing with a page with different parent', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e', parent: '1' });
+
+        expect(
+          () => nav.replace(dispatch, '3', { mutex: '4', path: 'a/d/e', parent: '2' }),
+        ).to.throw();
+
+        expect(
+          () => nav.replace(dispatch, '3', { mutex: '4', path: 'a/d/e' }),
+        ).to.throw();
+
+        expect(
+          () => nav.replace(dispatch, '2', { mutex: '4', path: 'a/d/e', parent: '1' }),
+        ).to.throw();
       });
 
       it('should transit to pages with already open mutex instead', () => {
@@ -180,6 +270,25 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'a/d/e', 'a/d/e'], '4');
       });
 
+      it('should properly replace an already open page with children', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'f', parent: '2' });
+        nav.open(dispatch, { mutex: '4', path: 'a/d/e', parent: '2' });
+        nav.open(dispatch, { mutex: '5', path: 'f', parent: '2' });
+        nav.open(dispatch, { mutex: '6', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'f', 'a/d/e', 'f', 'a/d/e'], '6');
+
+        nav.replace(dispatch, '2', { mutex: '7', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'a/d/e', 'a/d/e'], '7');
+      });
+
       it('should ignore pages with unknown path', () => {
         persist.clear('ADMIN');
         let nav = navigator;
@@ -194,21 +303,22 @@ describe('Navigator', () => {
         expect(nav).to.be.equals(navigator);
       });
 
-      it('should leave store unchanged when replacing non persistent pages', () => { //
+      it('should remove the replaced page from store when the new page is not persistent', () => {
         persist.clear('ADMIN');
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
         nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '2.5', path: 'f', parent: '2' });
         nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
 
-        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+        check(nav, ['a/d/e', 'f', 'f', 'a/d/e'], '3');
 
         nav.replace(dispatch, '2', { mutex: '4', path: 'a/g/e' });
 
         check(nav, ['a/d/e', 'a/g/e', 'a/d/e'], '4', false);
-        checkStore(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+        checkStore(nav, ['a/d/e', 'a/d/e'], '3');
       });
 
     });
@@ -308,7 +418,7 @@ describe('Navigator', () => {
         nav = navigator;
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
         nav.open(dispatch, { mutex: '2', path: 'f' });
-        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e', parent: '2' });
 
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
       });
@@ -363,7 +473,7 @@ describe('Navigator', () => {
         nav = navigator;
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
         nav.open(dispatch, { mutex: '2', path: 'f' });
-        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e', parent: '2' });
 
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
         nav.clear(dispatch);
@@ -402,7 +512,7 @@ describe('Navigator', () => {
         persist.save('ADMIN', [
           { mutex: '1', path: 'a/d/e' },
           { mutex: '2', path: 'f' },
-          { mutex: '3', path: 'a/d/e' },
+          { mutex: '3', path: 'a/d/e', parent: '2' },
         ]);
         persist.saveActivePage('ADMIN', '3');
 
@@ -418,7 +528,7 @@ describe('Navigator', () => {
         persist.save('ADMIN', [
           { mutex: '1', path: 'a/d/e' },
           { mutex: '2', path: 'blah!' },
-          { mutex: '3', path: 'a/d/e' },
+          { mutex: '3', path: 'a/d/e', parent: '1' },
         ]);
         persist.saveActivePage('ADMIN', '2');
 
@@ -726,11 +836,11 @@ describe('Navigator', () => {
       nav.open(dispatch, { mutex: '8', path: 'a/d/e', parent: '5' });
       nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '5' });
       nav.open(dispatch, { mutex: '10', path: 'f' });
-      nav.open(dispatch, { mutex: '11', path: 'a/d/e', parent: '8' });
-      nav.open(dispatch, { mutex: '12', path: 'a/d/e', parent: '8' });
-      nav.open(dispatch, { mutex: '13', path: 'a/d/e', parent: '8' });
-      nav.open(dispatch, { mutex: '14', path: 'a/d/e', parent: '8' });
-      nav.open(dispatch, { mutex: '15', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '11', path: 'a/d/e', parent: '10' });
+      nav.open(dispatch, { mutex: '12', path: 'a/d/e', parent: '10' });
+      nav.open(dispatch, { mutex: '13', path: 'a/d/e', parent: '10' });
+      nav.open(dispatch, { mutex: '14', path: 'a/d/e', parent: '10' });
+      nav.open(dispatch, { mutex: '15', path: 'a/d/e', parent: '10' });
 
       nav.transit(dispatch, '6');
       expect(nav.indexAsChildOfActiveRoot).to.be.equals(0);

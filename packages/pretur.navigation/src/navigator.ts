@@ -1,5 +1,5 @@
 import { Reducible, Action, Dispatch } from 'pretur.redux';
-import { indexOf, omit, without } from 'lodash';
+import { indexOf, omit, without, keyBy } from 'lodash';
 import { PageInstance } from './pageInstance';
 import { Pages, PageInstantiationData } from './pages';
 import { load, clear, loadActivePage, save, saveActivePage } from './persist';
@@ -51,9 +51,34 @@ function cloneInstances(oldInstances: Instances): Instances {
 function openPage(instances: Instances, options: PageOpenOptions, pages: Pages): Instances {
   const newInstances = cloneInstances(instances);
   const { insertAfterMutex, ...instantiationData } = options;
+  const insertAfterIndex = indexOf(newInstances.pageOrder, insertAfterMutex);
+
+  if (instantiationData.parent) {
+    if (instantiationData.parent === instantiationData.mutex) {
+      throw new Error(`${instantiationData.mutex} cannot be child of itself.`);
+    }
+
+    if (!instances.pages[instantiationData.parent]) {
+      throw new Error(`Parent of ${instantiationData.mutex} is invalid.`);
+    }
+
+    if (
+      insertAfterIndex !== -1 &&
+      insertAfterIndex < instances.pageOrder.indexOf(instantiationData.parent)
+    ) {
+      throw new Error(
+        `Cannot open ${instantiationData.mutex}. Cannot be inserted before the parent.`,
+      );
+    }
+
+    if (instances.pages[instantiationData.parent].parent) {
+      throw new Error(
+        `Cannot open ${instantiationData.mutex}. Nesting more than one level is forbidden.`,
+      );
+    }
+  }
 
   const newPage = pages.buildInstance(instantiationData);
-  const insertAfterIndex = indexOf(newInstances.pageOrder, insertAfterMutex);
 
   if (insertAfterIndex !== -1) {
     newInstances.pageOrder.splice(insertAfterIndex + 1, 0, instantiationData.mutex);
@@ -66,23 +91,43 @@ function openPage(instances: Instances, options: PageOpenOptions, pages: Pages):
   return newInstances;
 }
 
+function closePage(instances: Instances, toRemoveMutex: string): Instances {
+  const newPages = orderedPages(instances).filter(page => {
+    if (page.mutex === toRemoveMutex) {
+      return false;
+    }
+
+    return page.parent !== toRemoveMutex;
+  });
+
+  return {
+    pageOrder: newPages.map(page => page.mutex),
+    pages: keyBy(newPages, page => page.mutex),
+  };
+}
+
 function replacePage(instances: Instances, options: PageReplaceOptions, pages: Pages): Instances {
   const { toRemoveMutex, ...instantiationData } = options;
-  const toRemoveIndex = indexOf(instances.pageOrder, toRemoveMutex);
+  const toInsertIndex = indexOf(instances.pageOrder, toRemoveMutex);
 
-  if (toRemoveIndex === -1) {
+  if (toInsertIndex === -1) {
     return openPage(instances, instantiationData, pages);
   }
 
+  if (instantiationData.parent !== instances.pages[toRemoveMutex].parent) {
+    throw new Error(
+      `Cannot open ${instantiationData.mutex}. ` +
+      'The new page and the page to be removed must have the same parent.',
+    );
+  }
+
   const newPage = pages.buildInstance(instantiationData);
+  const newInstances = closePage(instances, toRemoveMutex);
 
-  const newPageOrder = [...instances.pageOrder];
-  newPageOrder.splice(toRemoveIndex, 1, instantiationData.mutex);
+  newInstances.pageOrder.splice(toInsertIndex, 0, instantiationData.mutex);
+  newInstances.pages[instantiationData.mutex] = newPage;
 
-  const newPages = <InstanceMap>omit(instances.pages, toRemoveMutex);
-  newPages[instantiationData.mutex] = newPage;
-
-  return { pageOrder: newPageOrder, pages: newPages };
+  return newInstances;
 }
 
 export class Navigator implements Reducible {
@@ -168,10 +213,49 @@ export class Navigator implements Reducible {
     return typeof mutex === 'string' ? this._instances.pages[mutex] : undefined;
   }
 
+  private persistInstances(instances: Instances): void {
+    const toSave: PageInstantiationData<any>[] = [];
+
+    for (const instance of orderedPages(instances)) {
+      if (instance.descriptor.persistent !== false) {
+        if (instance.parent) {
+          if (instances.pages[instance.parent].descriptor.persistent !== false) {
+            toSave.push(instance.instantiationData);
+          }
+        } else {
+          toSave.push(instance.instantiationData);
+        }
+      }
+    }
+
+    save(this._prefix, toSave);
+  }
+
+  private persistActivePage(instances: Instances, mutex: string | undefined): void {
+    if (!mutex) {
+      saveActivePage(this._prefix, undefined);
+      return;
+    }
+
+    if (instances.pages[mutex].descriptor.persistent !== false) {
+      const parentMutex = instances.pages[mutex].parent;
+
+      if (parentMutex) {
+        const parent = instances.pages[parentMutex];
+
+        if (parent.descriptor.persistent !== false) {
+          saveActivePage(this._prefix, mutex);
+        }
+      } else {
+        saveActivePage(this._prefix, mutex);
+      }
+    }
+  }
+
   public reduce(action: Action<any, any>): this {
     if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
       if (typeof action.payload !== 'number' && typeof action.payload !== 'string') {
-        saveActivePage(this._prefix, undefined);
+        this.persistActivePage(this._instances, undefined);
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
         return newNav;
@@ -186,9 +270,7 @@ export class Navigator implements Reducible {
 
       if (mutex) {
 
-        if (this._instances.pages[mutex].descriptor.persistent !== false) {
-          saveActivePage(this._prefix, mutex);
-        }
+        this.persistActivePage(this._instances, mutex);
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
@@ -200,32 +282,31 @@ export class Navigator implements Reducible {
     }
 
     if (NAVIGATION_OPEN_PAGE.is(this._prefix, action)) {
-      if (action.payload && this._instances.pages[action.payload.mutex]) {
+      if (!action.payload) {
+        return this;
+      }
 
-        if (this._instances.pages[action.payload.mutex].descriptor.persistent !== false) {
-          saveActivePage(this._prefix, action.payload.mutex);
-        }
+      const { mutex, path } = action.payload;
+
+      if (this._instances.pages[mutex]) {
+
+        this.persistActivePage(this._instances, mutex);
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
-        newNav._activePageMutex = action.payload.mutex;
+        newNav._activePageMutex = mutex;
         return newNav;
       }
 
-      if (action.payload && this._pages.hasPage(action.payload.path)) {
+      if (this._pages.hasPage(path)) {
         const newInstances = openPage(this._instances, action.payload, this._pages);
 
-        if (this._pages.getPage(action.payload.path).persistent !== false) {
-          save(this._prefix, orderedPages(newInstances)
-            .filter(instance => instance.descriptor.persistent !== false)
-            .map(instance => instance.instantiationData),
-          );
-          saveActivePage(this._prefix, action.payload.mutex);
-        }
+        this.persistInstances(newInstances);
+        this.persistActivePage(newInstances, mutex);
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = newInstances;
-        newNav._activePageMutex = action.payload.mutex;
+        newNav._activePageMutex = mutex;
         return newNav;
       }
       return this;
@@ -240,9 +321,7 @@ export class Navigator implements Reducible {
 
       if (this._instances.pages[mutex]) {
 
-        if (this._instances.pages[mutex].descriptor.persistent !== false) {
-          saveActivePage(this._prefix, mutex);
-        }
+        this.persistActivePage(this._instances, mutex);
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
@@ -253,13 +332,8 @@ export class Navigator implements Reducible {
       if (this._pages.hasPage(path)) {
         const newInstances = replacePage(this._instances, action.payload, this._pages);
 
-        if (this._pages.getPage(path).persistent !== false) {
-          save(this._prefix, orderedPages(newInstances)
-            .filter(instance => instance.descriptor.persistent !== false)
-            .map(instance => instance.instantiationData),
-          );
-          saveActivePage(this._prefix, mutex);
-        }
+        this.persistInstances(newInstances);
+        this.persistActivePage(newInstances, mutex);
 
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = newInstances;
@@ -295,15 +369,8 @@ export class Navigator implements Reducible {
           }
           const targetMutex: string | undefined = this._instances.pageOrder[targetIndex];
 
-          if (
-            targetMutex &&
-            this._instances.pages[targetMutex] &&
-            this._instances.pages[targetMutex].descriptor.persistent !== false
-          ) {
-            saveActivePage(this._prefix, targetMutex);
-          } else {
-            saveActivePage(this._prefix, undefined);
-          }
+          this.persistActivePage(this._instances, undefined);
+          this.persistActivePage(this._instances, targetMutex);
 
           newNav._activePageMutex = targetMutex;
         }
@@ -313,12 +380,7 @@ export class Navigator implements Reducible {
           pages: <InstanceMap>omit(this._instances.pages, mutex),
         };
 
-        if (this._instances.pages[mutex].descriptor.persistent !== false) {
-          save(this._prefix, orderedPages(newInstances)
-            .filter(instance => instance.descriptor.persistent !== false)
-            .map(instance => instance.instantiationData),
-          );
-        }
+        this.persistInstances(newInstances);
 
         newNav._instances = newInstances;
         return newNav;
