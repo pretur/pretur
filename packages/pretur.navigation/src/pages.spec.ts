@@ -46,11 +46,47 @@ const tree: PageTreeRoot = {
 describe('buildPage', () => {
 
   it('should properly build a page', () => {
+    const page = buildPage(component, reducerBuilder, 'A');
+    expect(page.component).to.be.equals(component);
+    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
+    expect(page.titleKey).to.be.equals('A');
+    expect(page.hidden).to.be.equals(false);
+    expect(page.persistent).to.be.equals(true);
+  });
+
+  it('should properly build a page with dynamic=false', () => {
+    const page = buildPage(component, reducerBuilder, 'A', false);
+    expect(page.component).to.be.equals(component);
+    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
+    expect(page.titleKey).to.be.equals('A');
+    expect(page.hidden).to.be.equals(false);
+    expect(page.persistent).to.be.equals(true);
+  });
+
+  it('should properly build a page with dynamic=true', () => {
     const page = buildPage(component, reducerBuilder, 'A', true);
     expect(page.component).to.be.equals(component);
     expect(page.reducerBuilder).to.be.equals(reducerBuilder);
     expect(page.titleKey).to.be.equals('A');
     expect(page.hidden).to.be.equals(true);
+    expect(page.persistent).to.be.equals(false);
+  });
+
+  it('should properly build a page with hidden=true, persistent=true', () => {
+    const page = buildPage(component, reducerBuilder, 'A', true, true);
+    expect(page.component).to.be.equals(component);
+    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
+    expect(page.titleKey).to.be.equals('A');
+    expect(page.hidden).to.be.equals(true);
+    expect(page.persistent).to.be.equals(true);
+  });
+
+  it('should properly build a page with hidden=false, persistent=false', () => {
+    const page = buildPage(component, reducerBuilder, 'A', false, false);
+    expect(page.component).to.be.equals(component);
+    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
+    expect(page.titleKey).to.be.equals('A');
+    expect(page.hidden).to.be.equals(false);
     expect(page.persistent).to.be.equals(false);
   });
 

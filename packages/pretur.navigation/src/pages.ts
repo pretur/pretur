@@ -27,14 +27,53 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
   component: ComponentClass<TProps> | StatelessComponent<TProps>,
   reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
   titleKey: string,
-  dynamic = false,
+): Page<TProps, TState, TReducerBuilderData>;
+export function buildPage<TProps, TState, TReducerBuilderData>(
+  component: ComponentClass<TProps> | StatelessComponent<TProps>,
+  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
+  titleKey: string,
+  dynamic: boolean,
+): Page<TProps, TState, TReducerBuilderData>;
+export function buildPage<TProps, TState, TReducerBuilderData>(
+  component: ComponentClass<TProps> | StatelessComponent<TProps>,
+  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
+  titleKey: string,
+  hidden: boolean,
+  persistent: boolean,
+): Page<TProps, TState, TReducerBuilderData>;
+export function buildPage<TProps, TState, TReducerBuilderData>(
+  component: ComponentClass<TProps> | StatelessComponent<TProps>,
+  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
+  titleKey: string,
+  dynamicOrHidden?: boolean,
+  persistent?: boolean,
 ): Page<TProps, TState, TReducerBuilderData> {
+  if (typeof dynamicOrHidden === 'boolean') {
+    if (typeof persistent === 'boolean') {
+      return {
+        component,
+        reducerBuilder,
+        titleKey,
+        hidden: dynamicOrHidden,
+        persistent,
+      };
+    }
+
+    return {
+      component,
+      reducerBuilder,
+      titleKey,
+      hidden: dynamicOrHidden,
+      persistent: !dynamicOrHidden,
+    };
+
+  }
   return {
     component,
     reducerBuilder,
     titleKey,
-    hidden: dynamic,
-    persistent: !dynamic,
+    hidden: false,
+    persistent: true,
   };
 }
 
