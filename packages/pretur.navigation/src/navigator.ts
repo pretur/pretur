@@ -1,5 +1,5 @@
 import { Reducible, Action, Dispatch } from 'pretur.redux';
-import { indexOf, omit, without, keyBy } from 'lodash';
+import { keyBy } from 'lodash';
 import { PageInstance } from './pageInstance';
 import { Pages, PageInstantiationData } from './pages';
 import { load, clear, loadActivePage, save, saveActivePage } from './persist';
@@ -51,7 +51,7 @@ function cloneInstances(oldInstances: Instances): Instances {
 function openPage(instances: Instances, options: PageOpenOptions, pages: Pages): Instances {
   const newInstances = cloneInstances(instances);
   const { insertAfterMutex, ...instantiationData } = options;
-  const insertAfterIndex = indexOf(newInstances.pageOrder, insertAfterMutex);
+  const insertAfterIndex = insertAfterMutex ? newInstances.pageOrder.indexOf(insertAfterMutex) : -1;
 
   if (instantiationData.parent) {
     if (instantiationData.parent === instantiationData.mutex) {
@@ -106,9 +106,34 @@ function closePage(instances: Instances, toRemoveMutex: string): Instances {
   };
 }
 
+function findClosePageTarget(instances: Instances, toRemoveMutex: string): string | undefined {
+  if (instances.pageOrder.length < 2) {
+    return;
+  }
+
+  const toRemove = instances.pages[toRemoveMutex];
+
+  if (!toRemove.parent) {
+    const roots = orderedPages(instances).filter(page => !page.parent).map(page => page.mutex);
+    const toRemoveIndex = roots.indexOf(toRemoveMutex);
+    return toRemoveIndex === 0 ? roots[1] : roots[toRemoveIndex - 1];
+  }
+
+  const parentChildren = orderedPages(instances)
+    .filter(page => page.parent === toRemove.parent)
+    .map(page => page.mutex);
+
+  if (parentChildren.length === 1) {
+    return toRemove.parent;
+  }
+
+  const toRemoveIndex = parentChildren.indexOf(toRemoveMutex);
+  return toRemoveIndex === 0 ? parentChildren[1] : parentChildren[toRemoveIndex - 1];
+}
+
 function replacePage(instances: Instances, options: PageReplaceOptions, pages: Pages): Instances {
   const { toRemoveMutex, ...instantiationData } = options;
-  const toInsertIndex = indexOf(instances.pageOrder, toRemoveMutex);
+  const toInsertIndex = instances.pageOrder.indexOf(toRemoveMutex);
 
   if (toInsertIndex === -1) {
     return openPage(instances, instantiationData, pages);
@@ -348,14 +373,7 @@ export class Navigator implements Reducible {
       newNav._activePageMutex = this._activePageMutex;
 
       if (this._activePageMutex === action.payload) {
-        const index = this._instances.pageOrder.indexOf(action.payload);
-        let targetIndex: number;
-        if (index > 0) {
-          targetIndex = index - 1;
-        } else {
-          targetIndex = 1;
-        }
-        const targetMutex: string | undefined = this._instances.pageOrder[targetIndex];
+        const targetMutex = findClosePageTarget(this._instances, action.payload);
 
         this.persistActivePage(this._instances, undefined);
         this.persistActivePage(this._instances, targetMutex);
@@ -363,10 +381,7 @@ export class Navigator implements Reducible {
         newNav._activePageMutex = targetMutex;
       }
 
-      const newInstances: Instances = {
-        pageOrder: without(this._instances.pageOrder, action.payload),
-        pages: <InstanceMap>omit(this._instances.pages, action.payload),
-      };
+      const newInstances = closePage(this._instances, action.payload);
 
       this.persistInstances(newInstances);
 

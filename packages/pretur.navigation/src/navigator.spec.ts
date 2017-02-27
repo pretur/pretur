@@ -45,6 +45,11 @@ const tree: PageTreeRoot = {
     component,
     reducerBuilder,
   },
+  'k': {
+    titleKey: 'F',
+    component,
+    reducerBuilder,
+  },
 };
 
 const navigator = new Navigator(new Pages(tree), 'ADMIN');
@@ -356,6 +361,7 @@ describe('Navigator', () => {
 
       it('should ignore if the mutex is not open', () => {
         const previousNav = nav;
+        nav.close(dispatch, undefined!);
         nav.close(dispatch, 'blah');
         expect(previousNav).to.be.equals(nav);
       });
@@ -368,6 +374,21 @@ describe('Navigator', () => {
         nav.close(dispatch, '1');
         nav.close(dispatch, '1');
         check(nav, ['f'], '4');
+      });
+
+      it('should close the page and all it\'s children', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '8', path: 'a/d/e', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'f' });
+        nav.open(dispatch, { mutex: '10', path: 'a/d/e', parent: '9' });
+        nav.transit(dispatch, '4');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e', 'f', 'a/d/e'], '4');
+        nav.close(dispatch, '5');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e'], '4');
+        nav.close(dispatch, '9');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '4');
       });
 
       it('should leave store unchanged when closing non persistent pages', () => {
@@ -393,6 +414,13 @@ describe('Navigator', () => {
         checkStore(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '4');
       });
 
+      it('should leave store unchanged when closing pages with non persistent parent', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/g/e' });
+        nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/g/e', 'a/d/e'], '6', false);
+        checkStore(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '4');
+      });
+
       it('should clear active page when active page targets a non persistent page', () => {
         nav.open(dispatch, { mutex: '5', path: 'a/g/e' });
         nav.open(dispatch, { mutex: '6', path: 'a/d/e' });
@@ -413,6 +441,84 @@ describe('Navigator', () => {
         check(nav, ['f', 'a/d/e'], '2');
         nav.close(dispatch, '2');
         check(nav, ['a/d/e'], '3');
+      });
+
+      it('should properly change the active page when there are nesting present', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '8', path: 'a/d/e' });
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e'], '8');
+        nav.close(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f'], '5');
+      });
+
+      it('should properly change the active page when there are nesting present (messy)', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'a/d/e' });
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '9');
+        nav.close(dispatch, '9');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f'], '7');
+      });
+
+      it('should properly change the active page when it\' the only child', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'a/d/e' });
+        nav.transit(dispatch, '6');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '6');
+        nav.close(dispatch, '6');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'a/d/e'], '5');
+      });
+
+      it('should properly change the active page when it\'s the only child (messy)', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '7', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'a/d/e' });
+        nav.transit(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'a/d/e', 'a/d/e', 'f', 'a/d/e'], '8');
+        nav.close(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'a/d/e', 'a/d/e', 'a/d/e'], '5');
+      });
+
+      it('should properly change the active page when it has siblings', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'a/d/e' });
+        nav.transit(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'f', 'a/d/e'], '8');
+        nav.close(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e'], '7');
+        nav.transit(dispatch, '6');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e'], '6');
+        nav.close(dispatch, '6');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '7');
+      });
+
+      it('should properly change the active page when it has siblings (messy)', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: 'a', path: 'k' });
+        nav.open(dispatch, { mutex: '7', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: 'b', path: 'k' });
+        nav.open(dispatch, { mutex: 'c', path: 'k' });
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'k' });
+        nav.transit(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'k', 'f', 'k', 'k', 'f', 'k'], '8');
+        nav.close(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'k', 'f', 'k', 'k', 'k'], '7');
+        nav.transit(dispatch, '6');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'k', 'f', 'k', 'k', 'k'], '6');
+        nav.close(dispatch, '6');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'k', 'f', 'k', 'k', 'k'], '7');
       });
 
       it('should set active page to undefined if all pages are closed', () => {
