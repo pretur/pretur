@@ -372,8 +372,14 @@ export class Navigator implements Reducible {
       const newNav = <this>new Navigator(this._pages, this._prefix);
       newNav._activePageMutex = this._activePageMutex;
 
-      if (this._activePageMutex === action.payload) {
-        const targetMutex = findClosePageTarget(this._instances, action.payload);
+      const isParentOfActive = this._activePageMutex &&
+        this._instances.pages[this._activePageMutex].parent === action.payload;
+
+      if (this._activePageMutex === action.payload || isParentOfActive) {
+        const targetMutex = findClosePageTarget(
+          this._instances,
+          isParentOfActive ? this._instances.pages[this._activePageMutex!].parent! : action.payload,
+        );
 
         this.persistActivePage(this._instances, undefined);
         this.persistActivePage(this._instances, targetMutex);

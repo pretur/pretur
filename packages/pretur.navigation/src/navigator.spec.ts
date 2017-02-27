@@ -521,6 +521,18 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'k', 'f', 'k', 'k', 'k'], '7');
       });
 
+      it('should properly change the active page when it is the parent of active', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'a/d/e' });
+        nav.transit(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'f', 'a/d/e'], '8');
+        nav.close(dispatch, '5');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '4');
+      });
+
       it('should set active page to undefined if all pages are closed', () => {
         nav.close(dispatch, '1');
         nav.close(dispatch, '2');
