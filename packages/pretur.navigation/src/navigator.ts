@@ -254,35 +254,31 @@ export class Navigator implements Reducible {
 
   public reduce(action: Action<any, any>): this {
     if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
-      if (typeof action.payload !== 'number' && typeof action.payload !== 'string') {
+      if (action.payload === this._activePageMutex) {
+        return this;
+      }
+
+      if (!action.payload) {
         this.persistActivePage(this._instances, undefined);
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
         return newNav;
       }
-      let mutex: string | undefined;
 
-      if (typeof action.payload === 'string' && this._instances.pages[action.payload]) {
-        mutex = action.payload;
-      } else {
-        mutex = this._instances.pageOrder[Number(action.payload)];
+      if (!this._instances.pages[action.payload]) {
+        return this;
       }
 
-      if (mutex) {
+      this.persistActivePage(this._instances, action.payload);
 
-        this.persistActivePage(this._instances, mutex);
-
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = this._instances;
-        newNav._activePageMutex = mutex;
-        return newNav;
-      }
-
-      return this;
+      const newNav = <this>new Navigator(this._pages, this._prefix);
+      newNav._instances = this._instances;
+      newNav._activePageMutex = action.payload;
+      return newNav;
     }
 
     if (NAVIGATION_OPEN_PAGE.is(this._prefix, action)) {
-      if (!action.payload) {
+      if (!action.payload || action.payload.mutex === this._activePageMutex) {
         return this;
       }
 
@@ -344,48 +340,38 @@ export class Navigator implements Reducible {
     }
 
     if (NAVIGATION_CLOSE_PAGE.is(this._prefix, action)) {
-      if (typeof action.payload !== 'number' && typeof action.payload !== 'string') {
+      if (!action.payload || !this._instances.pages[action.payload]) {
         return this;
       }
-      let mutex: string | undefined;
 
-      if (typeof action.payload === 'string' && this._instances.pages[action.payload]) {
-        mutex = action.payload;
-      } else {
-        mutex = this._instances.pageOrder[Number(action.payload)];
-      }
+      const newNav = <this>new Navigator(this._pages, this._prefix);
+      newNav._activePageMutex = this._activePageMutex;
 
-      if (mutex) {
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._activePageMutex = this._activePageMutex;
-
-        if (this._activePageMutex === mutex) {
-          const index = this._instances.pageOrder.indexOf(mutex);
-          let targetIndex: number;
-          if (index > 0) {
-            targetIndex = index - 1;
-          } else {
-            targetIndex = 1;
-          }
-          const targetMutex: string | undefined = this._instances.pageOrder[targetIndex];
-
-          this.persistActivePage(this._instances, undefined);
-          this.persistActivePage(this._instances, targetMutex);
-
-          newNav._activePageMutex = targetMutex;
+      if (this._activePageMutex === action.payload) {
+        const index = this._instances.pageOrder.indexOf(action.payload);
+        let targetIndex: number;
+        if (index > 0) {
+          targetIndex = index - 1;
+        } else {
+          targetIndex = 1;
         }
+        const targetMutex: string | undefined = this._instances.pageOrder[targetIndex];
 
-        const newInstances: Instances = {
-          pageOrder: without(this._instances.pageOrder, mutex),
-          pages: <InstanceMap>omit(this._instances.pages, mutex),
-        };
+        this.persistActivePage(this._instances, undefined);
+        this.persistActivePage(this._instances, targetMutex);
 
-        this.persistInstances(newInstances);
-
-        newNav._instances = newInstances;
-        return newNav;
+        newNav._activePageMutex = targetMutex;
       }
-      return this;
+
+      const newInstances: Instances = {
+        pageOrder: without(this._instances.pageOrder, action.payload),
+        pages: <InstanceMap>omit(this._instances.pages, action.payload),
+      };
+
+      this.persistInstances(newInstances);
+
+      newNav._instances = newInstances;
+      return newNav;
     }
 
     if (NAVIGATION_LOAD_PAGES.is(this._prefix, action)) {

@@ -87,6 +87,22 @@ describe('Navigator', () => {
         check(nav, ['a/d/e'], '1');
       });
 
+      it('should ignore when the target is the current page', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        check(nav, ['a/d/e'], '1');
+
+        const previousNav = nav;
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        check(nav, ['a/d/e'], '1');
+
+        expect(nav).to.be.equals(previousNav);
+      });
+
       it('should insert a page after a given index and set active page to it', () => {
         persist.clear('ADMIN');
         let nav = navigator;
@@ -426,6 +442,13 @@ describe('Navigator', () => {
       it('should ignore if the mutex is not open', () => {
         const previousNav = nav;
         nav.transit(dispatch, 'blah');
+        expect(previousNav).to.be.equals(nav);
+      });
+
+      it('should ignore when the target is the current page', () => {
+        const previousNav = nav;
+        nav.transit(dispatch, '3');
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
         expect(previousNav).to.be.equals(nav);
       });
 
