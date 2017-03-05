@@ -403,6 +403,7 @@ describe('relation', () => {
         expect(injected.attributes[0].name).to.be.equals('masterId');
         expect(injected.attributes[0].type).to.be.instanceof(IntegerType);
         expect(injected.attributes[0].unique).to.be.equals(true);
+        expect(injected.attributes[0].primary).to.be.equals(false);
       });
 
       it('should properly override the properties of relations and the fk attribute', () => {
