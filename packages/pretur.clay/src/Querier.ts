@@ -1,6 +1,6 @@
-import { isEqual, omit, compact } from 'lodash';
+import { isEqual, omit, compact, flatten, zip, fill, get, setWith, cloneDeep } from 'lodash';
 import { Reducible, Action, Dispatch } from 'pretur.redux';
-import { Query, QueryFilters, Ordering } from 'pretur.sync';
+import { Query, SubQuery, QueryFilters, Ordering } from 'pretur.sync';
 import { nextId } from './clay';
 import {
   CLAY_REFRESH,
@@ -11,6 +11,43 @@ import {
   CLAY_SET_QUERY_EXTRA,
   CLAY_SET_QUERIEIR_COUNT,
 } from './actions';
+
+function isPath(path?: string[]): boolean {
+  return Array.isArray(path) && path.length > 0;
+}
+
+export function getFilters(query: Query<any>, path?: string[]): QueryFilters<any> {
+  const target = isPath(path) ? getInclude(query, path) : query;
+  if (!target || !target.filters) {
+    return {};
+  }
+
+  return target.filters;
+}
+
+export function getInclude(query: Query<any>, path?: string[]): SubQuery<any> | undefined {
+  if (!isPath(path)) {
+    return;
+  }
+
+  const include = get(query, flatten(zip(fill(compact(path), 'include'), compact(path))));
+
+  if (include === true) {
+    return {};
+  }
+
+  if (!include) {
+    return;
+  }
+
+  return include;
+}
+
+export function setInclude<T>(query: Query<T>, include: SubQuery<any>, path?: string[]): void {
+  if (isPath(path)) {
+    setWith(query, flatten(zip(fill(compact(path), 'include'), compact(path))), include, Object);
+  }
+}
 
 export class Querier<T> implements Reducible {
   public readonly uniqueId: number;
@@ -46,15 +83,31 @@ export class Querier<T> implements Reducible {
     }
 
     if (CLAY_SET_QUERY_FILTERS.is(this.uniqueId, action)) {
-      if (isEqual(this.query.filters, action.payload)) {
+      if (!action.payload) {
         return this;
       }
 
-      const newQuery = omit<Query<T>, Query<T>>(this.query, 'filters');
+      const { path, filters } = action.payload;
 
-      if (action.payload) {
-        if (Object.keys(action.payload).length > 0) {
-          newQuery.filters = action.payload;
+      const target = isPath(path) ? getInclude(this.query, path) : this.query;
+
+      if (target && isEqual(target.filters, filters)) {
+        return this;
+      }
+
+      let newQuery: Query<T>;
+
+      if (isPath(path)) {
+        const include = omit<SubQuery<any>, any>(getInclude(this.query, path), 'filters');
+        if (filters) {
+          include.filters = filters;
+        }
+        newQuery = cloneDeep(this.query);
+        setInclude(newQuery, include, path);
+      } else {
+        newQuery = omit<Query<T>, Query<T>>(this.query, 'filters');
+        if (filters) {
+          newQuery.filters = filters;
         }
       }
 
@@ -134,26 +187,29 @@ export class Querier<T> implements Reducible {
     dispatch(CLAY_SET_QUERY_ATTRIBUTES.create.unicast(this.uniqueId, attributes));
   }
 
-  public resetFilters(dispatch: Dispatch, filters?: QueryFilters<T>): void {
-    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, filters));
+  public resetFilters(dispatch: Dispatch, filters?: QueryFilters<T>, path?: string[]): void {
+    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
   }
 
-  public setFilter(dispatch: Dispatch, field: keyof T, filter: any): void {
-    const newFilters = { ...(<any>this.query.filters) };
+  public setFilter(dispatch: Dispatch, field: keyof T, filter: any, path?: string[]): void {
+    const target = isPath(path) ? getInclude(this.query, path) : this.query;
+    const filters = target ? { ...target.filters } : {};
 
-    newFilters[field] = filter;
+    filters[field] = filter;
 
-    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, newFilters));
+    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
   }
 
-  public clearFilter(dispatch: Dispatch, field: keyof T): void {
-    if (!this.query.filters) {
+  public clearFilter(dispatch: Dispatch, field: keyof T, path?: string[]): void {
+    const target = isPath(path) ? getInclude(this.query, path) : this.query;
+
+    if (!target || !target.filters) {
       return;
     }
 
-    const newFilters = omit(this.query.filters, field);
+    const filters = omit(target.filters, field);
 
-    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, newFilters));
+    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
   }
 
   public setPagination(dispatch: Dispatch, skip = 0, take = 0): void {

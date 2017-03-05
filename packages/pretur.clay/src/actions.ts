@@ -13,6 +13,11 @@ export interface SetFieldPayload {
   value: any;
 }
 
+export interface SetFiltersPayload {
+  filters: QueryFilters<any>;
+  path?: string[];
+}
+
 export interface SetExtraPayload {
   extra: any;
   resetPagination: boolean;
@@ -53,8 +58,8 @@ export const CLAY_REFRESH: TargetedActionDescriptor<RefreshPayload, void>
 export const CLAY_SET_QUERY_ATTRIBUTES: TargetedActionDescriptor<string[], void>
   = createTargetedActionDescriptor<string[], void>('CLAY_SET_QUERY_ATTRIBUTES');
 
-export const CLAY_SET_QUERY_FILTERS: TargetedActionDescriptor<QueryFilters<any>, void>
-  = createTargetedActionDescriptor<QueryFilters<any>, void>('CLAY_SET_QUERY_FILTERS');
+export const CLAY_SET_QUERY_FILTERS: TargetedActionDescriptor<SetFiltersPayload, void>
+  = createTargetedActionDescriptor<SetFiltersPayload, void>('CLAY_SET_QUERY_FILTERS');
 
 export const CLAY_SET_QUERY_PAGINATION: TargetedActionDescriptor<QueryPagination, void>
   = createTargetedActionDescriptor<QueryPagination, void>('CLAY_SET_QUERY_PAGINATION');
