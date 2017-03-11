@@ -69,6 +69,7 @@ export interface InjectiveOptions<TSource, TTarget> {
   required?: boolean;
   unique?: boolean;
   primary?: boolean;
+  mutable?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   owner?: Owner;
@@ -275,15 +276,13 @@ function injective<TSource, TTarget>(
   });
 
   appendAttribute(model, {
-    mutable: false,
+    mutable: typeof options.mutable === 'boolean' ? options.mutable : !options.primary,
     name: options.foreignKey,
     owner: options.keyOwner || options.owner || model.owner,
     primary: options.primary || false,
     required: options.required || false,
     type: options.foreignKeyType || DataTypes.INTEGER(),
-    unique: typeof options.unique === 'boolean'
-      ? options.unique
-      : !options.primary,
+    unique: typeof options.unique === 'boolean' ? options.unique : !options.primary,
   });
 }
 

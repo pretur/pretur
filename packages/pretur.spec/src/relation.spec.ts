@@ -399,11 +399,11 @@ describe('relation', () => {
         expect(injected.relations[0].alias).to.be.equals('master');
         expect(injected.relations[0].type).to.be.equals('MASTER');
 
-        expect(injected.attributes[0].mutable).to.be.false;
+        expect(injected.attributes[0].mutable).to.be.true;
         expect(injected.attributes[0].name).to.be.equals('masterId');
         expect(injected.attributes[0].type).to.be.instanceof(IntegerType);
-        expect(injected.attributes[0].unique).to.be.equals(true);
-        expect(injected.attributes[0].primary).to.be.equals(false);
+        expect(injected.attributes[0].unique).to.be.true;
+        expect(injected.attributes[0].primary).to.be.false;
       });
 
       it('should properly override the properties of relations and the fk attribute', () => {
@@ -416,6 +416,7 @@ describe('relation', () => {
           alias: 'master',
           foreignKey: 'someId',
           foreignKeyType: DataTypes.STRING(),
+          mutable: false,
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'injected',
@@ -431,8 +432,8 @@ describe('relation', () => {
         expect(master.relations[0].model).to.be.equals('Injected');
         expect(master.relations[0].alias).to.be.equals('injected');
         expect(master.relations[0].key).to.be.equals('someId');
-        expect(master.relations[0].required).to.be.equals(true);
-        expect(master.relations[0].virtual).to.be.equals(true);
+        expect(master.relations[0].required).to.be.true;
+        expect(master.relations[0].virtual).to.be.true;
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
@@ -441,16 +442,37 @@ describe('relation', () => {
         expect(injected.relations[0].model).to.be.equals('Master');
         expect(injected.relations[0].alias).to.be.equals('master');
         expect(injected.relations[0].key).to.be.equals('someId');
-        expect(injected.relations[0].required).to.be.equals(true);
-        expect(injected.relations[0].virtual).to.be.equals(false);
+        expect(injected.relations[0].required).to.be.true;
+        expect(injected.relations[0].virtual).to.be.false;
         expect(injected.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(injected.relations[0].onUpdate).to.be.equals('NO ACTION');
 
         expect(injected.attributes[0].mutable).to.be.false;
         expect(injected.attributes[0].name).to.be.equals('someId');
         expect(injected.attributes[0].type).to.be.instanceof(StringType);
-        expect(injected.attributes[0].required).to.be.equals(true);
-        expect(injected.attributes[0].unique).to.be.equals(false);
+        expect(injected.attributes[0].required).to.be.true;
+        expect(injected.attributes[0].unique).to.be.false;
+      });
+
+      it('should properly override the fk attribute for primary case', () => {
+        const master = mockModel('Master');
+        const injected = mockModel('Injected');
+
+        createRelationBuilder(injected).injective({
+          alias: 'master',
+          foreignKey: 'someId',
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          ownAliasOnTarget: 'injected',
+          owner: 'owner',
+          primary: true,
+          target: mockUninitializedStateModel(master),
+          targetOwner: 'owner2',
+        });
+
+        expect(injected.attributes[0].mutable).to.be.false;
+        expect(injected.attributes[0].required).to.be.false;
+        expect(injected.attributes[0].unique).to.be.false;
       });
 
     });
