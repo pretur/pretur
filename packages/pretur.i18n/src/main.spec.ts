@@ -136,15 +136,7 @@ const frenchCompiler = buildCompiler('fr');
 
 const french = {
   locale: 'fr',
-  tree: {
-    a: {
-      b: {
-        c: {
-          de: frenchCompiler.constant('bonjour'),
-        },
-      },
-    },
-  },
+  tree: { a: { b: { c: { de: frenchCompiler.constant('bonjour') } } } },
 };
 
 describe('internationalize', () => {

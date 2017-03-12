@@ -16,12 +16,12 @@ export type Method = 'DELETE' | 'GET' | 'HEAD' | 'OPTIONS' | 'POST' | 'PUT';
 export type RequestMode = 'same-origin' | 'no-cors' | 'cors';
 export type RequestCredentials = 'omit' | 'same-origin' | 'include';
 export type RequestCache =
-  'default' |
-  'no-store' |
-  'reload' |
-  'no-cache' |
-  'force-cache' |
-  'only-if-cached';
+  | 'default'
+  | 'no-store'
+  | 'reload'
+  | 'no-cache'
+  | 'force-cache'
+  | 'only-if-cached';
 
 export interface RequestOptions {
   method?: Method | string;
