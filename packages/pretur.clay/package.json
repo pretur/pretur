@@ -29,8 +29,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.clay",
   "dependencies": {
-    "@types/bluebird": "^3.5.0",
-    "@types/lodash": "^4.14.55",
+    "@types/bluebird": "^3.5.2",
+    "@types/lodash": "^4.14.58",
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4",
     "pretur.fetch": "^0.15.2",
@@ -43,6 +43,6 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.3.0-dev.20170312"
+    "typescript": "^2.3.0-dev.20170328"
   }
 }

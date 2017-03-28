@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.fetch",
   "dependencies": {
-    "@types/bluebird": "^3.5.0",
-    "@types/node": "^7.0.8",
+    "@types/bluebird": "^3.5.2",
+    "@types/node": "^7.0.12",
     "bluebird": "^3.5.0",
     "node-fetch": "^1.6.3",
     "tslib": "^1.6.0",
@@ -36,6 +36,6 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.3.0-dev.20170312"
+    "typescript": "^2.3.0-dev.20170328"
   }
 }

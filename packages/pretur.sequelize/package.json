@@ -26,9 +26,9 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.sequelize",
   "dependencies": {
-    "@types/bluebird": "^3.5.0",
-    "@types/lodash": "^4.14.55",
-    "@types/sequelize": "^4.0.46",
+    "@types/bluebird": "^3.5.2",
+    "@types/lodash": "^4.14.58",
+    "@types/sequelize": "^4.0.49",
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.15.2",
@@ -39,6 +39,6 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.3.0-dev.20170312"
+    "typescript": "^2.3.0-dev.20170328"
   }
 }
