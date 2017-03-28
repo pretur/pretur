@@ -68,6 +68,7 @@ export function literal(value: any) {
     case 'undefined':
       return safe('undefined');
   }
+
   return safe('');
 }
 
