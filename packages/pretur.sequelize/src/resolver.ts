@@ -181,6 +181,7 @@ function buildOrder<T>(
     if (!Array.isArray(defaultOrder)) {
       return;
     }
+
     return [defaultOrder.slice()];
   }
 
