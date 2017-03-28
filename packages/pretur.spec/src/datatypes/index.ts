@@ -2,6 +2,7 @@ import AbstractType from './AbstractType';
 import EnumType, { EnumValue } from './EnumType';
 import BooleanType from './BooleanType';
 import DoubleType from './DoubleType';
+import BigIntegerType from './BigIntegerType';
 import IntegerType from './IntegerType';
 import StringType from './StringType';
 import ObjectType from './ObjectType';
@@ -14,6 +15,7 @@ export {
   EnumType,
   BooleanType,
   DoubleType,
+  BigIntegerType,
   IntegerType,
   StringType,
   ObjectType,
@@ -22,6 +24,7 @@ export {
 };
 
 export const DataTypes = {
+  BIG_INTEGER: BigIntegerType.create,
   BOOLEAN: BooleanType.create,
   DATE: DateType.create,
   DOUBLE: DoubleType.create,

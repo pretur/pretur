@@ -4,6 +4,7 @@ import {
   Spec,
   AbstractType,
   EnumType,
+  BigIntegerType,
   IntegerType,
   StringType,
   ObjectType,
@@ -149,6 +150,8 @@ export function buildSequelizeModel<T>(
 
 function datatypeToSequelizeType(datatype: AbstractType): any {
   switch (true) {
+    case BigIntegerType.is(datatype):
+      return Sequelize.BIGINT;
     case IntegerType.is(datatype):
       return Sequelize.INTEGER;
     case StringType.is(datatype):
