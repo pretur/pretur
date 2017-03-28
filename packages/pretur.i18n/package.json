@@ -1,6 +1,6 @@
 {
   "name": "pretur.i18n",
-  "version": "0.15.2",
+  "version": "0.15.3",
   "description": "Internationalization using MessageFormat",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
