@@ -198,11 +198,10 @@ function buildWhere<T>(
 
   if (query && query.filters) {
     const filters = query.filters;
-    let filtersKeys = Object.keys(query.filters);
-
-    if (model.allowedAttributes) {
-      filtersKeys = intersection(filtersKeys, model.allowedAttributes);
-    }
+    const filtersKeys = intersection(
+      Object.keys(query.filters),
+      [...model.allowedAttributes, '$and', '$or'],
+    );
 
     filtersKeys.map(field => {
       const value = filters[<keyof T>field];
