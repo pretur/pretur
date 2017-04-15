@@ -176,7 +176,7 @@ describe('relation', () => {
         (
           main: Model<any>,
           inheritor: <T>(name: string, alias: keyof T, i18nKey: string) => Inheritor<MockModel, T>,
-          appendInheritorGroup: <T>(options: InheritorsOptions<MockModel, T>) => void
+          appendInheritorGroup: <T>(options: InheritorsOptions<MockModel, T>) => void,
         ): void;
       }
 

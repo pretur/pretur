@@ -69,7 +69,7 @@ export class Spec<T> {
   private model: Model<T>;
   private byAlias = (alias: keyof T) => find(this.model.relations, { alias });
   private nonVirtualByAlias = (alias: keyof T) =>
-    find(this.model.relations.filter(nonVirtual), { alias });
+    find(this.model.relations.filter(nonVirtual), { alias })
 
   public get name(): string {
     return this.model.name;
