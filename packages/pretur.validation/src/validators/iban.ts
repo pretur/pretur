@@ -1,9 +1,15 @@
 import * as Bluebird from 'bluebird';
-import { Validator, ValidationError } from '../validator';
+import { I18nBundle } from 'pretur.i18n';
 import * as IBANValidator from 'iban';
 
-export function iban(key: string): Validator<string> {
-  return async function ibanValidator(str: string): Bluebird<ValidationError> {
+export interface IbanBundleData {
+  VALUE: string;
+}
+
+export type IbanError<K extends string> = undefined | I18nBundle<K, IbanBundleData>;
+
+export function iban<K extends string>(key: K) {
+  return async function ibanValidator(str: string): Bluebird<IbanError<K>> {
     if (!str) {
       return;
     }

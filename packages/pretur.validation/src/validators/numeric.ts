@@ -1,8 +1,14 @@
 import * as Bluebird from 'bluebird';
-import { Validator, ValidationError } from '../validator';
+import { I18nBundle } from 'pretur.i18n';
 
-export function numeric(key: string): Validator<string> {
-  return async function numericValidator(str: string): Bluebird<ValidationError> {
+export interface NumericBundleData {
+  VALUE: string;
+}
+
+export type NumericError<K extends string> = undefined | I18nBundle<K, NumericBundleData>;
+
+export function numeric<K extends string>(key: K) {
+  return async function numericValidator(str: string): Bluebird<NumericError<K>> {
     if (!str) {
       return;
     }

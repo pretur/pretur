@@ -1,12 +1,16 @@
 import * as Bluebird from 'bluebird';
-import { Validator, ValidationError } from '../validator';
+import { I18nBundle } from 'pretur.i18n';
 
-export function exactLength(
-  key: string,
-  length: number,
-  acceptEmpty = false,
-): Validator<string> {
-  return async function exactLengthValidator(str: string): Bluebird<ValidationError> {
+export interface ExactLengthBundleData {
+  ACCEPT_EMPTY: boolean;
+  EXPECTED_LENGTH: number;
+  VALUE: string;
+}
+
+export type ExactLengthError<K extends string> = undefined | I18nBundle<K, ExactLengthBundleData>;
+
+export function exactLength<K extends string>(key: K, length: number, acceptEmpty = false) {
+  return async function exactLengthValidator(str: string): Bluebird<ExactLengthError<K>> {
 
     if (acceptEmpty && !str) {
       return;

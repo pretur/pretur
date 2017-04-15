@@ -1,13 +1,16 @@
 import * as Bluebird from 'bluebird';
-import { Validator, ValidationError } from '../validator';
+import { I18nBundle } from 'pretur.i18n';
 
-export function positive(key: string): Validator<number> {
-  return async function positiveValidator(num: number): Bluebird<ValidationError> {
+export interface PositiveBundleData {
+  VALUE: number;
+}
+
+export type PositiveError<K extends string> = undefined | I18nBundle<K, PositiveBundleData>;
+
+export function positive<K extends string>(key: K) {
+  return async function positiveValidator(num: number): Bluebird<PositiveError<K>> {
     if (typeof num !== 'number' || isNaN(num) || num <= 0) {
-      return {
-        key,
-        data: { VALUE: num },
-      };
+      return { key, data: { VALUE: num } };
     }
     return;
   };
