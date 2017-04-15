@@ -533,6 +533,21 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '4');
       });
 
+      it('should properly change the active page to the provided goto when provided', () => {
+        nav.close(dispatch, '4', '1');
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '1');
+      });
+
+      it('should ignore goto when invalid', () => {
+        nav.close(dispatch, '4', 'blah');
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+      });
+
+      it('should ignore goto when self referring', () => {
+        nav.close(dispatch, '4', '4');
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+      });
+
       it('should set active page to undefined if all pages are closed', () => {
         nav.close(dispatch, '1');
         nav.close(dispatch, '2');
@@ -732,7 +747,7 @@ describe('Navigator', () => {
     });
 
     it('should absorb actions that target it', () => {
-      const action1: any = actions.NAVIGATION_CLOSE_PAGE.create.unicast('ADMIN', '2');
+      const action1: any = actions.NAVIGATION_CLOSE_PAGE.create.unicast('ADMIN', { mutex: '2' });
       action1['value'] = 10;
       const newNav1 = nav.reduce(action1);
       expect(nav.active!.state.value).to.be.equals(1);

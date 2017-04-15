@@ -96,10 +96,11 @@ export interface PageDescriptor<TProps, TState, TReducerBuilderData> {
   reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>;
 }
 
-export interface PageInstantiationData<TReducerBuilderData> {
+export interface PageInstantiationData<TReducerBuilderData = undefined> {
   path: string;
   mutex: string;
   parent?: string;
+  goToOnClose?: string;
   reducerBuilderData?: TReducerBuilderData;
   titleData?: any;
 }

@@ -28,6 +28,11 @@ export interface PageOpenOptions extends PageInstantiationData<any> {
   insertAfterMutex?: string;
 }
 
+export interface PageCloseOptions {
+  mutex: string;
+  goto?: string;
+}
+
 interface InstanceMap {
   [prop: string]: PageInstance<any, any, any>;
 }
@@ -106,9 +111,17 @@ function closePage(instances: Instances, toRemoveMutex: string): Instances {
   };
 }
 
-function findClosePageTarget(instances: Instances, toRemoveMutex: string): string | undefined {
+function findClosePageTarget(
+  instances: Instances,
+  toRemoveMutex: string,
+  override?: string,
+): string | undefined {
   if (instances.pageOrder.length < 2) {
     return;
+  }
+
+  if (override && override !== toRemoveMutex && instances.pages[override]) {
+    return override;
   }
 
   const toRemove = instances.pages[toRemoveMutex];
@@ -365,7 +378,13 @@ export class Navigator implements Reducible {
     }
 
     if (NAVIGATION_CLOSE_PAGE.is(this._prefix, action)) {
-      if (!action.payload || !this._instances.pages[action.payload]) {
+      if (!action.payload) {
+        return this;
+      }
+
+      const { mutex, goto } = action.payload;
+
+      if (!this._instances.pages[mutex]) {
         return this;
       }
 
@@ -373,12 +392,13 @@ export class Navigator implements Reducible {
       newNav._activePageMutex = this._activePageMutex;
 
       const isParentOfActive = this._activePageMutex &&
-        this._instances.pages[this._activePageMutex].parent === action.payload;
+        this._instances.pages[this._activePageMutex].parent === mutex;
 
-      if (this._activePageMutex === action.payload || isParentOfActive) {
+      if (this._activePageMutex === mutex || isParentOfActive) {
         const targetMutex = findClosePageTarget(
           this._instances,
-          isParentOfActive ? this._instances.pages[this._activePageMutex!].parent! : action.payload,
+          isParentOfActive ? this._instances.pages[this._activePageMutex!].parent! : mutex,
+          goto,
         );
 
         this.persistActivePage(this._instances, undefined);
@@ -387,7 +407,7 @@ export class Navigator implements Reducible {
         newNav._activePageMutex = targetMutex;
       }
 
-      const newInstances = closePage(this._instances, action.payload);
+      const newInstances = closePage(this._instances, mutex);
 
       this.persistInstances(newInstances);
 
@@ -493,8 +513,8 @@ export class Navigator implements Reducible {
     ));
   }
 
-  public close(dispatch: Dispatch, mutex: string) {
-    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this._prefix, mutex));
+  public close(dispatch: Dispatch, mutex: string, goto?: string) {
+    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this._prefix, { mutex, goto }));
   }
 
   public load(dispatch: Dispatch) {
