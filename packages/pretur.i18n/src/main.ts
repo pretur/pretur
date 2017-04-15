@@ -12,6 +12,7 @@ export interface I18nFormatter {
 
 export interface I18nStringBuilder<K extends string = string, D extends object | undefined = any> {
   (data?: D): string;
+  datatype?: D;
   key: K;
   path: string;
 }
