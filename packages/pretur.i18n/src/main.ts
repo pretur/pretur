@@ -1,42 +1,44 @@
+export interface I18nBundle<K extends string = string, D extends object = any> {
+  key: K;
+  data?: D;
+}
+
 export interface I18nFormatter {
-  (bundle: I18nBundle): string;
-  <K extends string>(key: string): I18nStringBuilder<K, any>;
+  <B extends I18nBundle = I18nBundle>(bundle: B): string;
+  <K extends string = string, D extends object | undefined = undefined>(
+    key: K,
+  ): I18nStringBuilder<K, D>;
 }
 
-export interface I18nBundle {
-  key: string;
-  data?: any;
-}
-
-export interface I18nStringBuilder<K extends string, D> {
+export interface I18nStringBuilder<K extends string = string, D extends object | undefined = any> {
   (data?: D): string;
   key: K;
   path: string;
 }
 
 export interface Language {
-  [key: string]: I18nStringBuilder<string, any>;
+  [key: string]: I18nStringBuilder;
 }
 
-export function format(
+export function format<B extends I18nBundle = I18nBundle>(
   language: Language,
   fallback: Language | undefined,
-  bundle: I18nBundle,
+  bundle: B,
 ): string;
 export function format(
   language: Language,
   fallback: Language | undefined,
   key: string,
-): I18nStringBuilder<string, any>;
+): I18nStringBuilder;
 export function format(
   language: Language,
   fallback: Language | undefined,
   nothing: undefined,
 ): undefined;
-export function format(
+export function format<B extends I18nBundle = I18nBundle>(
   language: Language,
   fallback: Language | undefined,
-  bundleOrKeyOrNothing: I18nBundle | string | undefined,
+  bundleOrKeyOrNothing: B | string | undefined,
 ): string | I18nStringBuilder<string, any> | undefined {
   if (process.env.NODE_ENV !== 'production' && !language) {
     throw new TypeError('language must be provided');
@@ -63,23 +65,17 @@ export function format(
   return;
 }
 
-export function buildFormatter<F extends I18nFormatter>(
+export function buildFormatter<F = I18nFormatter>(
   language: Language,
   fallback: Language | undefined = undefined,
 ): F {
-  return <F>((input: I18nBundle | string | undefined) => format(language, fallback, <any>input));
-}
-
-export interface MessageFormatParameters {
-  [param: string]: any;
+  return <any>((input: any) => format(language, fallback, input));
 }
 
 export interface Compiler {
-  constant(str: string): I18nStringBuilder<string, void>;
+  constant(str: string): I18nStringBuilder<string, undefined>;
   callback<D>(callback: (data?: D) => string): I18nStringBuilder<string, D>;
-  messageFormat<D extends MessageFormatParameters>(
-    formatString: string,
-  ): I18nStringBuilder<string, D>;
+  messageFormat<D extends object>(formatString: string): I18nStringBuilder<string, D>;
   describe<T>(tree: T): LanguageDescriptor<T>;
 }
 

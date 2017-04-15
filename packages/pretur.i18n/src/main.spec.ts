@@ -105,7 +105,7 @@ describe('buildFormatter', () => {
     const language2 = <Language>{ B: compiler.callback((d: { C: string }) => 'B' + d.C) };
 
     interface Formatter extends I18nFormatter {
-      (key: 'A'): I18nStringBuilder<'A', void>;
+      (key: 'A'): I18nStringBuilder<'A'>;
       (key: 'B'): I18nStringBuilder<'A', { C: string }>;
     }
 
