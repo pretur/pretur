@@ -48,8 +48,8 @@ export class PageInstance<TProps, TState, TReducerBuilderData> implements Reduci
     return this.params.instantiationData.parent;
   }
 
-  public get goToOnClose(): string | undefined {
-    return this.params.instantiationData.goToOnClose;
+  public get openedFrom(): string | undefined {
+    return this.params.instantiationData.openedFrom;
   }
 
   public get title(): I18nBundle {

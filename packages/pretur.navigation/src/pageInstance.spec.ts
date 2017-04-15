@@ -33,8 +33,8 @@ const desciptor = {
 };
 
 const instance = new PageInstance<Prop, State, ReducerBuilderData>(desciptor, {
-  goToOnClose: '3',
   mutex: '1',
+  openedFrom: '3',
   parent: '2',
   path: 'admin',
   reducerBuilderData: <ReducerBuilderData>{ rank: 1 },
@@ -55,8 +55,8 @@ describe('PageInstance', () => {
     expect(instance.path).to.be.equals('admin');
   });
 
-  it('should contain the correct goToOnClose', () => {
-    expect(instance.goToOnClose).to.be.equals('3');
+  it('should contain the correct openedFrom', () => {
+    expect(instance.openedFrom).to.be.equals('3');
   });
 
   it('should contain the correct title', () => {

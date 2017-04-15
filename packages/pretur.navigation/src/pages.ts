@@ -100,7 +100,7 @@ export interface PageInstantiationData<TReducerBuilderData = undefined> {
   path: string;
   mutex: string;
   parent?: string;
-  goToOnClose?: string;
+  openedFrom?: string;
   reducerBuilderData?: TReducerBuilderData;
   titleData?: any;
 }

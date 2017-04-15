@@ -7,7 +7,7 @@ export interface NavPagePassedProps<TState> {
   mutex: string;
   parent: string | undefined;
   path: string;
-  goToOnClose: string | undefined;
+  openedFrom: string | undefined;
   state: TState;
   title: I18nBundle;
   navigator: Navigator;
@@ -32,7 +32,7 @@ export function NavPage(
       mutex={page.mutex}
       parent={page.parent}
       path={page.path}
-      goToOnClose={page.goToOnClose}
+      openedFrom={page.openedFrom}
       state={page.state}
       title={page.title}
       navigator={navigator}

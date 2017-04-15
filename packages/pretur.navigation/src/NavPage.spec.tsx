@@ -45,7 +45,7 @@ describe('NavPage', () => {
     let nav = navigator;
     const dispatch: any = (a: any) => nav = nav.reduce(a);
 
-    nav.open(dispatch, { mutex: '1', path: 'a/d/e', goToOnClose: '3' });
+    nav.open(dispatch, { mutex: '1', path: 'a/d/e', openedFrom: '3' });
 
     const renderer = createRenderer();
     renderer.render(<NavPage navigator={nav} />);
@@ -55,7 +55,7 @@ describe('NavPage', () => {
     expect(output.props.mutex).to.be.equals('1');
     expect(output.props.parent).to.be.undefined;
     expect(output.props.path).to.be.equals('a/d/e');
-    expect(output.props.goToOnClose).to.be.equals('3');
+    expect(output.props.openedFrom).to.be.equals('3');
     expect(output.props.state).to.be.equals(3);
     expect(output.props.title.key).to.be.equals('E');
     expect(output.props.navigator).to.be.equals(nav);
