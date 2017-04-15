@@ -11,7 +11,7 @@ export interface Thunk {
   (dispatch: Dispatch): Bluebird<void>;
 }
 
-export interface Action<TPayload, TMeta> {
+export interface Action<TPayload = undefined, TMeta = undefined> {
   type: string;
   payload?: TPayload;
   meta?: TMeta;
@@ -21,12 +21,13 @@ export interface ActionTransformer {
   <A extends Action<any, any>>(action: A): A;
 }
 
-export interface TargetedAction<TPayload, TMeta> extends Action<TPayload, TMeta> {
+export interface TargetedAction<TPayload = undefined, TMeta = undefined>
+  extends Action<TPayload, TMeta> {
   target?: ValidTargetType | ValidTargetType[];
   broadcast: boolean;
 }
 
-export interface ActionDescriptor<TPayload, TMeta> {
+export interface ActionDescriptor<TPayload = undefined, TMeta = undefined> {
   type: string;
   create(payload?: TPayload, meta?: TMeta): Action<TPayload, TMeta>;
   is(action: Action<any, any>): action is Action<TPayload, TMeta>;
@@ -67,7 +68,7 @@ export function composeTransformers<A extends Action<any, any>>(
   throw new TypeError(TRANSFORMER_ERROR);
 }
 
-export function createActionDescriptor<TPayload, TMeta>(
+export function createActionDescriptor<TPayload = undefined, TMeta = undefined>(
   type: string,
   transformers?: ActionTransformer | ActionTransformer[],
 ): ActionDescriptor<TPayload, TMeta> {
@@ -87,7 +88,7 @@ export function createActionDescriptor<TPayload, TMeta>(
   };
 }
 
-export interface TargetedActionDescriptorCreator<TPayload, TMeta> {
+export interface TargetedActionDescriptorCreator<TPayload = undefined, TMeta = undefined> {
   unicast(
     target: ValidTargetType,
     payload?: TPayload,
@@ -101,13 +102,13 @@ export interface TargetedActionDescriptorCreator<TPayload, TMeta> {
   broadcast(payload?: TPayload, meta?: TMeta): TargetedAction<TPayload, TMeta>;
 }
 
-export interface TargetedActionDescriptor<TPayload, TMeta> {
+export interface TargetedActionDescriptor<TPayload = undefined, TMeta = undefined> {
   type: string;
   create: TargetedActionDescriptorCreator<TPayload, TMeta>;
   is(id: ValidTargetType, action: Action<any, any>): action is TargetedAction<TPayload, TMeta>;
 }
 
-export function createTargetedActionDescriptor<TPayload, TMeta>(
+export function createTargetedActionDescriptor<TPayload = undefined, TMeta = undefined>(
   type: string,
   transformers?: ActionTransformer | ActionTransformer[],
 ): TargetedActionDescriptor<TPayload, TMeta> {
@@ -161,8 +162,8 @@ export function createTargetedActionDescriptor<TPayload, TMeta>(
   };
 }
 
-export interface AsyncActionDescriptor<TPayload> {
-  create: (payload?: TPayload, meta?: any) => Thunk;
+export interface AsyncActionDescriptor<TPayload = undefined, TMeta = undefined> {
+  create: (payload?: TPayload, meta?: TMeta) => Thunk;
 }
 
 export function createAsyncAction<TPayload, TResult>(

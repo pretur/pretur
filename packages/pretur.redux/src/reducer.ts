@@ -36,7 +36,7 @@ export interface Mutator<TState> {
     action: Action<any, any>,
     set: Setter<TState>,
     unset: Unsetter<TState>,
-    reset: Resetter<TState>
+    reset: Resetter<TState>,
   ): void;
 }
 
