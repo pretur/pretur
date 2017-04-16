@@ -5,10 +5,21 @@ import { Set } from './Set';
 import { Record } from './Record';
 import { toPlain, Clay } from './clay';
 
+export interface ApplyMutationsResult {
+  results: MutateResult<any>[];
+  applied: boolean;
+}
+
+export function buildApplyMutations(
+  requester: Requester,
+): (mutations: MutateRequest<any>[]) => Bluebird<ApplyMutationsResult> {
+  return (mutations) => applyMutations(requester, mutations);
+}
+
 export async function applyMutations(
   requester: Requester,
   mutations: MutateRequest<any>[],
-): Bluebird<{ results: MutateResult<any>[], applied: boolean }> {
+): Bluebird<ApplyMutationsResult> {
   if (mutations.length === 0) {
     return { results: [], applied: false };
   }
