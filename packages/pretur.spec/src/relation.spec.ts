@@ -1,8 +1,9 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { Model, UninitializedStateModel } from './model';
-import { EnumType, IntegerType, DataTypes, StringType } from './attribute';
+import { noop } from 'lodash';
+import { Spec } from './spec';
+import { EnumAttribute } from './attribute';
 import {
   Relation,
   appendRelation,
@@ -40,30 +41,19 @@ interface Child3 {
   c: number;
 }
 
-function mockModel(name: string): Model<MockModel> {
+function mockSpec(name: string): Spec<MockModel> {
   return {
     name,
     attributes: [],
     indexes: { unique: [] },
+    initialize: noop,
     join: false,
     owner: undefined!,
     relations: [],
-    virtual: false,
   };
 }
 
-function mockUninitializedStateModel(model: Model<any>): UninitializedStateModel<any> {
-  return {
-    model,
-    initialize: () => undefined!,
-    join: model.join,
-    name: model.name,
-    owner: model.owner,
-    virtual: model.virtual,
-  };
-}
-
-const baseRelation = <Relation>{
+const baseRelation = <Relation<any>>{
   alias: undefined!,
   key: 'aId',
   model: 'A',
@@ -78,84 +68,94 @@ describe('relation', () => {
   describe('appendRelation', () => {
 
     it('should properly append the relation to the model', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
-      appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' });
-      appendRelation(model, baseRelation, <any>{ alias: 'b', type: 'RECURSIVE' });
+      appendRelation(spec, { ...baseRelation, alias: 'id', type: 'RECURSIVE' });
+      appendRelation(spec, { ...baseRelation, alias: 'type', type: 'RECURSIVE' });
 
-      expect(model.relations[0].alias).to.be.equals('a');
-      expect(model.relations[1].alias).to.be.equals('b');
+      expect(spec.relations[0].alias).to.be.equals('id');
+      expect(spec.relations[1].alias).to.be.equals('type');
     });
 
-    it('should fail when model is invalid', () => {
-      expect(() => appendRelation(undefined!)).to.throw();
+    it('should fail when spec is invalid', () => {
+      expect(() => appendRelation(undefined!, undefined!)).to.throw();
     });
 
     it('should fail when no relations are provided', () => {
-      expect(() => appendRelation(mockModel('A'))).to.throw();
+      expect(() => appendRelation(mockSpec('A'), undefined!)).to.throw();
     });
 
     it('should fail when alias is invalid', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: undefined, type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: undefined!, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
     it('should fail when key is invalid', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', key: undefined, type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'id', key: undefined, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
     it('should fail when alias is repeated', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'id', type: 'RECURSIVE' }),
       ).not.to.throw();
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'id', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
     it('should fail when type is invalid', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'BLAH' }),
+        appendRelation(spec, { ...baseRelation, alias: 'id', type: <any>'BLAH' }),
       ).to.throw();
     });
 
     it('should fail when type is many to many but through is not provided', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', type: 'MANY_TO_MANY' }),
+        appendRelation(spec, { ...baseRelation, alias: 'id', type: 'MANY_TO_MANY' }),
       ).to.throw();
     });
 
     it('should fail when type is recursive but model is different', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', model: 'B', type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'id', model: 'B', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
     it('should fail when onUpdate or onDelete are invalid', () => {
-      const model = mockModel('A');
+      const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', onDelete: 'A', type: 'RECURSIVE' }),
+        appendRelation(spec, {
+          ...baseRelation,
+          alias: 'id',
+          onDelete: <any>'A',
+          type: 'RECURSIVE',
+        }),
       ).to.throw();
 
       expect(() =>
-        appendRelation(model, baseRelation, <any>{ alias: 'a', onUpdate: 'A', type: 'RECURSIVE' }),
+        appendRelation(spec, {
+          ...baseRelation,
+          alias: 'id',
+          onUpdate: <any>'A',
+          type: 'RECURSIVE',
+        }),
       ).to.throw();
     });
 
@@ -166,7 +166,7 @@ describe('relation', () => {
     describe('inheritors builder', () => {
 
       it('should properly initialize an inheritors builder', () => {
-        const main = mockModel('Main');
+        const main = mockSpec('Main');
         expect(() =>
           createRelationBuilder(main).inheritors,
         ).not.to.throw();
@@ -174,31 +174,36 @@ describe('relation', () => {
 
       interface TestCase {
         (
-          main: Model<any>,
-          inheritor: <T>(name: string, alias: keyof T, i18nKey: string) => Inheritor<MockModel, T>,
-          appendInheritorGroup: <T>(options: InheritorsOptions<MockModel, T>) => void,
+          main: Spec<any>,
+          inheritor: <T extends object>(
+            name: string,
+            alias: keyof T,
+            i18nKey: string,
+          ) => Inheritor<MockModel, T>,
+          appendInheritorGroup: <T extends object>(
+            options: InheritorsOptions<MockModel, T>,
+          ) => void,
         ): void;
       }
 
       function assetEnumType(
-        main: Model<any>,
+        main: Spec<any>,
         index: number,
         typeName: string,
         typeEnumName: string,
         enumValueNames: string[],
       ) {
-        expect(main.attributes[index].mutable).to.be.true;
-        expect(main.attributes[index].name).to.be.equals(typeName);
-        expect(main.attributes[index].type).to.be.instanceof(EnumType);
-        expect((<EnumType<string>>main.attributes[index].type).name)
-          .to.be.equals(typeEnumName);
-        expect((<EnumType<string>>main.attributes[index].type).values.map(v => v.name))
-          .to.deep.equal(enumValueNames);
+        const attribute = <EnumAttribute<any, string>>main.attributes[index];
+        expect(attribute.mutable).to.be.true;
+        expect(attribute.name).to.be.equals(typeName);
+        expect(attribute.type).to.be.equals('ENUM');
+        expect(attribute.typename).to.be.equals(typeEnumName);
+        expect(attribute.values).to.deep.equal(enumValueNames);
       }
 
       const testCases: [string, TestCase][] = [
         [
-          'should add the type enum to the main model',
+          'should add the type enum to the main spec',
           (main, inheritor, append) => {
             append({
               aliasOnSubclasses: 'main',
@@ -218,14 +223,10 @@ describe('relation', () => {
           'should correctly add the subclass/superclass relation pairs',
           (main, inheritor, append) => {
             main.owner = 'owner';
-            main.virtual = true;
 
             const child1 = inheritor<Child1 & Child2 & Child3>('Child1', 'a', 'A');
             const child2 = inheritor<Child1 & Child2 & Child3>('Child2', 'b', 'A');
             const child3 = inheritor<Child1 & Child2 & Child3>('Child3', 'c', 'A');
-
-            child3.target.virtual = true;
-            child3.target.model.virtual = true;
 
             append({
               aliasOnSubclasses: 'main',
@@ -239,52 +240,46 @@ describe('relation', () => {
             expect(main.relations[0].model).to.be.equals('Child1');
             expect(main.relations[0].alias).to.be.equals('a');
             expect(main.relations[0].key).to.be.equals('id');
-            expect(main.relations[0].virtual).to.be.false;
 
-            expect(child1.target.model.relations[0].owner).to.be.equals('owner');
-            expect(child1.target.model.relations[0].type).to.be.equals('SUPERCLASS');
-            expect(child1.target.model.relations[0].model).to.be.equals('Main');
-            expect(child1.target.model.relations[0].alias).to.be.equals('main');
-            expect(child1.target.model.relations[0].key).to.be.equals('id');
-            expect(child1.target.model.relations[0].virtual).to.be.true;
+            expect(child1.target.relations[0].owner).to.be.equals('owner');
+            expect(child1.target.relations[0].type).to.be.equals('SUPERCLASS');
+            expect(child1.target.relations[0].model).to.be.equals('Main');
+            expect(child1.target.relations[0].alias).to.be.equals('main');
+            expect(child1.target.relations[0].key).to.be.equals('id');
 
             expect(main.relations[1].owner).to.be.equals('owner');
             expect(main.relations[1].type).to.be.equals('SUBCLASS');
             expect(main.relations[1].model).to.be.equals('Child2');
             expect(main.relations[1].alias).to.be.equals('b');
             expect(main.relations[1].key).to.be.equals('id');
-            expect(main.relations[1].virtual).to.be.false;
 
-            expect(child2.target.model.relations[0].owner).to.be.equals('owner');
-            expect(child2.target.model.relations[0].type).to.be.equals('SUPERCLASS');
-            expect(child2.target.model.relations[0].model).to.be.equals('Main');
-            expect(child2.target.model.relations[0].alias).to.be.equals('main');
-            expect(child2.target.model.relations[0].key).to.be.equals('id');
-            expect(child2.target.model.relations[0].virtual).to.be.true;
+            expect(child2.target.relations[0].owner).to.be.equals('owner');
+            expect(child2.target.relations[0].type).to.be.equals('SUPERCLASS');
+            expect(child2.target.relations[0].model).to.be.equals('Main');
+            expect(child2.target.relations[0].alias).to.be.equals('main');
+            expect(child2.target.relations[0].key).to.be.equals('id');
 
             expect(main.relations[2].owner).to.be.equals('owner');
             expect(main.relations[2].type).to.be.equals('SUBCLASS');
             expect(main.relations[2].model).to.be.equals('Child3');
             expect(main.relations[2].alias).to.be.equals('c');
             expect(main.relations[2].key).to.be.equals('id');
-            expect(main.relations[2].virtual).to.be.true;
 
-            expect(child3.target.model.relations[0].owner).to.be.equals('owner');
-            expect(child3.target.model.relations[0].type).to.be.equals('SUPERCLASS');
-            expect(child3.target.model.relations[0].model).to.be.equals('Main');
-            expect(child3.target.model.relations[0].alias).to.be.equals('main');
-            expect(child3.target.model.relations[0].key).to.be.equals('id');
-            expect(child3.target.model.relations[0].virtual).to.be.true;
+            expect(child3.target.relations[0].owner).to.be.equals('owner');
+            expect(child3.target.relations[0].type).to.be.equals('SUPERCLASS');
+            expect(child3.target.relations[0].model).to.be.equals('Main');
+            expect(child3.target.relations[0].alias).to.be.equals('main');
+            expect(child3.target.relations[0].key).to.be.equals('id');
           },
         ],
       ];
 
       testCases.forEach(([expectation, testCase]) => {
-        const main = mockModel('Main');
+        const main = mockSpec('Main');
         const inheritor = (name: string, alias: string, i18nKey: string) => ({
           alias,
           i18nKey,
-          target: mockUninitializedStateModel(mockModel(name)),
+          target: mockSpec(name),
         });
         const appendInheritorGroup = createRelationBuilder(main).inheritors;
 
@@ -298,21 +293,21 @@ describe('relation', () => {
     describe('master builder', () => {
 
       it('should properly initialize a master builder', () => {
-        const main = mockModel('Main');
+        const main = mockSpec('Main');
         expect(() =>
           createRelationBuilder(main).inheritors,
         ).not.to.throw();
       });
 
       it('should properly append master/detail relations and fk on source', () => {
-        const master = mockModel('Master');
-        const detail = mockModel('Detail');
+        const master = mockSpec('Master');
+        const detail = mockSpec('Detail');
 
         createRelationBuilder(detail).master({
           alias: 'master',
           foreignKey: 'masterId',
           ownAliasOnTarget: 'details',
-          target: mockUninitializedStateModel(master),
+          target: master,
         });
 
         expect(master.relations[0].alias).to.be.equals('details');
@@ -323,25 +318,23 @@ describe('relation', () => {
 
         expect(detail.attributes[0].mutable).to.be.true;
         expect(detail.attributes[0].name).to.be.equals('masterId');
-        expect(detail.attributes[0].type).to.be.instanceof(IntegerType);
+        expect(detail.attributes[0].type).to.be.equals('INTEGER');
       });
 
       it('should properly override the properties of relations and the fk attribute', () => {
-        const master = mockModel('Master');
-        const detail = mockModel('Detail');
-
-        detail.virtual = true;
+        const master = mockSpec('Master');
+        const detail = mockSpec('Detail');
 
         createRelationBuilder(detail).master({
           alias: 'master',
           foreignKey: 'someId',
-          foreignKeyType: DataTypes.STRING(),
+          foreignKeyType: 'STRING',
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'details',
           owner: 'owner',
           required: true,
-          target: mockUninitializedStateModel(master),
+          target: master,
           targetOwner: 'owner2',
         });
 
@@ -351,7 +344,6 @@ describe('relation', () => {
         expect(master.relations[0].alias).to.be.equals('details');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.equals(true);
-        expect(master.relations[0].virtual).to.be.equals(true);
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
@@ -361,13 +353,12 @@ describe('relation', () => {
         expect(detail.relations[0].alias).to.be.equals('master');
         expect(detail.relations[0].key).to.be.equals('someId');
         expect(detail.relations[0].required).to.be.equals(true);
-        expect(detail.relations[0].virtual).to.be.equals(false);
         expect(detail.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(detail.relations[0].onUpdate).to.be.equals('NO ACTION');
 
         expect(detail.attributes[0].mutable).to.be.true;
         expect(detail.attributes[0].name).to.be.equals('someId');
-        expect(detail.attributes[0].type).to.be.instanceof(StringType);
+        expect(detail.attributes[0].type).to.be.equals('STRING');
         expect(detail.attributes[0].required).to.be.equals(true);
       });
 
@@ -376,24 +367,24 @@ describe('relation', () => {
     describe('injective builder', () => {
 
       it('should properly initialize a injective builder', () => {
-        const main = mockModel('Main');
+        const main = mockSpec('Main');
         expect(() =>
           createRelationBuilder(main).inheritors,
         ).not.to.throw();
       });
 
       it('should properly append injective/master relations and fk on source', () => {
-        const master = mockModel('Master');
-        const injected = mockModel('Injected');
+        const master = mockSpec('Master');
+        const injected = mockSpec('Injected');
 
         createRelationBuilder(injected).injective({
           alias: 'master',
           foreignKey: 'masterId',
-          ownAliasOnTarget: 'injected',
-          target: mockUninitializedStateModel(master),
+          ownAliasOnTarget: 'someId',
+          target: master,
         });
 
-        expect(master.relations[0].alias).to.be.equals('injected');
+        expect(master.relations[0].alias).to.be.equals('someId');
         expect(master.relations[0].type).to.be.equals('INJECTIVE');
 
         expect(injected.relations[0].alias).to.be.equals('master');
@@ -401,28 +392,26 @@ describe('relation', () => {
 
         expect(injected.attributes[0].mutable).to.be.true;
         expect(injected.attributes[0].name).to.be.equals('masterId');
-        expect(injected.attributes[0].type).to.be.instanceof(IntegerType);
+        expect(injected.attributes[0].type).to.be.equals('INTEGER');
         expect(injected.attributes[0].unique).to.be.true;
         expect(injected.attributes[0].primary).to.be.false;
       });
 
       it('should properly override the properties of relations and the fk attribute', () => {
-        const master = mockModel('Master');
-        const injected = mockModel('Injected');
-
-        injected.virtual = true;
+        const master = mockSpec('Master');
+        const injected = mockSpec('Injected');
 
         createRelationBuilder(injected).injective({
           alias: 'master',
           foreignKey: 'someId',
-          foreignKeyType: DataTypes.STRING(),
+          foreignKeyType: 'STRING',
           mutable: false,
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
-          ownAliasOnTarget: 'injected',
+          ownAliasOnTarget: 'details',
           owner: 'owner',
           required: true,
-          target: mockUninitializedStateModel(master),
+          target: master,
           targetOwner: 'owner2',
           unique: false,
         });
@@ -430,10 +419,9 @@ describe('relation', () => {
         expect(master.relations[0].owner).to.be.equals('owner2');
         expect(master.relations[0].type).to.be.equals('INJECTIVE');
         expect(master.relations[0].model).to.be.equals('Injected');
-        expect(master.relations[0].alias).to.be.equals('injected');
+        expect(master.relations[0].alias).to.be.equals('details');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.true;
-        expect(master.relations[0].virtual).to.be.true;
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
@@ -443,30 +431,29 @@ describe('relation', () => {
         expect(injected.relations[0].alias).to.be.equals('master');
         expect(injected.relations[0].key).to.be.equals('someId');
         expect(injected.relations[0].required).to.be.true;
-        expect(injected.relations[0].virtual).to.be.false;
         expect(injected.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(injected.relations[0].onUpdate).to.be.equals('NO ACTION');
 
         expect(injected.attributes[0].mutable).to.be.false;
         expect(injected.attributes[0].name).to.be.equals('someId');
-        expect(injected.attributes[0].type).to.be.instanceof(StringType);
+        expect(injected.attributes[0].type).to.be.equals('STRING');
         expect(injected.attributes[0].required).to.be.true;
         expect(injected.attributes[0].unique).to.be.false;
       });
 
       it('should properly override the fk attribute for primary case', () => {
-        const master = mockModel('Master');
-        const injected = mockModel('Injected');
+        const master = mockSpec('Master');
+        const injected = mockSpec('Injected');
 
         createRelationBuilder(injected).injective({
           alias: 'master',
           foreignKey: 'someId',
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
-          ownAliasOnTarget: 'injected',
+          ownAliasOnTarget: 'details',
           owner: 'owner',
           primary: true,
-          target: mockUninitializedStateModel(master),
+          target: master,
           targetOwner: 'owner2',
         });
 
@@ -480,14 +467,14 @@ describe('relation', () => {
     describe('recursive builder', () => {
 
       it('should properly initialize a recursive builder', () => {
-        const main = mockModel('Main');
+        const main = mockSpec('Main');
         expect(() =>
           createRelationBuilder(main).recursive,
         ).not.to.throw();
       });
 
       it('should properly append the recursive relation and its key', () => {
-        const master = mockModel('Master');
+        const master = mockSpec('Master');
 
         createRelationBuilder(master).recursive({
           alias: 'parent',
@@ -499,19 +486,18 @@ describe('relation', () => {
 
         expect(master.attributes[0].mutable).to.be.true;
         expect(master.attributes[0].name).to.be.equals('id');
-        expect(master.attributes[0].type).to.be.instanceof(IntegerType);
+        expect(master.attributes[0].type).to.be.equals('INTEGER');
       });
 
       it('should properly override the properties of the relation and the key', () => {
-        const master = mockModel('Master');
+        const master = mockSpec('Master');
 
         master.owner = 'owner';
-        master.virtual = true;
 
         createRelationBuilder(master).recursive({
           alias: 'parent',
           key: 'someId',
-          keyType: DataTypes.STRING(),
+          keyType: 'STRING',
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
         });
@@ -522,12 +508,11 @@ describe('relation', () => {
         expect(master.relations[0].alias).to.be.equals('parent');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.equals(false);
-        expect(master.relations[0].virtual).to.be.equals(true);
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
         expect(master.attributes[0].name).to.be.equals('someId');
-        expect(master.attributes[0].type).to.be.instanceof(StringType);
+        expect(master.attributes[0].type).to.be.equals('STRING');
         expect(master.attributes[0].required).to.be.equals(false);
       });
 

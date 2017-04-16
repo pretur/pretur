@@ -1,12 +1,8 @@
-import { assign, chain } from 'lodash';
-import { Model, Owner } from './model';
-import { DataTypes, AbstractType, IntegerType, StringType } from './datatypes';
+import { chain } from 'lodash';
+import { Spec, Owner } from './spec';
 
-export * from './datatypes';
-
-export interface Attribute<T, K extends keyof T> {
+export interface AttributeBase<T extends object, K extends keyof T> {
   name: K;
-  type: AbstractType;
   owner?: Owner;
   required?: boolean;
   unique?: boolean;
@@ -16,50 +12,63 @@ export interface Attribute<T, K extends keyof T> {
   defaultValue?: T[K];
 }
 
-function getCommonDefaults(owner: Owner): Attribute<any, string> {
-  return {
-    owner,
-    autoIncrement: false,
-    mutable: true,
-    name: undefined!,
-    primary: false,
-    required: false,
-    type: undefined!,
-    unique: false,
-  };
+export type NormalType = 'INTEGER' | 'BIGINT' | 'BOOLEAN' | 'DATE' | 'DOUBLE' | 'STRING' | 'OBJECT';
+export type RangeType = 'INTEGER' | 'BIGINT' | 'DATE';
+
+export interface NormalAttribute<T extends object, K extends keyof T> extends AttributeBase<T, K> {
+  type: NormalType;
 }
+
+export interface EnumAttribute<T extends object, K extends keyof T> extends AttributeBase<T, K> {
+  type: 'ENUM';
+  typename: string;
+  values: T[K][];
+}
+
+export interface RangeAttribute<T extends object, K extends keyof T> extends AttributeBase<T, K> {
+  type: 'RANGE';
+  subtype: RangeType;
+}
+
+export type Attribute<T extends object = any, K extends keyof T = keyof T> =
+  | NormalAttribute<T, K>
+  | EnumAttribute<T, K>
+  | RangeAttribute<T, K>;
+
+const defaults: Partial<Attribute> = {
+  autoIncrement: false,
+  mutable: true,
+  primary: false,
+  required: false,
+  unique: false,
+};
+
+const primaryDefaults: Partial<Attribute> = {
+  ...defaults,
+  autoIncrement: true,
+  mutable: false,
+  primary: true,
+  type: 'INTEGER',
+};
 
 export interface PrimaryKeyOptions<T, K extends keyof T> {
   name: K;
-  type?: IntegerType | StringType;
+  type?: NormalType;
   autoIncrement?: boolean;
   mutable?: boolean;
 }
 
-function getPrimaryKeyDefaults(owner: Owner): Attribute<any, string> {
-  return assign(getCommonDefaults(owner), {
-    autoIncrement: true,
-    mutable: false,
-    primary: true,
-    type: DataTypes.INTEGER(),
-  });
-}
-
-export function validateAttribute(attribute: Attribute<any, string>) {
+export function validateAttribute(attribute: Attribute) {
   if (process.env.NODE_ENV !== 'production') {
     if (!attribute.name || typeof attribute.name !== 'string') {
       throw new Error(`Attribute name < ${attribute.name} > is invalid`);
-    }
-
-    if (!(attribute.type instanceof AbstractType)) {
-      throw new Error(`Attribute ${attribute.name} does not have a valid type.`);
     }
 
     if (attribute.autoIncrement && !attribute.primary) {
       throw new Error(`Only primary keys can be auto increment. Check ${attribute.name}.`);
     }
 
-    if (attribute.autoIncrement && !IntegerType.is(attribute.type)) {
+    if (attribute.autoIncrement && attribute.type !== 'INTEGER' && attribute.type !== 'BIGINT') {
       throw new Error(`Only integer attributes can be auto incremented. Check ${attribute.name}.`);
     }
 
@@ -69,19 +78,20 @@ export function validateAttribute(attribute: Attribute<any, string>) {
   }
 }
 
-export function appendAttribute<T>(model: Model<T>, ...attributes: Attribute<T, keyof T>[]): void {
-  const attribute = assign<Attribute<T, keyof T>>({}, ...attributes);
-
+export function appendAttribute<T extends object>(
+  spec: Spec<T>,
+  attribute: Attribute<T>,
+): void {
   if (process.env.NODE_ENV !== 'production') {
-    if (!model) {
+    if (!spec) {
       throw new Error('Model must be provided.');
     }
 
-    if (attributes.length === 0) {
-      throw new Error(`No attribute provided to be appended to ${model.name}.`);
+    if (!attribute) {
+      throw new Error(`No attribute provided to be appended to ${spec.name}.`);
     }
 
-    if (chain(model.attributes).map('name').includes(attribute.name).value()) {
+    if (chain(spec.attributes).map('name').includes(attribute.name).value()) {
       throw new Error(
         `Attribute ${attribute.name} of type ${attribute.type.toString()} was added twice.`,
       );
@@ -90,39 +100,33 @@ export function appendAttribute<T>(model: Model<T>, ...attributes: Attribute<T, 
     validateAttribute(attribute);
   }
 
-  model.attributes.push(attribute);
+  spec.attributes.push(attribute);
 }
 
-export interface AttributeBuilder<T> {
+export interface AttributeBuilder<T extends object> {
   <K extends keyof T>(options: Attribute<T, K>): void;
   primaryKey<K extends keyof T>(options?: PrimaryKeyOptions<T, K>): void;
 }
 
-export function createAttributeBuilder<T>(model: Model<T>): AttributeBuilder<T> {
-  if (process.env.NODE_ENV !== 'production' && !model) {
-    throw new Error('model must be provided');
+export function createAttributeBuilder<T extends object>(spec: Spec<T>): AttributeBuilder<T> {
+  if (process.env.NODE_ENV !== 'production' && !spec) {
+    throw new Error('spec must be provided');
   }
 
-  const commonDefaults = getCommonDefaults(model.owner);
-  const pkDefaults = getPrimaryKeyDefaults(model.owner);
-
   function attributeBuilder<K extends keyof T>(options: Attribute<T, K>): void {
-    appendAttribute(model, commonDefaults, options);
+    appendAttribute(spec, { ...defaults, owner: spec.owner, ...options });
   }
 
   const ab = <AttributeBuilder<T>>attributeBuilder;
 
-  ab.primaryKey
-    = function buildPrimaryKey<K extends keyof T>(options?: PrimaryKeyOptions<T, K>): void {
-      if (
-        options &&
-        StringType.is(<AbstractType>options.type) &&
-        !options.hasOwnProperty('autoIncrement')
-      ) {
-        options.autoIncrement = false;
-      }
-      appendAttribute(model, pkDefaults, <Attribute<T, K>>options);
-    };
+  ab.primaryKey = function buildPrimaryKey<K extends keyof T>(
+    options?: PrimaryKeyOptions<T, K>,
+  ): void {
+    if (options && options.type === 'STRING' && !options.hasOwnProperty('autoIncrement')) {
+      options.autoIncrement = false;
+    }
+    appendAttribute(spec, { ...primaryDefaults, owner: spec.owner, ...(<any>options) });
+  };
 
   return ab;
 }

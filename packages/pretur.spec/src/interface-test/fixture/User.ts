@@ -1,4 +1,4 @@
-import { createModel, DataTypes, UninitializedStateModel } from '../../main';
+import { createSpec, Spec } from '../../main';
 import RoleModel, { Role } from './Role';
 import { Permission } from './Permission';
 
@@ -11,12 +11,12 @@ export interface User {
   permissions: Permission<any>[];
 }
 
-export default <UninitializedStateModel<User>>createModel<User>(
+export default <Spec<User>>createSpec<User>(
   { name: 'User', owner: 'me' },
   ({ attribute, relation }) => {
     attribute.primaryKey({ name: 'id' });
-    attribute({ name: 'firstName', type: DataTypes.STRING() });
-    attribute({ name: 'lastName', type: DataTypes.STRING() });
+    attribute({ name: 'firstName', type: 'STRING' });
+    attribute({ name: 'lastName', type: 'STRING' });
 
     relation.master({
       alias: 'role',

@@ -1,47 +1,46 @@
 import { ModificationActions, appendRelation } from './relation';
-import { Model, UninitializedStateModel, Owner } from './model';
-import { Spec } from './spec';
-import {
-  IntegerType,
-  StringType,
-  AttributeBuilder,
-  createAttributeBuilder,
-  DataTypes,
-} from './attribute';
+import { Spec, Owner } from './spec';
+import { AttributeBuilder, createAttributeBuilder, NormalType } from './attribute';
 
-export interface JoinModelBuilder<T> {
+export interface JoinSpecBuilder<T extends object> {
   attribute: AttributeBuilder<T>;
   multicolumnUniqueIndex(...fields: (keyof T)[]): void;
 }
 
-export interface JoineeOptions<TJoin, TSource, TTarget> {
-  model: UninitializedStateModel<TSource>;
+export interface JoineeOptions<
+  TJoin extends object,
+  TSource extends object,
+  TTarget extends object> {
+  spec: Spec<TSource>;
   aliasOnJoin: keyof TJoin;
   aliasOnTarget: keyof TTarget;
   key: keyof TJoin;
-  type?: IntegerType | StringType;
+  type?: NormalType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   primary?: boolean;
 }
 
-export interface Joinee<TJoin, TSource, TTarget> {
-  model: UninitializedStateModel<TSource>;
+export interface Joinee<TJoin extends object, TSource extends object, TTarget extends object> {
+  spec: Spec<TSource>;
   aliasOnJoin: keyof TJoin;
   aliasOnTarget: keyof TTarget;
   key: keyof TJoin;
   primary: boolean;
-  type: IntegerType | StringType;
+  type: NormalType;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
 
-export function joineeValidateAndSetDefault<TJoin, TSource, TTarget>(
+export function joineeValidateAndSetDefault<
+  TJoin extends object,
+  TSource extends object,
+  TTarget extends object>(
   options: JoineeOptions<TJoin, TSource, TTarget>,
 ): Joinee<TJoin, TSource, TTarget> {
   if (process.env.NODE_ENV !== 'production') {
-    if (!options.model) {
-      throw new Error('model is not provided');
+    if (!options.spec) {
+      throw new Error('spec is not provided');
     }
 
     if (typeof options.aliasOnJoin !== 'string') {
@@ -57,44 +56,49 @@ export function joineeValidateAndSetDefault<TJoin, TSource, TTarget>(
     aliasOnJoin: options.aliasOnJoin,
     aliasOnTarget: options.aliasOnTarget,
     key: options.key,
-    model: options.model,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
     primary: options.primary !== false,
-    type: options.type || DataTypes.INTEGER(),
+    spec: options.spec,
+    type: options.type || 'INTEGER',
   };
 }
 
-export interface CreateJoinModelOptions<TJoin, TFirst, TSecond> {
+export interface CreateJoinSpecOptions<
+  TJoin extends object,
+  TFirst extends object,
+  TSecond extends object> {
   name: string;
   owner: Owner;
   firstJoinee: JoineeOptions<TJoin, TFirst, TSecond>;
   secondJoinee: JoineeOptions<TJoin, TSecond, TFirst>;
-  virtual?: boolean;
 }
 
-export function createJoinModel<TJoin, TSecond, TFirst>(
-  options: CreateJoinModelOptions<TJoin, TSecond, TFirst>,
-  initializer?: (modelBuilder: JoinModelBuilder<TJoin>) => void,
-): UninitializedStateModel<TJoin> {
+export function createJoinSpec<
+  TJoin extends object,
+  TSecond extends object,
+  TFirst extends object>(
+  options: CreateJoinSpecOptions<TJoin, TSecond, TFirst>,
+  initializer?: (specBuilder: JoinSpecBuilder<TJoin>) => void,
+): Spec<TJoin> {
 
   const firstJoinee = joineeValidateAndSetDefault(options.firstJoinee);
   const secondJoinee = joineeValidateAndSetDefault(options.secondJoinee);
 
-  const model: Model<TJoin> = {
+  const spec: Spec<TJoin> = {
     attributes: [],
     indexes: { unique: [] },
+    initialize,
     join: true,
     name: options.name,
     owner: options.owner,
     relations: [],
-    virtual: options.virtual || false,
   };
 
-  const builder = <JoinModelBuilder<TJoin>>{
-    attribute: createAttributeBuilder(model),
+  const builder = <JoinSpecBuilder<TJoin>>{
+    attribute: createAttributeBuilder(spec),
     multicolumnUniqueIndex(...fields: string[]) {
-      model.indexes.unique.push(fields);
+      spec.indexes.unique.push(fields);
     },
   };
 
@@ -112,69 +116,57 @@ export function createJoinModel<TJoin, TSecond, TFirst>(
     type: secondJoinee.type,
   });
 
-  appendRelation(model, {
+  appendRelation(spec, {
     alias: firstJoinee.aliasOnJoin,
     key: firstJoinee.key,
-    model: firstJoinee.model.name,
+    model: firstJoinee.spec.name,
     onDelete: firstJoinee.onDelete,
     onUpdate: firstJoinee.onUpdate,
     owner: options.owner,
     required: true,
     type: 'MASTER',
-    virtual: firstJoinee.model.virtual,
   });
 
-  appendRelation(model, {
+  appendRelation(spec, {
     alias: secondJoinee.aliasOnJoin,
     key: secondJoinee.key,
-    model: secondJoinee.model.name,
+    model: secondJoinee.spec.name,
     onDelete: secondJoinee.onDelete,
     onUpdate: secondJoinee.onUpdate,
     owner: options.owner,
     required: true,
     type: 'MASTER',
-    virtual: secondJoinee.model.virtual,
   });
 
-  appendRelation(firstJoinee.model.model, {
+  appendRelation(firstJoinee.spec, {
     alias: secondJoinee.aliasOnTarget,
     key: firstJoinee.key,
-    model: secondJoinee.model.name,
+    model: secondJoinee.spec.name,
     onDelete: firstJoinee.onDelete,
     onUpdate: firstJoinee.onUpdate,
     owner: options.owner,
     required: true,
-    through: model.name,
+    through: spec.name,
     type: 'MANY_TO_MANY',
-    virtual: options.virtual === true ? true : secondJoinee.model.virtual,
   });
 
-  appendRelation(secondJoinee.model.model, {
+  appendRelation(secondJoinee.spec, {
     alias: firstJoinee.aliasOnTarget,
     key: secondJoinee.key,
-    model: firstJoinee.model.name,
+    model: firstJoinee.spec.name,
     onDelete: secondJoinee.onDelete,
     onUpdate: secondJoinee.onUpdate,
     owner: options.owner,
     required: true,
-    through: model.name,
+    through: spec.name,
     type: 'MANY_TO_MANY',
-    virtual: options.virtual === true ? true : firstJoinee.model.virtual,
   });
 
-  function initialize(): Spec<TJoin> {
+  function initialize() {
     if (typeof initializer === 'function') {
       initializer(builder);
     }
-    return new Spec<TJoin>(model);
   }
 
-  return {
-    model,
-    join: true,
-    name: options.name,
-    owner: options.owner,
-    virtual: options.virtual || false,
-    initialize,
-  };
+  return spec;
 }
