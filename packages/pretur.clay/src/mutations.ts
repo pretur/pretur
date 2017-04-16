@@ -71,7 +71,7 @@ export interface MutationsExtractor {
   extractInsertData(clay: Record<any> | Set<Record<any>>, model: string): object;
   extractUpdateData(clay: Record<any>, model: string): { attributes: string[], data: object };
   extractRemoveIdentifiers(clay: Record<any>, model: string): object;
-  mutations(clay: Set<Record<any>> | Record<any>, model: string): MutateRequest<any>[];
+  getMutations(clay: Set<Record<any>> | Record<any>, model: string): MutateRequest<any>[];
 }
 
 export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): MutationsExtractor {
@@ -89,7 +89,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     const data: any = {};
     const spec = specPool[model];
 
-    const nonAutoIncrementedOwnedAttributes = spec.attributeArray
+    const nonAutoIncrementedOwnedAttributes = spec.attributes
       .filter(attrib => !attrib.autoIncrement && ownersIntersect(attrib.owner || [], owner))
       .map(attrib => attrib.name);
 
@@ -100,16 +100,15 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
       }
     }
 
-    const nonVirtualRelations = spec.nonVirtualRelations;
-    const targetRelations = [
-      ...nonVirtualRelations.subclass,
-      ...nonVirtualRelations.master,
-      ...nonVirtualRelations.detail,
-      ...nonVirtualRelations.manyToMany,
-      ...nonVirtualRelations.injective,
-    ];
-    const ownedTargetRelations = targetRelations
-      .filter(relation => ownersIntersect(relation.owner || [], owner));
+    const ownedTargetRelations = spec.relations
+      .filter(relation => ownersIntersect(relation.owner || [], owner))
+      .filter(({ type }) =>
+        type === 'SUBCLASS' ||
+        type === 'MASTER' ||
+        type === 'DETAIL' ||
+        type === 'MANY_TO_MANY' ||
+        type === 'INJECTIVE',
+    );
 
     for (const relation of ownedTargetRelations) {
       if (clay.fields[relation.alias]) {
@@ -126,9 +125,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
   ): { attributes: string[], data: object } {
     const spec = specPool[model];
 
-    const primaries = spec.attributeArray
-      .filter(attrib => attrib.primary)
-      .map(attrib => attrib.name);
+    const primaries = spec.attributes.filter(attrib => attrib.primary).map(attrib => attrib.name);
 
     const data: any = {};
     const attributes: string[] = [];
@@ -137,7 +134,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
       data[primary] = toPlain(clay.fields[primary]);
     }
 
-    const mutables = spec.attributeArray
+    const mutables = spec.attributes
       .filter(attrib => attrib.mutable && ownersIntersect(attrib.owner || [], owner))
       .map(attrib => attrib.name);
 
@@ -155,9 +152,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
   function extractRemoveIdentifiers(clay: Record<any>, model: string): object {
     const spec = specPool[model];
 
-    const primaries = spec.attributeArray
-      .filter(attrib => attrib.primary)
-      .map(attrib => attrib.name);
+    const primaries = spec.attributes.filter(attrib => attrib.primary).map(attrib => attrib.name);
 
     const identifiers: any = {};
 
@@ -168,13 +163,13 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     return identifiers;
   }
 
-  function mutations(clay: Set<Record<any>> | Record<any>, model: string) {
+  function getMutations(clay: Set<Record<any>> | Record<any>, model: string) {
     const requests: MutateRequest<any>[] = [];
     const spec = specPool[model];
 
     if (clay instanceof Set) {
       for (const item of clay.items) {
-        requests.push(...mutations(item, model));
+        requests.push(...getMutations(item, model));
       }
     } else {
       if (clay.state === 'removed') {
@@ -202,12 +197,12 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
           });
         }
 
-        const nonVirtualOwnedRelations = spec.nonVirtualRelationArray
+        const ownedRelations = spec.relations
           .filter(relation => ownersIntersect(relation.owner || [], owner));
 
-        for (const relation of nonVirtualOwnedRelations) {
+        for (const relation of ownedRelations) {
           if (clay.fields[relation.alias]) {
-            requests.push(...mutations(clay.fields[relation.alias], relation.model));
+            requests.push(...getMutations(clay.fields[relation.alias], relation.model));
           }
         }
       }
@@ -220,6 +215,6 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     extractInsertData,
     extractUpdateData,
     extractRemoveIdentifiers,
-    mutations,
+    getMutations,
   };
 }
