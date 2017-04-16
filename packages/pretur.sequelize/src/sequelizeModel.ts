@@ -1,18 +1,6 @@
 import * as Sequelize from 'sequelize';
 import { Pool } from './pool';
-import {
-  Spec,
-  AbstractType,
-  EnumType,
-  BigIntegerType,
-  IntegerType,
-  StringType,
-  ObjectType,
-  BooleanType,
-  DoubleType,
-  DateType,
-  RangeType,
-} from 'pretur.spec';
+import { Spec, Attribute } from 'pretur.spec';
 
 export type SequelizeInstance<T> = Sequelize.Instance<Partial<T>> & Partial<T>;
 export type SequelizeModel<T> = Sequelize.Model<SequelizeInstance<T>, Partial<T>>;
@@ -28,28 +16,29 @@ export interface BuildSequelizeModelOptions<T> {
   createDatabase?(sequelizeModel: SequelizeModel<T>): void;
 }
 
-export function buildSequelizeModel<T>(
+export function buildSequelizeModel<T extends object>(
   spec: Spec<T>,
   sequelize: Sequelize.Sequelize,
   options?: BuildSequelizeModelOptions<T>,
 ): UninitializedSequelizeModel<T> {
   const attributes: { [attrib: string]: Sequelize.DefineAttributeColumnOptions } = {};
 
-  spec.attributeArray.forEach(attrib =>
-    attributes[attrib.name] = {
-      allowNull: !attrib.required,
-      autoIncrement: attrib.primary && !!attrib.autoIncrement,
-      defaultValue: attrib.defaultValue,
+  for (const attribute of spec.attributes) {
+    attributes[attribute.name] = {
+      allowNull: !attribute.required,
+      autoIncrement: attribute.primary && !!attribute.autoIncrement,
+      defaultValue: attribute.defaultValue,
       field: (
         options &&
         options.attributeToFieldMap &&
-        options.attributeToFieldMap[attrib.name]
+        options.attributeToFieldMap[attribute.name]
       ) || undefined,
-      primaryKey: !!attrib.primary,
-      type: datatypeToSequelizeType(attrib.type),
-      unique: !attrib.primary && !!attrib.unique,
-      values: EnumType.is(attrib.type) ? attrib.type.values.map(v => v.name) : undefined,
-    });
+      primaryKey: !!attribute.primary,
+      type: datatypeToSequelizeType(attribute),
+      unique: !attribute.primary && !!attribute.unique,
+      values: attribute.type === 'ENUM' ? attribute.values : undefined,
+    };
+  }
 
   const defineOptions: Sequelize.DefineOptions<SequelizeInstance<T>> = {
     tableName: (options && options.tableName) || spec.name,
@@ -62,83 +51,38 @@ export function buildSequelizeModel<T>(
   const model = sequelize.define<SequelizeInstance<T>, T>(spec.name, attributes, defineOptions);
 
   function initialize(pool: Pool) {
-    spec.nonVirtualRelations.superclass.forEach(superclass => {
-      if (pool.models[superclass.model] && pool.models[superclass.model].sequelizeModel) {
-        model.belongsTo(pool.models[superclass.model].sequelizeModel!, {
-          as: superclass.alias,
-          foreignKey: superclass.key,
-          onDelete: superclass.onDelete,
-          onUpdate: superclass.onUpdate,
-        });
-      }
-    });
+    for (const relation of spec.relations) {
+      const target = pool.models[relation.model] && pool.models[relation.model].sequelizeModel;
+      const through = relation.through && pool.models[relation.through].sequelizeModel;
+      if (target) {
+        const relationOptions = {
+          as: relation.alias,
+          foreignKey: relation.key,
+          onDelete: relation.onDelete,
+          onUpdate: relation.onUpdate,
+        };
 
-    spec.nonVirtualRelations.subclass.forEach(subclass => {
-      if (pool.models[subclass.model] && pool.models[subclass.model].sequelizeModel) {
-        model.hasOne(pool.models[subclass.model].sequelizeModel!, {
-          as: subclass.alias,
-          foreignKey: subclass.key,
-          onDelete: subclass.onDelete,
-          onUpdate: subclass.onUpdate,
-        });
+        switch (relation.type) {
+          case 'SUPERCLASS':
+          case 'MASTER':
+            model.belongsTo(target, relationOptions);
+            break;
+          case 'DETAIL':
+            model.hasMany(target, relationOptions);
+            break;
+          case 'SUBCLASS':
+          case 'INJECTIVE':
+          case 'RECURSIVE':
+            model.hasOne(target, relationOptions);
+            break;
+          case 'MANY_TO_MANY':
+            if (through) {
+              model.belongsToMany(target, { ...relationOptions, through });
+            }
+            break;
+        }
       }
-    });
-
-    spec.nonVirtualRelations.manyToMany.forEach(manyToMany => {
-      if (pool.models[manyToMany.model] && pool.models[manyToMany.model].sequelizeModel) {
-        model.belongsToMany(pool.models[manyToMany.model].sequelizeModel!, {
-          as: manyToMany.alias,
-          foreignKey: manyToMany.key,
-          onDelete: manyToMany.onDelete,
-          onUpdate: manyToMany.onUpdate,
-          through: pool.models[manyToMany.through!].sequelizeModel!,
-        });
-      }
-    });
-
-    spec.nonVirtualRelations.master.forEach(master => {
-      if (pool.models[master.model] && pool.models[master.model].sequelizeModel) {
-        model.belongsTo(pool.models[master.model].sequelizeModel!, {
-          as: master.alias,
-          foreignKey: master.key,
-          onDelete: master.onDelete,
-          onUpdate: master.onUpdate,
-        });
-      }
-    });
-
-    spec.nonVirtualRelations.detail.forEach(detail => {
-      if (pool.models[detail.model] && pool.models[detail.model].sequelizeModel) {
-        model.hasMany(pool.models[detail.model].sequelizeModel!, {
-          as: detail.alias,
-          foreignKey: detail.key,
-          onDelete: detail.onDelete,
-          onUpdate: detail.onUpdate,
-        });
-      }
-    });
-
-    spec.nonVirtualRelations.injective.forEach(injective => {
-      if (pool.models[injective.model] && pool.models[injective.model].sequelizeModel) {
-        model.hasOne(pool.models[injective.model].sequelizeModel!, {
-          as: injective.alias,
-          foreignKey: injective.key,
-          onDelete: injective.onDelete,
-          onUpdate: injective.onUpdate,
-        });
-      }
-    });
-
-    spec.nonVirtualRelations.recursive.forEach(recursive => {
-      if (pool.models[recursive.model] && pool.models[recursive.model].sequelizeModel) {
-        model.hasOne(pool.models[recursive.model].sequelizeModel!, {
-          as: recursive.alias,
-          foreignKey: recursive.key,
-          onDelete: recursive.onDelete,
-          onUpdate: recursive.onUpdate,
-        });
-      }
-    });
+    }
 
     if (options && options.createDatabase) {
       options.createDatabase(model);
@@ -148,25 +92,29 @@ export function buildSequelizeModel<T>(
   return { sequelizeModel: model, initialize };
 }
 
-function datatypeToSequelizeType(datatype: AbstractType): any {
-  switch (true) {
-    case BigIntegerType.is(datatype):
+function datatypeToSequelizeType(attribute: Attribute): any {
+  switch (attribute.type) {
+    case 'BIGINT':
       return Sequelize.BIGINT;
-    case IntegerType.is(datatype):
+    case 'INTEGER':
       return Sequelize.INTEGER;
-    case StringType.is(datatype):
+    case 'STRING':
       return Sequelize.TEXT;
-    case ObjectType.is(datatype):
+    case 'OBJECT':
       return Sequelize.JSONB;
-    case EnumType.is(datatype):
+    case 'ENUM':
       return Sequelize.ENUM;
-    case BooleanType.is(datatype):
+    case 'BOOLEAN':
       return Sequelize.BOOLEAN;
-    case DoubleType.is(datatype):
+    case 'DOUBLE':
       return Sequelize.DOUBLE;
-    case DateType.is(datatype):
+    case 'DATE':
       return Sequelize.DATE;
-    case RangeType.is(datatype):
-      return Sequelize.RANGE(datatypeToSequelizeType((<RangeType>datatype).subtype));
+    case 'RANGE':
+      switch (attribute.subtype) {
+        case 'BIGINT': return Sequelize.RANGE(Sequelize.BIGINT);
+        case 'INTEGER': return Sequelize.RANGE(Sequelize.INTEGER);
+        case 'DATE': return Sequelize.RANGE(Sequelize.DATE);
+      }
   }
 }

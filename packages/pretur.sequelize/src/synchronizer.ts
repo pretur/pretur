@@ -1,6 +1,6 @@
 import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
-import { intersection, assign, pick } from 'lodash';
+import { intersection, pick } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
 import { Spec } from 'pretur.spec';
 import { ModelDescriptor } from './descriptor';
@@ -81,7 +81,7 @@ export interface BuildSynchronizerOptions<T> {
   removeInterceptor?: SynchronizationInterceptor<RemoveMutateRequest<T>, boolean>;
 }
 
-export function buildSynchronizer<T>(
+export function buildSynchronizer<T extends object>(
   spec: Spec<T>,
   options?: BuildSynchronizerOptions<T>,
 ): UnitializedSynchronizer<T> {
@@ -145,7 +145,7 @@ export function buildSynchronizer<T>(
 
 const INJECTED_MASTER_RESOLUTION_KEY = '__INJECTED_MASTER_RESOLUTION_KEY';
 
-async function insert<T>(
+async function insert<T extends object>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<InsertMutateRequest<T>> | undefined,
@@ -162,16 +162,16 @@ async function insert<T>(
   }
 
   async function defaultInsertBehavior(): Bluebird<void | Partial<T>> {
-    const data: Partial<T> = assign({}, item.data);
+    const data: Partial<T> = { ...(<any>item.data) };
 
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
     }
 
     try {
-      for (const master of model.spec.relations.master) {
+      for (const master of model.spec.relations.filter(({ type }) => type === 'MASTER')) {
         const masterData = data[<keyof T>master.alias];
-        (<any>data)[master.alias] = undefined;
+        data[master.alias] = undefined;
 
         if (masterData) {
           const masterModel = pool.models[master.model];
@@ -239,13 +239,14 @@ async function insert<T>(
           if (Array.isArray(nested)) {
             for (const nestedItem of nested) {
 
-              const nestedInsertData = assign({}, nestedItem, {
+              const nestedInsertData = {
+                ...nestedItem,
                 [aliasKeyMap[alias]]: newData[model.primaryKeys[0]],
-              });
+              };
 
               await targetModel.synchronizer(
                 transaction,
-                <InsertMutateRequest<any>>{
+                {
                   action: 'insert',
                   data: nestedInsertData,
                   model: aliasModelMap[alias],
@@ -257,13 +258,14 @@ async function insert<T>(
               );
             }
           } else {
-            const nestedInsertData = assign({}, nested, {
+            const nestedInsertData = {
+              ...nested,
               [aliasKeyMap[alias]]: newData[model.primaryKeys[0]],
-            });
+            };
 
             await targetModel.synchronizer(
               transaction,
-              <InsertMutateRequest<any>>{
+              {
                 action: 'insert',
                 data: nestedInsertData,
                 model: aliasModelMap[alias],
@@ -303,7 +305,7 @@ async function insert<T>(
   return defaultInsertBehavior();
 }
 
-async function update<T>(
+async function update<T extends object>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<UpdateMutateRequest<T>> | undefined,
@@ -358,7 +360,7 @@ async function update<T>(
   return defaultUpdateBehavior();
 }
 
-async function remove<T>(
+async function remove<T extends object>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<RemoveMutateRequest<T>> | undefined,

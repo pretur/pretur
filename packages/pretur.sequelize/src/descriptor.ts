@@ -23,7 +23,7 @@ export type FieldWhereBuilders<T> = {
   [P in keyof T]?: (value: T[P]) => FieldWhereClause<T[P]>;
 };
 
-export interface ModelDescriptor<T> {
+export interface ModelDescriptor<T extends object> {
   spec: Spec<T>;
   name: string;
   primaryKeys: (keyof T)[];
@@ -50,11 +50,11 @@ export interface BuildModelDescriptorOptions<T> {
   allowedMutableAttributes?: (keyof T)[];
 }
 
-export function buildModelDescriptor<T>(
+export function buildModelDescriptor<T extends object>(
   spec: Spec<T>,
   options?: BuildModelDescriptorOptions<T>,
 ): ModelDescriptor<T> {
-  const primaryKeys = spec.attributeArray.filter(a => a.primary).map(a => a.name);
+  const primaryKeys = spec.attributes.filter(a => a.primary).map(a => a.name);
 
   const sequelizeModel
     = (options && options.sequelizeModel && options.sequelizeModel.sequelizeModel) || undefined;
@@ -63,7 +63,7 @@ export function buildModelDescriptor<T>(
   const synchronizer
     = (options && options.synchronizer && options.synchronizer.synchronizer) || undefined;
 
-  const aliasModelMap = spec.relationArray.reduce(
+  const aliasModelMap = spec.relations.reduce(
     (m, r) => {
       m[r.alias] = r.model;
       return m;
@@ -71,19 +71,19 @@ export function buildModelDescriptor<T>(
     <AliasModelMap<T>>{},
   );
 
-  const aliasKeyMap = spec.relationArray.reduce(
+  const aliasKeyMap = spec.relations.reduce(
     (m, r) => {
-      m[<keyof T>r.alias] = <keyof T>r.key;
+      m[r.alias] = <keyof T>r.key;
       return m;
     },
     <AliasKeyMap<T>>{},
   );
 
   const allowedAttributes
-    = (options && options.allowedAttributes) || spec.attributeArray.map(a => a.name);
+    = (options && options.allowedAttributes) || spec.attributes.map(a => a.name);
 
   const mutableAttributes = (options && options.allowedMutableAttributes)
-    || spec.attributeArray.filter(a => a.mutable).map(a => a.name);
+    || spec.attributes.filter(a => a.mutable).map(a => a.name);
 
   const defaultOrder = (options && options.defaultOrder)
     || (primaryKeys[0] && [primaryKeys[0], 'ASC'])

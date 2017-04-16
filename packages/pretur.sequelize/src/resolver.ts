@@ -33,7 +33,7 @@ export interface BuildResolverOptions<T> {
   queryTransformer?(query: Query<T> | undefined): Query<T> | undefined;
 }
 
-export function buildCustomResolver<T>(
+export function buildCustomResolver<T extends object>(
   _: Spec<T>,
   resolver: CustomResolver<T>,
 ): UnitializedResolver<T> {
@@ -50,7 +50,7 @@ export function buildCustomResolver<T>(
   return { resolver: wrappedResolver, initialize };
 }
 
-export function buildResolver<T>(
+export function buildResolver<T extends object>(
   spec: Spec<T>,
   options?: BuildResolverOptions<T>,
 ): UnitializedResolver<T> {
