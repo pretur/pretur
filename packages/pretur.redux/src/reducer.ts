@@ -1,5 +1,4 @@
 import { combineReducers as reduxCombineReducers } from 'redux';
-import { assign } from 'lodash';
 import { Action } from './action';
 
 export interface Reducer<TState> {
@@ -49,9 +48,9 @@ export function createMutatorReducer<TState>(
   return function reducer(state = initialState, action: Action<any, any>) {
     let modified = false;
 
-    let set: TState | undefined = undefined!;
-    let unset: (keyof TState)[] | undefined = <any>undefined;
-    let reset: TState | undefined = undefined;
+    let set: TState | undefined;
+    let unset: (keyof TState)[] | undefined;
+    let reset: TState | undefined;
 
     function setter<TProps extends keyof TState>(prop: TProps, value: TState[TProps]) {
       if (value !== state![prop]) {
@@ -101,10 +100,12 @@ export function createMutatorReducer<TState>(
       return reset;
     }
 
-    const next = assign<TState>({}, state, set);
+    const next: TState = { ...(<any>state), ...(<any>set) };
 
     if (Array.isArray(unset)) {
-      unset.forEach(prop => delete next[prop]);
+      for (const property of unset) {
+        delete next[property];
+      }
     }
 
     return next;
@@ -180,7 +181,7 @@ export interface EnhancedReducible<T> {
 export function createReducibleMap<T extends ReducibleMap>(map: T): EnhancedReducibleState<T> {
   const properties = Object.keys(map);
 
-  let previousReducibleMap = assign<EnhancedReducibleState<T>>({}, map);
+  let previousReducibleMap = <EnhancedReducibleState<T>>{ ...(<any>map) };
   const reduce = function reduce(action: Action<any, any>): EnhancedReducibleState<T> {
     let modified = false;
     const newReducibleMap = <EnhancedReducibleState<T>>{};
