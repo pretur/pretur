@@ -122,7 +122,7 @@ export function createAttributeBuilder<T extends object>(spec: Spec<T>): Attribu
   ab.primaryKey = function buildPrimaryKey<K extends keyof T>(
     options?: PrimaryKeyOptions<T, K>,
   ): void {
-    if (options && options.type === 'STRING' && !options.hasOwnProperty('autoIncrement')) {
+    if (options && options.type && options.type !== 'INTEGER' && options.type !== 'BIGINT') {
       options.autoIncrement = false;
     }
     appendAttribute(spec, { ...primaryDefaults, owner: spec.owner, ...(<any>options) });
