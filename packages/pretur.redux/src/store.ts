@@ -8,7 +8,7 @@ import { createLogger } from 'redux-logger';
 export interface Store<TState> {
   dispatch: Dispatch;
   getState(): TState;
-  subscribe(listener: (state: TState) => any): () => void;
+  subscribe(listener: () => any): () => void;
   replaceReducer(nextReducer: Reducer<TState>): void;
 }
 
