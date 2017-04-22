@@ -28,7 +28,7 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.redux",
   "dependencies": {
     "@types/bluebird": "^3.5.2",
-    "@types/lodash": "^4.14.62",
+    "@types/lodash": "^4.14.63",
     "@types/redux-logger": "^3.0.0",
     "@types/redux-thunk": "^2.1.31",
     "bluebird": "^3.5.0",
@@ -36,10 +36,10 @@
     "redux": "^3.6.0",
     "redux-logger": "^3.0.1",
     "redux-thunk": "^2.2.0",
-    "tslib": "^1.6.0"
+    "tslib": "^1.6.1"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.3.0-dev.20170415"
+    "typescript": "^2.3.0-dev.20170422"
   }
 }

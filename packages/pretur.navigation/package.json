@@ -29,20 +29,20 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.navigation",
   "dependencies": {
-    "@types/lodash": "^4.14.62",
-    "@types/react": "^15.0.21",
+    "@types/lodash": "^4.14.63",
+    "@types/react": "^15.0.22",
     "local-storage": "^1.4.2",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.16.0",
     "pretur.redux": "^0.16.0",
-    "tslib": "^1.6.0"
+    "tslib": "^1.6.1"
   },
   "peerDependencies": {
     "react": "^15.0.0"
   },
   "devDependencies": {
-    "@types/react-addons-test-utils": "^0.14.17",
+    "@types/react-addons-test-utils": "^0.14.18",
     "rimraf": "^2.6.1",
-    "typescript": "^2.3.0-dev.20170415"
+    "typescript": "^2.3.0-dev.20170422"
   }
 }
