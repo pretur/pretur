@@ -232,6 +232,10 @@ export class Record<T> implements Clay {
     }
   }
 
+  public discard(dispatch: Dispatch): void {
+    dispatch(CLAY_REMOVE.create.broadcast(this.uniqueId));
+  }
+
   public unremove(dispatch: Dispatch): void {
     if (this.state === 'removed') {
       dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, 'normal'));
