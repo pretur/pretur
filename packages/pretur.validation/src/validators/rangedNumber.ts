@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import { I18nBundle } from 'pretur.i18n';
 
 export interface RangedNumberBundleData {
@@ -18,7 +17,7 @@ export function rangedNumber<K extends string>(
   inclusiveFrom = true,
   inclusiveTo = true,
 ) {
-  return async function rangedNumberValidator(num: number): Bluebird<RangedNumberError<K>> {
+  return async function rangedNumberValidator(num: number): Promise<RangedNumberError<K>> {
     if (
       typeof num !== 'number' ||
       isNaN(num) ||

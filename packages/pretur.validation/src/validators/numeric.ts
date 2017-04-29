@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import { I18nBundle } from 'pretur.i18n';
 
 export interface NumericBundleData {
@@ -8,7 +7,7 @@ export interface NumericBundleData {
 export type NumericError<K extends string> = undefined | I18nBundle<K, NumericBundleData>;
 
 export function numeric<K extends string>(key: K) {
-  return async function numericValidator(str: string): Bluebird<NumericError<K>> {
+  return async function numericValidator(str: string): Promise<NumericError<K>> {
     if (!str) {
       return;
     }

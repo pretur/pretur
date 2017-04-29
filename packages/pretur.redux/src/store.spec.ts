@@ -1,9 +1,12 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import * as Bluebird from 'bluebird';
 import { EMISSION_DISPATCH, EMISSION_GET_STATE, emit } from './emission';
 import { Store, createStore } from './store';
+
+function delay(duration: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, duration));
+}
 
 describe('createStore', () => {
 
@@ -22,16 +25,16 @@ describe('createStore', () => {
   it('should properly create store with thunk support', () => {
     const obj = {};
     const obj2 = {};
-    const store = createStore<any>((s = obj, {type}) => type === 'T' ? obj2 : s);
+    const store = createStore<any>((s = obj, { type }) => type === 'T' ? obj2 : s);
     return store.dispatch(
-      (dispatch) => Bluebird.delay(0).then(() => dispatch({ type: 'T' })),
+      (dispatch) => delay(0).then(() => dispatch({ type: 'T' })),
     ).then(() => expect(store.getState()).to.be.equals(obj2));
   });
 
   it('should properly create store with emission support', () => {
     const obj = {};
     let emitIsWorking = false;
-    let promise: Bluebird<void> = <any>undefined;
+    let promise: Promise<void> = <any>undefined;
     let store: Store<any>;
     const reducer = (state = obj, action: any) => {
       if (action.type === 'A') {

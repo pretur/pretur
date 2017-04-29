@@ -1,7 +1,4 @@
 /// <reference types="node" />
-
-import * as Bluebird from 'bluebird';
-
 export interface Headers {
   append(name: string, value: string): void;
   delete(name: string): void;
@@ -42,19 +39,19 @@ export interface Response {
   ok: boolean;
   statusText: string;
   headers: Headers;
-  arrayBuffer(): Bluebird<ArrayBuffer>;
-  blob(): Bluebird<Blob>;
-  formData(): Bluebird<FormData>;
-  json(): Bluebird<any>;
-  json<T>(): Bluebird<T>;
-  text(): Bluebird<string>;
+  arrayBuffer(): Promise<ArrayBuffer>;
+  blob(): Promise<Blob>;
+  formData(): Promise<FormData>;
+  json(): Promise<any>;
+  json<T>(): Promise<T>;
+  text(): Promise<string>;
   error(): Response;
   redirect(url: string, status: number): Response;
   clone(): Response;
 }
 
 export interface Fetch {
-  (url: string, options?: RequestOptions): Bluebird<Response>;
+  (url: string, options?: RequestOptions): Promise<Response>;
 }
 
 let fetcher: Fetch;

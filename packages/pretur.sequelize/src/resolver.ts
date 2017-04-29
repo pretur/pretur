@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
 import { intersection } from 'lodash';
 import { Query, SubQuery, QueryInclude } from 'pretur.sync';
@@ -12,11 +11,11 @@ export interface ResolveResult<T> {
 }
 
 export interface Resolver<T> {
-  (query?: Partial<Query<T>>, context?: any): Bluebird<ResolveResult<T>>;
+  (query?: Partial<Query<T>>, context?: any): Promise<ResolveResult<T>>;
 }
 
 export interface CustomResolver<T> {
-  (query: Query<T> | undefined, pool: Pool, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T> | undefined, pool: Pool, context: any): Promise<ResolveResult<T>>;
 }
 
 export interface UnitializedResolver<T> {
@@ -25,7 +24,7 @@ export interface UnitializedResolver<T> {
 }
 
 export interface ResolveInterceptor<T> {
-  (query: Query<T> | undefined, result: ResolveResult<T>, context: any): Bluebird<ResolveResult<T>>;
+  (query: Query<T> | undefined, result: ResolveResult<T>, context: any): Promise<ResolveResult<T>>;
 }
 
 export interface BuildResolverOptions<T> {
@@ -39,7 +38,7 @@ export function buildCustomResolver<T extends object>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>undefined;
 
-  function wrappedResolver(query: Query<T>, context: any): Bluebird<ResolveResult<T>> {
+  function wrappedResolver(query: Query<T>, context: any): Promise<ResolveResult<T>> {
     return resolver(query, pool, context);
   }
 
@@ -56,7 +55,7 @@ export function buildResolver<T extends object>(
 ): UnitializedResolver<T> {
   let pool: Pool = <any>undefined;
 
-  async function resolver(rawQuery?: Query<T>, context?: any): Bluebird<ResolveResult<T>> {
+  async function resolver(rawQuery?: Query<T>, context?: any): Promise<ResolveResult<T>> {
     let query = rawQuery;
 
     if (options && typeof options.queryTransformer === 'function') {

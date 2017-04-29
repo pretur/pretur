@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import { I18nBundle } from 'pretur.i18n';
 
 export interface MinimumLengthBundleData {
@@ -11,7 +10,7 @@ export type MinimumLengthError<K extends string>
   = undefined | I18nBundle<K, MinimumLengthBundleData>;
 
 export function minimumLength<K extends string>(key: K, minLength: number, acceptEmpty = false) {
-  return async function minimumLengthValidator(str: string): Bluebird<MinimumLengthError<K>> {
+  return async function minimumLengthValidator(str: string): Promise<MinimumLengthError<K>> {
 
     if (acceptEmpty && !str) {
       return;

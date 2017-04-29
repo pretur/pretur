@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import preturFetch, { Method } from 'pretur.fetch';
 
 export interface FetchOptions {
@@ -15,7 +14,7 @@ export interface FetchResponse<TBody> {
   statusText: string;
 }
 
-export async function fetch<TBody>(options: FetchOptions): Bluebird<FetchResponse<TBody>> {
+export async function fetch<TBody>(options: FetchOptions): Promise<FetchResponse<TBody>> {
   const response = await preturFetch(options.url, {
     body: JSON.stringify(options.body),
     credentials: 'include',

@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import { SpecPool, Owner, ownersIntersect } from 'pretur.spec';
 import { MutateRequest, Requester, MutateResult } from 'pretur.sync';
 import { Set } from './Set';
@@ -12,21 +11,21 @@ export interface ApplyMutationsResult {
 
 export function buildApplyMutations(
   requester: Requester,
-): (mutations: MutateRequest<any>[]) => Bluebird<ApplyMutationsResult> {
-  return (mutations) => applyMutations(requester, mutations);
+): (mutations: MutateRequest<any>[]) => Promise<ApplyMutationsResult> {
+  return mutations => applyMutations(requester, mutations);
 }
 
 export async function applyMutations(
   requester: Requester,
   mutations: MutateRequest<any>[],
-): Bluebird<ApplyMutationsResult> {
+): Promise<ApplyMutationsResult> {
   if (mutations.length === 0) {
     return { results: [], applied: false };
   }
 
   requester.batchMutateStart();
 
-  const promises: Bluebird<MutateResult<any>>[] = [];
+  const promises: Promise<MutateResult<any>>[] = [];
 
   for (const mutation of mutations) {
     if (mutation.type !== 'mutate') {
@@ -48,7 +47,7 @@ export async function applyMutations(
 
   requester.batchMutateEnd();
 
-  const results = await Bluebird.all(promises);
+  const results = await Promise.all(promises);
   let applied = true;
 
   for (const result of results) {

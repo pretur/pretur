@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import * as Sequelize from 'sequelize';
 import { intersection, pick } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
@@ -18,7 +17,7 @@ export interface ResultItemAppender {
 }
 
 export interface ErrorHandler<T> {
-  (data: T, error: any, rip: ResultItemAppender): Bluebird<void>;
+  (data: T, error: any, rip: ResultItemAppender): Promise<void>;
 }
 
 export interface Insert<T> {
@@ -27,7 +26,7 @@ export interface Insert<T> {
     item: InsertMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<Partial<T> | void>;
+  ): Promise<Partial<T> | void>;
 }
 
 export interface Update<T> {
@@ -36,7 +35,7 @@ export interface Update<T> {
     item: UpdateMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<void>;
+  ): Promise<void>;
 }
 
 export interface Remove<T> {
@@ -45,7 +44,7 @@ export interface Remove<T> {
     item: RemoveMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<void>;
+  ): Promise<void>;
 }
 
 export interface Synchronizer<T> {
@@ -54,7 +53,7 @@ export interface Synchronizer<T> {
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<Partial<T> | void>;
+  ): Promise<Partial<T> | void>;
 }
 
 export interface UnitializedSynchronizer<T> {
@@ -69,7 +68,7 @@ export interface SynchronizationInterceptor<T, R> {
     rip: ResultItemAppender,
     pool: Pool,
     context: any,
-  ): Bluebird<R>;
+  ): Promise<R>;
 }
 
 export interface BuildSynchronizerOptions<T> {
@@ -92,7 +91,7 @@ export function buildSynchronizer<T extends object>(
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Bluebird<Partial<T> | void> {
+  ): Promise<Partial<T> | void> {
 
     if (item.action === 'insert') {
       return insert(
@@ -154,14 +153,14 @@ async function insert<T extends object>(
   item: InsertMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
-): Bluebird<Partial<T> | void> {
+): Promise<Partial<T> | void> {
   const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  async function defaultInsertBehavior(): Bluebird<void | Partial<T>> {
+  async function defaultInsertBehavior(): Promise<void | Partial<T>> {
     const data: Partial<T> = { ...(<any>item.data) };
 
     if (!model.sequelizeModel) {
@@ -314,14 +313,14 @@ async function update<T extends object>(
   item: UpdateMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
-): Bluebird<void> {
+): Promise<void> {
   const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  async function defaultUpdateBehavior(): Bluebird<void> {
+  async function defaultUpdateBehavior(): Promise<void> {
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
     }
@@ -369,14 +368,14 @@ async function remove<T extends object>(
   item: RemoveMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
-): Bluebird<void> {
+): Promise<void> {
   const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  async function defaultRemoveBehavior(): Bluebird<void> {
+  async function defaultRemoveBehavior(): Promise<void> {
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
     }

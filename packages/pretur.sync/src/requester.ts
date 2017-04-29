@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import { debounce, find, compact } from 'lodash';
 import { Query } from './query';
 import { fetch, FetchResponse } from './fetch';
@@ -37,15 +36,15 @@ export type UpdateOptions<T> = { data: Partial<T>, attributes: (keyof T)[], mode
 export type RemoveOptions<T> = { identifiers: Partial<T>, model: string };
 
 export interface Requester {
-  select<T>(query: Query<T>): Bluebird<SelectResult<T>>;
-  operate<TData, TResult>(name: string, data?: TData): Bluebird<OperateResult<TResult>>;
-  insert<T>(options: InsertOptions<T>): Bluebird<InsertMutateResult<T>>;
-  insert<T>(model: string, data: Partial<T>): Bluebird<InsertMutateResult<T>>;
-  update<T>(options: UpdateOptions<T>): Bluebird<UpdateMutateResult>;
-  update<T>(model: string, attributes: (keyof T)[], data: Partial<T>): Bluebird<UpdateMutateResult>;
-  remove<T>(options: RemoveOptions<T>): Bluebird<RemoveMutateResult>;
-  remove<T>(model: string, identifiers: Partial<T>): Bluebird<RemoveMutateResult>;
-  validate<T>(name: string, data: T): Bluebird<ValidateResult>;
+  select<T>(query: Query<T>): Promise<SelectResult<T>>;
+  operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>>;
+  insert<T>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
+  insert<T>(model: string, data: Partial<T>): Promise<InsertMutateResult<T>>;
+  update<T>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
+  update<T>(model: string, attributes: (keyof T)[], data: Partial<T>): Promise<UpdateMutateResult>;
+  remove<T>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
+  remove<T>(model: string, identifiers: Partial<T>): Promise<RemoveMutateResult>;
+  validate<T>(name: string, data: T): Promise<ValidateResult>;
   batchMutateStart(): void;
   batchMutateEnd(): void;
   flush(): void;
@@ -93,7 +92,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
 
   const debouncedSend = debounce(send, wait, { maxWait });
 
-  async function send(): Bluebird<void> {
+  async function send() {
     if (requestRunning) {
       congested = true;
       return;
@@ -102,12 +101,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     const pendingQueue = compact(queue);
     queue = [];
     requestRunning = true;
-    fetch<Response[]>({
-      body: pendingQueue.map(item => item.request),
-      json: true,
-      method: 'POST',
-      url: endPoint,
-    }).then(response => {
+
+    try {
+      const response = await fetch<Response[]>({
+        body: pendingQueue.map(item => item.request),
+        json: true,
+        method: 'POST',
+        url: endPoint,
+      });
       for (const item of pendingQueue) {
         item.resolve({
           body: find(response.body, res => res.requestId === item.request.requestId),
@@ -116,21 +117,21 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           statusText: response.statusText,
         });
       }
-    }).catch(error => {
+    } catch (error) {
       for (const item of pendingQueue) {
         item.reject(error);
       }
-    }).finally(() => {
+    } finally {
       requestRunning = false;
       if (congested) {
         congested = false;
         debouncedSend();
       }
-    });
+    }
   }
 
-  function select<T>(query: Query<T>): Bluebird<SelectResult<T>> {
-    return new Bluebird<SelectResult<T>>((resolve, reject) => {
+  function select<T>(query: Query<T>): Promise<SelectResult<T>> {
+    return new Promise<SelectResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
         reject,
@@ -164,8 +165,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function operate<TData, TResult>(name: string, data?: TData): Bluebird<OperateResult<TResult>> {
-    return new Bluebird<OperateResult<TResult>>((resolve, reject) => {
+  function operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>> {
+    return new Promise<OperateResult<TResult>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
         reject,
@@ -201,10 +202,10 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function insert<T>(options: InsertOptions<T>): Bluebird<InsertMutateResult<T>>;
-  function insert<T>(model: string, data: Partial<T>): Bluebird<InsertMutateResult<T>>;
-  function insert<T>(model: string | InsertOptions<T>, data?: T): Bluebird<InsertMutateResult<T>> {
-    return new Bluebird<InsertMutateResult<T>>((resolve, reject) => {
+  function insert<T>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
+  function insert<T>(model: string, data: Partial<T>): Promise<InsertMutateResult<T>>;
+  function insert<T>(model: string | InsertOptions<T>, data?: T): Promise<InsertMutateResult<T>> {
+    return new Promise<InsertMutateResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
         reject,
@@ -249,14 +250,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function update<T>(options: UpdateOptions<T>): Bluebird<UpdateMutateResult>;
-  function update<T>(model: string, attributes: (keyof T)[], data: T): Bluebird<UpdateMutateResult>;
+  function update<T>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
+  function update<T>(model: string, attributes: (keyof T)[], data: T): Promise<UpdateMutateResult>;
   function update<T>(
     model: string | UpdateOptions<T>,
     attributes?: (keyof T)[],
     data?: T,
-  ): Bluebird<UpdateMutateResult> {
-    return new Bluebird<UpdateMutateResult>((resolve, reject) => {
+  ): Promise<UpdateMutateResult> {
+    return new Promise<UpdateMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
         reject,
@@ -301,13 +302,13 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function remove<T>(options: RemoveOptions<T>): Bluebird<RemoveMutateResult>;
-  function remove<T>(model: string, identifiers: T): Bluebird<RemoveMutateResult>;
+  function remove<T>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
+  function remove<T>(model: string, identifiers: T): Promise<RemoveMutateResult>;
   function remove<T>(
     model: string | RemoveOptions<T>,
     identifiers?: T,
-  ): Bluebird<RemoveMutateResult> {
-    return new Bluebird<RemoveMutateResult>((resolve, reject) => {
+  ): Promise<RemoveMutateResult> {
+    return new Promise<RemoveMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
         reject,
@@ -351,8 +352,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function validate<T>(name: string, data: T): Bluebird<ValidateResult> {
-    return new Bluebird<ValidateResult>((resolve, reject) => {
+  function validate<T>(name: string, data: T): Promise<ValidateResult> {
+    return new Promise<ValidateResult>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
         reject,

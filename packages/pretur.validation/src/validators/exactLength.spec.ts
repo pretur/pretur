@@ -1,12 +1,11 @@
 /// <reference types="mocha" />
 
-import * as Bluebird from 'bluebird';
 import { expect } from 'chai';
 import { exactLength } from './exactLength';
 
 describe('value-validator:exactLength', () => {
 
-  it('should return undefined for valid input', async (): Bluebird<void> => {
+  it('should return undefined for valid input', async () => {
     const validator1 = exactLength('A', 2, false);
     const validator2 = exactLength('A', 3, true);
     expect(await validator1('12')).to.be.undefined;
@@ -17,7 +16,7 @@ describe('value-validator:exactLength', () => {
 
   it(
     'should return bundle with {VALUE, EXPECTED_LENGTH, ACCEPT_EMPTY} for invalid input',
-    async (): Bluebird<void> => {
+    async () => {
       const validator1 = exactLength('A', 2, false);
       const validator2 = exactLength('A', 3, true);
       expect(await validator1('123')).to.deep.equal({

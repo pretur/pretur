@@ -1,4 +1,3 @@
-import * as Bluebird from 'bluebird';
 import { Spec, SpecPool } from 'pretur.spec';
 import { Dispatch } from 'pretur.redux';
 import { Query, MutateRequest, Requester } from 'pretur.sync';
@@ -76,7 +75,7 @@ async function loadSimple<A extends object>(
   spec: Spec<A>,
   requester: Requester,
   query?: Partial<Query<A>>,
-): Bluebird<{ data: A[], count: number }> {
+) {
   const { data = [], count = 0 } = await requester.select<A>({ ...query, model: spec.name });
   return { data, count };
 }
@@ -88,7 +87,7 @@ async function loadIntoSet<A extends object, F extends FieldMap<A>>(
   dispatch: Dispatch,
   set: Set<Record<F>>,
   query?: Partial<Query<A>>,
-): Bluebird<void> {
+) {
   const { data = [] } = await requester.select<A>({ ...query, model: spec.name });
   set.replace(dispatch, buildSet<A, F>(pool, spec, data));
 }
@@ -100,7 +99,7 @@ async function loadIntoRecord<A extends object, F extends FieldMap<A>>(
   dispatch: Dispatch,
   record: Record<F>,
   query?: Partial<Query<A>>,
-): Bluebird<boolean> {
+) {
   const { data } = await requester.select<A>({ ...query, model: spec.name });
   const row = data && data[0];
   if (row) {
@@ -118,7 +117,7 @@ export async function selectAndRefresh<A extends object, F extends FieldMap<A>>(
   set: Set<Record<F>>,
   querier: Querier<A>,
   extra?: Partial<Query<A>>,
-): Bluebird<{ data: A[], count: number }> {
+) {
   const { data = [], count = 0 } = await requester.select<A>({ ...querier.query, ...extra });
   refresh(dispatch, set, querier, { data: buildSet<A, F>(pool, spec, data), count });
   return { data, count };
@@ -136,16 +135,16 @@ export interface Helpers<A extends object, F extends FieldMap<A>> {
 
   querier(query?: Partial<Query<A>>): Querier<A>;
 
-  load(query?: Partial<Query<A>>): Bluebird<{ data: A[], count: number }>;
-  load(dispatch: Dispatch, set: Set<Record<F>>, query?: Partial<Query<A>>): Bluebird<void>;
-  load(dispatch: Dispatch, record: Record<F>, query?: Partial<Query<A>>): Bluebird<boolean>;
+  load(query?: Partial<Query<A>>): Promise<{ data: A[], count: number }>;
+  load(dispatch: Dispatch, set: Set<Record<F>>, query?: Partial<Query<A>>): Promise<void>;
+  load(dispatch: Dispatch, record: Record<F>, query?: Partial<Query<A>>): Promise<boolean>;
 
   select(
     dispatch: Dispatch,
     set: Set<Record<F>>,
     querier: Querier<A>,
     extra?: Partial<Query<A>>,
-  ): Bluebird<{ data: A[], count: number }>;
+  ): Promise<{ data: A[], count: number }>;
 }
 
 export interface HelperFactory {
@@ -186,22 +185,22 @@ export function buildHelpersFactory(
       return buildQuerier(spec, query);
     }
 
-    async function load(query?: Partial<Query<A>>): Bluebird<{ data: A[], count: number }>;
+    async function load(query?: Partial<Query<A>>): Promise<{ data: A[], count: number }>;
     async function load(
       dispatch: Dispatch,
       set: Set<Record<F>>,
       query?: Partial<Query<A>>,
-    ): Bluebird<void>;
+    ): Promise<void>;
     async function load(
       dispatch: Dispatch,
       record: Record<F>,
       query?: Partial<Query<A>>,
-    ): Bluebird<boolean>;
+    ): Promise<boolean>;
     async function load(
       queryOrDispatch?: Partial<Query<A>> | Dispatch,
       clay?: Set<Record<F>> | Record<F>,
       query?: Partial<Query<A>>,
-    ): Bluebird<{ data: A[], count: number } | void | boolean> {
+    ) {
       if (typeof queryOrDispatch === 'function' && clay) {
         if (clay instanceof Record) {
           return loadIntoRecord(pool, spec, requester, queryOrDispatch, clay, query);
@@ -218,7 +217,7 @@ export function buildHelpersFactory(
       set: Set<Record<F>>,
       querier: Querier<A>,
       extra?: Partial<Query<A>>,
-    ): Bluebird<{ data: A[], count: number }> {
+    ) {
       return selectAndRefresh(pool, spec, requester, dispatch, set, querier, extra);
     }
 

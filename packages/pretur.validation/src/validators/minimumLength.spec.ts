@@ -1,12 +1,11 @@
 /// <reference types="mocha" />
 
-import * as Bluebird from 'bluebird';
 import { expect } from 'chai';
 import { minimumLength } from './minimumLength';
 
 describe('value-validator:minimumLength', () => {
 
-  it('should return undefined for valid input', async (): Bluebird<void> => {
+  it('should return undefined for valid input', async () => {
     const validator1 = minimumLength('A', 2, false);
     const validator2 = minimumLength('A', 3, true);
     expect(await validator1('12')).to.be.undefined;
@@ -19,7 +18,7 @@ describe('value-validator:minimumLength', () => {
 
   it(
     'should return bundle with {VALUE, MINIMUM_LENGTH, ACCEPT_EMPTY} for invalid input',
-    async (): Bluebird<void> => {
+    async () => {
       const validator1 = minimumLength('A', 2, false);
       const validator2 = minimumLength('A', 3, true);
       expect(await validator1('1')).to.deep.equal({

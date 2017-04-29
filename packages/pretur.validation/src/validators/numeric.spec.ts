@@ -1,12 +1,11 @@
 /// <reference types="mocha" />
 
-import * as Bluebird from 'bluebird';
 import { expect } from 'chai';
 import { numeric } from './numeric';
 
 describe('value-validator:numeric', () => {
 
-  it('should return undefined for valid input', async (): Bluebird<void> => {
+  it('should return undefined for valid input', async () => {
     const validator = numeric('A');
     expect(await validator('123')).to.be.undefined;
     expect(await validator('')).to.be.undefined;
@@ -20,7 +19,7 @@ describe('value-validator:numeric', () => {
     expect(await validator(undefined!)).to.be.undefined;
   });
 
-  it('should return bundle with {VALUE} for invalid input', async (): Bluebird<void> => {
+  it('should return bundle with {VALUE} for invalid input', async () => {
     const validator = numeric('A');
     expect(await validator('blah')).to.deep.equal({ data: { VALUE: 'blah' }, key: 'A' });
   });

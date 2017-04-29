@@ -1,14 +1,12 @@
-import * as Bluebird from 'bluebird';
-
 export type ValidTargetType = number | string | symbol;
 
 export interface Dispatch {
   (action: Action<any, any>): void;
-  (thunk: Thunk): Bluebird<void>;
+  (thunk: Thunk): Promise<void>;
 }
 
 export interface Thunk {
-  (dispatch: Dispatch): Bluebird<void>;
+  (dispatch: Dispatch): Promise<void>;
 }
 
 export interface Action<TPayload = undefined, TMeta = undefined> {
@@ -167,7 +165,7 @@ export interface AsyncActionDescriptor<TPayload = undefined, TMeta = undefined> 
 }
 
 export function createAsyncAction<TPayload, TResult>(
-  resolve: (data?: TPayload) => Bluebird<TResult>,
+  resolve: (data?: TPayload) => Promise<TResult>,
   success: ActionDescriptor<TResult, any>,
   fail?: ActionDescriptor<any, any>,
   attempt?: ActionDescriptor<TPayload, any>,
