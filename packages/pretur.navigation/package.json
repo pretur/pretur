@@ -43,6 +43,6 @@
   "devDependencies": {
     "@types/react-addons-test-utils": "^0.14.18",
     "rimraf": "^2.6.1",
-    "typescript": "^2.4.0-dev.20170429"
+    "typescript": "^2.4.0-dev.20170502"
   }
 }

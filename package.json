@@ -20,7 +20,7 @@
   "devDependencies": {
     "@types/chai": "^3.5.2",
     "@types/mocha": "^2.2.41",
-    "@types/node": "^7.0.14",
+    "@types/node": "^7.0.15",
     "@types/react-addons-test-utils": "^0.14.18",
     "chai": "^3.5.0",
     "lerna": "^2.0.0-rc.4",
@@ -30,6 +30,6 @@
     "tslint": "^5.1.0",
     "tslint-eslint-rules": "^4.0.0",
     "tslint-microsoft-contrib": "^4.0.1",
-    "typescript": "^2.4.0-dev.20170429"
+    "typescript": "^2.4.0-dev.20170502"
   }
 }
