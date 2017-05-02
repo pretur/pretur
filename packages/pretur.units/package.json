@@ -1,0 +1,33 @@
+{
+  "name": "pretur.units",
+  "version": "0.17.0",
+  "description": "Unit conversion library",
+  "main": "lib/main.js",
+  "typings": "lib/main.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "rimraf lib && tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "pretur",
+    "units",
+    "conversion"
+  ],
+  "author": "Ali Taheri Moghaddar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pretur/pretur"
+  },
+  "bugs": {
+    "url": "https://github.com/pretur/pretur/issues"
+  },
+  "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.units",
+  "devDependencies": {
+    "rimraf": "^2.6.1",
+    "typescript": "^2.4.0-dev.20170429"
+  }
+}
