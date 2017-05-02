@@ -37,8 +37,8 @@ describe('Units', () => {
       expect(units.convert('kg', 'g', 2.5)).to.be.equals(2500);
     });
 
-    it('should ignore invalid conversions', () => {
-      const units = new Units(['g', 'kg'], [
+    it('should ignore invalid unit names and conversions', () => {
+      const units = new Units(['g', 'kg', <any>0, <any>false, <any>undefined], [
         <any>undefined,
         ['kg', 'g', 1000],
         <any>false,

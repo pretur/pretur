@@ -17,8 +17,8 @@ export default class Units<U extends string> {
   private units: U[] = [];
   private matrix: ConversionMatrix<U> = <any>{};
 
-  constructor(units: U[], conversions?: Conversion<U>[]) {
-    units.forEach(unit => {
+  constructor(units: U[], conversions?: (Conversion<U>)[]) {
+    units.filter(unit => typeof unit === 'string').forEach(unit => {
       if (this.units.indexOf(unit) === -1) {
         this.units.push(unit);
         this.matrix[unit] = <any>{};
@@ -44,13 +44,12 @@ export default class Units<U extends string> {
     if (typeof ratio !== 'number') {
       throw new Error(`Ratio ${ratio} is not a number`);
     }
-    if (ratio === 0) {
-      throw new Error(`Ratio cannot be zero`);
+    if (ratio === 0 || Number.isNaN(ratio) || ratio === -Infinity) {
+      throw new Error(`Ratio cannot be zero, NaN or negative infinity`);
     }
 
     this.matrix[source][destination] = ratio;
-    this.matrix[destination][source] = Math.pow(ratio, -1);
-
+    this.matrix[destination][source] = ratio === Infinity ? ratio : Math.pow(ratio, -1);
   }
 
   private calculateCoefficient(source: U, destination: U): number {
