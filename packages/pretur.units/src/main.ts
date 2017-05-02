@@ -44,12 +44,12 @@ export default class Units<U extends string> {
     if (typeof ratio !== 'number') {
       throw new Error(`Ratio ${ratio} is not a number`);
     }
-    if (ratio === 0 || Number.isNaN(ratio) || ratio === -Infinity) {
-      throw new Error(`Ratio cannot be zero, NaN or negative infinity`);
+    if (ratio === 0 || !Number.isFinite(ratio)) {
+      throw new Error(`Ratio must be a non-zero finite number`);
     }
 
     this.matrix[source][destination] = ratio;
-    this.matrix[destination][source] = ratio === Infinity ? ratio : Math.pow(ratio, -1);
+    this.matrix[destination][source] = Math.pow(ratio, -1);
   }
 
   private calculateCoefficient(source: U, destination: U): number {
