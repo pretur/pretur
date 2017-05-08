@@ -15,10 +15,6 @@ export interface Action<TPayload = undefined, TMeta = undefined> {
   meta?: TMeta;
 }
 
-export interface ActionTransformer {
-  <A extends Action<any, any>>(action: A): A;
-}
-
 export interface TargetedAction<TPayload = undefined, TMeta = undefined>
   extends Action<TPayload, TMeta> {
   target?: ValidTargetType | ValidTargetType[];
@@ -31,54 +27,13 @@ export interface ActionDescriptor<TPayload = undefined, TMeta = undefined> {
   is(action: Action<any, any>): action is Action<TPayload, TMeta>;
 }
 
-const TRANSFORMER_ERROR = 'The provided transformer is not a function';
-
-export function composeTransformers<A extends Action<any, any>>(
-  transformers?: ActionTransformer | ActionTransformer[],
-): ActionTransformer {
-  if (!transformers) {
-    return (action: A) => action;
-  }
-
-  if (Array.isArray(transformers)) {
-
-    transformers.forEach(t => {
-      if (typeof t !== 'function') {
-        throw new TypeError(TRANSFORMER_ERROR);
-      }
-    });
-
-    if (transformers.length === 0) {
-      return (action: A) => action;
-    }
-
-    if (transformers.length === 1) {
-      return transformers[0];
-    }
-
-    return (action: A) => transformers.reduce((prev, curr) => curr(prev), action);
-  }
-
-  if (typeof transformers === 'function') {
-    return transformers;
-  }
-
-  throw new TypeError(TRANSFORMER_ERROR);
-}
-
 export function createActionDescriptor<TPayload = undefined, TMeta = undefined>(
   type: string,
-  transformers?: ActionTransformer | ActionTransformer[],
 ): ActionDescriptor<TPayload, TMeta> {
-  const transform = composeTransformers(transformers);
   return {
     type,
     create(payload?: TPayload, meta?: TMeta): Action<TPayload, TMeta> {
-      return transform({
-        type,
-        payload,
-        meta,
-      });
+      return { type, payload, meta };
     },
     is(action: Action<any, any>): action is Action<TPayload, TMeta> {
       return action.type === type;
@@ -108,37 +63,35 @@ export interface TargetedActionDescriptor<TPayload = undefined, TMeta = undefine
 
 export function createTargetedActionDescriptor<TPayload = undefined, TMeta = undefined>(
   type: string,
-  transformers?: ActionTransformer | ActionTransformer[],
 ): TargetedActionDescriptor<TPayload, TMeta> {
-  const transform = composeTransformers(transformers);
   return {
     type,
     create: {
       unicast(target: ValidTargetType, payload?: TPayload, meta?: TMeta) {
-        return transform({
+        return {
           type,
           payload,
           meta,
           target,
           broadcast: false,
-        });
+        };
       },
       multicast(targets: ValidTargetType[], payload?: TPayload, meta?: TMeta) {
-        return transform({
+        return {
           type,
           payload,
           meta,
           broadcast: false,
           target: targets,
-        });
+        };
       },
       broadcast(payload?: TPayload, meta?: TMeta) {
-        return transform({
+        return {
           type,
           payload,
           meta,
           broadcast: true,
-        });
+        };
       },
     },
     is(id: ValidTargetType, action: Action<any, any>): action is TargetedAction<TPayload, TMeta> {
@@ -158,45 +111,4 @@ export function createTargetedActionDescriptor<TPayload = undefined, TMeta = und
       return targeted.target === id;
     },
   };
-}
-
-export interface AsyncActionDescriptor<TPayload = undefined, TMeta = undefined> {
-  create: (payload?: TPayload, meta?: TMeta) => Thunk;
-}
-
-export function createAsyncAction<TPayload, TResult>(
-  resolve: (data?: TPayload) => Promise<TResult>,
-  success: ActionDescriptor<TResult, any>,
-  fail?: ActionDescriptor<any, any>,
-  attempt?: ActionDescriptor<TPayload, any>,
-): AsyncActionDescriptor<TPayload> {
-  return {
-    create: (payload, meta) => dispatch => {
-
-      if (attempt) {
-        dispatch(attempt.create(payload, meta));
-      }
-
-      const promise = resolve(payload).then(result => dispatch(success.create(result, meta)));
-
-      if (fail) {
-        promise.catch(error => dispatch(fail.create(error, meta)));
-      }
-
-      return promise;
-    },
-  };
-}
-
-export function hook(dispatch: Dispatch, ...transformers: ActionTransformer[]): Dispatch {
-  const transform = composeTransformers(transformers);
-  return <Dispatch>((action: Action<any, any>) => {
-    if (typeof action === 'function') {
-      throw new TypeError('cannot hook into thunks');
-    }
-    if (!action) {
-      throw new TypeError('invalid action provided to hook into');
-    }
-    dispatch(transform(action));
-  });
 }
