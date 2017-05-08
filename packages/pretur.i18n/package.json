@@ -30,9 +30,9 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.i18n",
   "dependencies": {
-    "@types/node": "^7.0.15",
+    "@types/node": "^7.0.18",
     "messageformat": "^1.0.2",
-    "tslib": "^1.6.1"
+    "tslib": "^1.7.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",

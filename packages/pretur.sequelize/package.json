@@ -26,14 +26,14 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.sequelize",
   "dependencies": {
-    "@types/lodash": "^4.14.63",
-    "@types/sequelize": "^4.0.51",
+    "@types/lodash": "^4.14.64",
+    "@types/sequelize": "^4.0.52",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.17.1",
     "pretur.spec": "^0.17.1",
     "pretur.sync": "^0.17.1",
     "sequelize": "^4.0.0-2",
-    "tslib": "^1.6.1"
+    "tslib": "^1.7.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
