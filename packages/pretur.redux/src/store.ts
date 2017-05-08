@@ -1,7 +1,6 @@
 import { createStore as reduxCreateStore, applyMiddleware } from 'redux';
 import { Reducer } from './reducer';
 import { Dispatch } from './action';
-import { emissionMiddleware } from './emission';
 import thunk from 'redux-thunk';
 import { createLogger } from 'redux-logger';
 
@@ -16,18 +15,11 @@ export function createStore<TState>(topLevelReducer: Reducer<TState>, log = fals
   if (log) {
     return reduxCreateStore(
       topLevelReducer,
-      applyMiddleware(
-        thunk,
-        emissionMiddleware,
-        createLogger(),
-      ),
+      applyMiddleware(thunk, createLogger()),
     );
   }
   return reduxCreateStore(
     topLevelReducer,
-    applyMiddleware(
-      thunk,
-      emissionMiddleware,
-    ),
+    applyMiddleware(thunk),
   );
 }
