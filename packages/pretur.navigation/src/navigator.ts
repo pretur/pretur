@@ -13,13 +13,6 @@ import {
   NAVIGATION_CLEAR_PAGES,
 } from './actions';
 
-const DEISOLATE_KEY = '@@navigator_deisolate';
-
-export function deisolate<A extends Action<any, any>>(action: A): A {
-  (<any>action)[DEISOLATE_KEY] = true;
-  return action;
-}
-
 export interface PageReplaceOptions extends PageInstantiationData<any> {
   toRemoveMutex: string;
 }
@@ -454,43 +447,23 @@ export class Navigator implements Reducible {
       return <this>new Navigator(this._pages, this._prefix);
     }
 
-    if ((<any>action)[DEISOLATE_KEY]) {
-      let modified = false;
+    const newInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
+    let modified = false;
 
-      const newInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
-
-      orderedPages(this._instances).forEach(instance => {
-        const newInstance = instance.reduce(action);
-        if (newInstance !== instance) {
-          modified = true;
-        }
-        newInstances.pages[instance.mutex] = newInstance;
-      });
-
-      if (modified) {
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._activePageMutex = this._activePageMutex;
-        newNav._instances = newInstances;
-        return newNav;
+    orderedPages(this._instances).forEach(instance => {
+      const newInstance = instance.reduce(action);
+      if (newInstance !== instance) {
+        modified = true;
       }
-      return this;
-    }
+      newInstances.pages[instance.mutex] = newInstance;
+    });
 
-    if (this._activePageMutex && this._instances.pages[this._activePageMutex]) {
-      const target = this._instances.pages[this._activePageMutex];
-      const newTarget = target.reduce(action);
-      if (target !== newTarget) {
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._activePageMutex = this._activePageMutex;
-        newNav._instances = {
-          pageOrder: this._instances.pageOrder,
-          pages: { ...this._instances.pages, [this._activePageMutex]: newTarget },
-        };
-        return newNav;
-      }
-      return this;
+    if (modified) {
+      const newNav = <this>new Navigator(this._pages, this._prefix);
+      newNav._activePageMutex = this._activePageMutex;
+      newNav._instances = newInstances;
+      return newNav;
     }
-
     return this;
   }
 

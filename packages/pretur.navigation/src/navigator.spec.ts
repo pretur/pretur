@@ -1,9 +1,8 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { find } from 'lodash';
 import { Pages, PageTreeRoot } from '../src/pages';
-import { Navigator, deisolate } from '../src/navigator';
+import { Navigator } from '../src/navigator';
 import * as actions from '../src/actions';
 import * as persist from '../src/persist';
 
@@ -727,23 +726,6 @@ describe('Navigator', () => {
 
     it('should properly initialize page states', () => {
       nav.all.forEach(page => expect(page!.state).to.be.deep.equal({ value: 1 }));
-    });
-
-    it('should call reduce only on active page', () => {
-      const newNav = nav.reduce(<any>{ type: 'STUFF!', value: 10 });
-      expect(nav.active!.state.value).to.be.equals(1);
-      expect(newNav.active!.state.value).to.be.equals(10);
-      expect(find(newNav.all, page => page.mutex === '1')!.state.value).to.be.equals(1);
-      expect(find(newNav.all, page => page.mutex === '2')!.state.value).to.be.equals(1);
-    });
-
-    it('should call reduce on all pages if the action is deisolated', () => {
-      const newNav = nav.reduce(deisolate(<any>{ type: 'STUFF!', value: 10 }));
-      expect(nav.active!.state.value).to.be.equals(1);
-      expect(newNav.active!.state.value).to.be.equals(10);
-      expect(find(newNav.all, page => page.mutex === '1')!.state.value).to.be.equals(10);
-      expect(find(newNav.all, page => page.mutex === '2')!.state.value).to.be.equals(10);
-      expect(find(newNav.all, page => page.mutex === '3')!.state.value).to.be.equals(10);
     });
 
     it('should absorb actions that target it', () => {
