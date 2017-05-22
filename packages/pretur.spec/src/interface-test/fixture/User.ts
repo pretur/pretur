@@ -1,17 +1,23 @@
-import { createSpec, Spec } from '../../main';
+import { createSpec, Spec, Model } from '../../main';
 import RoleModel, { Role } from './Role';
 import { Permission } from './Permission';
 
-export interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  roleId: number;
-  role: Role;
-  permissions: Permission<any>[];
-}
+export type User = Model<{
+  fields: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    roleId: number;
+  };
+  records: {
+    role: Role;
+  };
+  sets: {
+    permissions: Permission<any>;
+  }
+}>;
 
-export default <Spec<User>>createSpec<User>(
+export default createSpec<User>(
   { name: 'User', owner: 'me' },
   ({ attribute, relation }) => {
     attribute.primaryKey({ name: 'id' });

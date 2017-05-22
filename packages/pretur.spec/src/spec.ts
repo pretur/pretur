@@ -5,17 +5,36 @@ import { Spec } from './spec';
 
 export type Owner = string | string[];
 
-export interface Indexes {
-  unique: string[][];
+export interface Indexes<T> {
+  unique: (keyof T)[][];
 }
 
-export interface Spec<T extends object> {
-  name: string;
+export type ModelType<F = any, R = any, S = any> = {
+  fields: F;
+  records: R;
+  sets: S;
+};
+
+export type Sets<S> = {[P in keyof S]: S[P][]};
+
+export type Model<
+  T extends ModelType<F, R, S> = ModelType,
+  F = T['fields'],
+  R = T['records'],
+  S = T['sets']> = F & R & Sets<S> & { $type: T };
+
+export interface Spec<
+  M extends Model<ModelType<F, R, S>> = Model,
+  F = M['$type']['fields'],
+  R = M['$type']['records'],
+  S = M['$type']['sets'],
+  N extends string = string> {
+  name: N;
   owner: Owner;
   join: boolean;
-  attributes: Attribute<T, keyof T>[];
-  indexes: Indexes;
-  relations: Relation<T>[];
+  attributes: Attribute<F, keyof F>[];
+  indexes: Indexes<F>;
+  relations: Relation<R, S>[];
   initialize: () => void;
 }
 
@@ -24,17 +43,22 @@ export interface CreateSpecOptions {
   owner: Owner;
 }
 
-export interface SpecBuilder<T extends object> {
-  attribute: AttributeBuilder<T>;
-  relation: RelationsBuilder<T>;
-  multicolumnUniqueIndex(...fields: (keyof T)[]): void;
+export interface SpecBuilder<F, R, S> {
+  attribute: AttributeBuilder<F>;
+  relation: RelationsBuilder<F, R, S>;
+  multicolumnUniqueIndex(...fields: (keyof F)[]): void;
 }
 
-export function createSpec<T extends object>(
+export function createSpec<
+  M extends Model<T>,
+  T extends ModelType<F, R, S> = M['$type'],
+  F = T['fields'],
+  R = T['records'],
+  S = T['sets']>(
   options: CreateSpecOptions,
-  initializer?: (specBuilder: SpecBuilder<T>) => void,
-): Spec<T> {
-  const spec: Spec<T> = {
+  initializer?: (specBuilder: SpecBuilder<F, R, S>) => void,
+): Spec<M> {
+  const spec: Spec<M> = {
     attributes: [],
     indexes: { unique: [] },
     join: false,
@@ -44,11 +68,11 @@ export function createSpec<T extends object>(
     initialize,
   };
 
-  const builder = <SpecBuilder<T>>{
+  const builder = <SpecBuilder<F, R, S>>{
     attribute: createAttributeBuilder(spec),
     relation: createRelationBuilder(spec),
 
-    multicolumnUniqueIndex(...fields: string[]) {
+    multicolumnUniqueIndex(...fields: (keyof F)[]) {
       spec.indexes.unique.push(fields);
     },
   };

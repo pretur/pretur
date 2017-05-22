@@ -1,17 +1,21 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { createSpec, ownersIntersect } from './spec';
+import { createSpec, Model, ownersIntersect } from './spec';
 
-interface MockSpec {
-  a: number;
-  b: string;
-  c: number;
-  d: number;
-  e: number;
-  f: number;
-  g: number;
-}
+type MockModel = Model<{
+  fields: {
+    a: number;
+    b: string;
+    c: number;
+    d: number;
+    e: number;
+    f: number;
+    g: number;
+  };
+  records: {};
+  sets: {};
+}>;
 
 describe('ownersIntersect', () => {
 
@@ -39,7 +43,7 @@ describe('spec', () => {
   describe('createSpec', () => {
 
     it('should properly build an Spec object', () => {
-      const spec = createSpec<MockSpec>({
+      const spec = createSpec<MockModel>({
         name: 'a',
         owner: ['b', 'c'],
       });
@@ -67,7 +71,7 @@ describe('spec', () => {
     });
 
     it('should properly call the builder with valid multicolumnUniqueIndex builder', () => {
-      const spec = createSpec<MockSpec>(
+      const spec = createSpec<MockModel>(
         { name: 'a', owner: undefined! },
         ({ multicolumnUniqueIndex }) => {
           expect(multicolumnUniqueIndex).to.be.a('function');

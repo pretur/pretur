@@ -1,15 +1,20 @@
-import { createJoinSpec, Spec } from '../../main';
+import { createJoinSpec, Spec, Model } from '../../main';
 import UserModel, { User } from './User';
 import PermissionModel, { Permission } from './Permission';
 
-export interface UserPermission {
-  userId: number;
-  user: User;
-  permissionId: number;
-  permission: Permission<any>;
-}
+export type UserPermission = Model<{
+  fields: {
+    userId: number;
+    permissionId: number;
+  };
+  records: {
+    user: User;
+    permission: Permission<any>;
+  };
+  sets: {};
+}>;
 
-export default <Spec<UserPermission>>createJoinSpec<UserPermission, User, Permission<any>>({
+export default createJoinSpec<UserPermission, User, Permission<any>>({
   firstJoinee: {
     aliasOnJoin: 'user',
     aliasOnTarget: 'users',

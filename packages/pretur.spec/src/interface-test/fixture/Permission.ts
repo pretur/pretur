@@ -1,4 +1,4 @@
-import { createSpec, Spec } from '../../main';
+import { createSpec, Spec, Model } from '../../main';
 import { User } from './User';
 
 export interface PermissionValues<T> {
@@ -6,14 +6,19 @@ export interface PermissionValues<T> {
   value: T;
 }
 
-export interface Permission<T> {
-  id: number;
-  name: string;
-  values: PermissionValues<T>;
-  users: User[];
-}
+export type Permission<T> = Model<{
+  fields: {
+    id: number;
+    name: string;
+    values: PermissionValues<T>;
+  };
+  records: {};
+  sets: {
+    users: User;
+  }
+}>;
 
-export default <Spec<Permission<any>>>createSpec<Permission<any>>(
+export default createSpec<Permission<any>>(
   { name: 'Role', owner: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });

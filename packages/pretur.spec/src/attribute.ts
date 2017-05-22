@@ -1,7 +1,7 @@
 import { chain } from 'lodash';
-import { Spec, Owner } from './spec';
+import { Spec, Model, ModelType, Owner } from './spec';
 
-export interface AttributeBase<T extends object, K extends keyof T> {
+export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
   owner?: Owner;
   required?: boolean;
@@ -15,22 +15,22 @@ export interface AttributeBase<T extends object, K extends keyof T> {
 export type NormalType = 'INTEGER' | 'BIGINT' | 'BOOLEAN' | 'DATE' | 'DOUBLE' | 'STRING' | 'OBJECT';
 export type RangeType = 'INTEGER' | 'BIGINT' | 'DATE';
 
-export interface NormalAttribute<T extends object, K extends keyof T> extends AttributeBase<T, K> {
+export interface NormalAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
   type: NormalType;
 }
 
-export interface EnumAttribute<T extends object, K extends keyof T> extends AttributeBase<T, K> {
+export interface EnumAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
   type: 'ENUM';
   typename: string;
   values: T[K][];
 }
 
-export interface RangeAttribute<T extends object, K extends keyof T> extends AttributeBase<T, K> {
+export interface RangeAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
   type: 'RANGE';
   subtype: RangeType;
 }
 
-export type Attribute<T extends object = any, K extends keyof T = keyof T> =
+export type Attribute<T = any, K extends keyof T = keyof T> =
   | NormalAttribute<T, K>
   | EnumAttribute<T, K>
   | RangeAttribute<T, K>;
@@ -78,9 +78,9 @@ export function validateAttribute(attribute: Attribute) {
   }
 }
 
-export function appendAttribute<T extends object>(
-  spec: Spec<T>,
-  attribute: Attribute<T>,
+export function appendAttribute<F, R, S>(
+  spec: Spec<Model<ModelType<F, R, S>>, F, R, S>,
+  attribute: Attribute<F>,
 ): void {
   if (process.env.NODE_ENV !== 'production') {
     if (!spec) {
@@ -103,24 +103,26 @@ export function appendAttribute<T extends object>(
   spec.attributes.push(attribute);
 }
 
-export interface AttributeBuilder<T extends object> {
-  <K extends keyof T>(options: Attribute<T, K>): void;
-  primaryKey<K extends keyof T>(options?: PrimaryKeyOptions<T, K>): void;
+export interface AttributeBuilder<F> {
+  <K extends keyof F>(options: Attribute<F, K>): void;
+  primaryKey<K extends keyof F>(options?: PrimaryKeyOptions<F, K>): void;
 }
 
-export function createAttributeBuilder<T extends object>(spec: Spec<T>): AttributeBuilder<T> {
+export function createAttributeBuilder<F, R, S>(
+  spec: Spec<Model<ModelType<F, R, S>>, F, R, S>,
+): AttributeBuilder<F> {
   if (process.env.NODE_ENV !== 'production' && !spec) {
     throw new Error('spec must be provided');
   }
 
-  function attributeBuilder<K extends keyof T>(options: Attribute<T, K>): void {
+  function attributeBuilder<K extends keyof F>(options: Attribute<F, K>): void {
     appendAttribute(spec, { ...defaults, owner: spec.owner, ...options });
   }
 
-  const ab = <AttributeBuilder<T>>attributeBuilder;
+  const ab = <AttributeBuilder<F>>attributeBuilder;
 
-  ab.primaryKey = function buildPrimaryKey<K extends keyof T>(
-    options?: PrimaryKeyOptions<T, K>,
+  ab.primaryKey = function buildPrimaryKey<K extends keyof F>(
+    options?: PrimaryKeyOptions<F, K>,
   ): void {
     if (options && options.type && options.type !== 'INTEGER' && options.type !== 'BIGINT') {
       options.autoIncrement = false;

@@ -2,17 +2,21 @@
 
 import { expect } from 'chai';
 import { noop } from 'lodash';
-import { Spec } from './spec';
+import { Spec, Model } from './spec';
 import { appendAttribute, createAttributeBuilder } from './attribute';
 
 interface MockModel {
-  a: number;
-  b: string;
-  c: number;
-  d: number;
+  fields: {
+    a: number;
+    b: string;
+    c: number;
+    d: number;
+  };
+  records: {};
+  sets: {};
 }
 
-function mockSpec(name: string): Spec<MockModel> {
+function mockSpec(name: string): Spec<Model<MockModel>> {
   return {
     name,
     attributes: [],

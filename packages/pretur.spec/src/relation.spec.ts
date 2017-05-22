@@ -53,7 +53,7 @@ function mockSpec(name: string): Spec<MockModel> {
   };
 }
 
-const baseRelation = <Relation<any>>{
+const baseRelation = <Relation>{
   alias: undefined!,
   key: 'aId',
   model: 'A',
@@ -179,9 +179,9 @@ describe('relation', () => {
             name: string,
             alias: keyof T,
             i18nKey: string,
-          ) => Inheritor<MockModel, T>,
+          ) => Inheritor<any, any, any, any>,
           appendInheritorGroup: <T extends object>(
-            options: InheritorsOptions<MockModel, T>,
+            options: InheritorsOptions<any, any, any, any, any>,
           ) => void,
         ): void;
       }

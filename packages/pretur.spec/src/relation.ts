@@ -1,5 +1,5 @@
-import { appendAttribute, NormalType } from './attribute';
-import { Spec, Owner } from './spec';
+import { appendAttribute, NormalType, EnumAttribute } from './attribute';
+import { Spec, Model, ModelType, Owner } from './spec';
 
 export type ModificationActions =
   'RESTRICT' |
@@ -17,37 +17,37 @@ export type RelationType =
   'MANY_TO_MANY' |
   'INJECTIVE';
 
-export interface Relation<T extends object, K extends string = string> {
+export interface Relation<R = any, S = any> {
   type: RelationType;
   model: string;
   owner?: Owner;
-  alias: keyof T;
-  key: K;
+  alias: keyof R | keyof S;
+  key: string;
   through?: string;
   required?: boolean;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
 
-export interface Inheritor<TSource extends object, TTarget extends object> {
-  target: Spec<TTarget>;
-  alias: keyof TSource;
+export interface Inheritor<SR, TF, TR, TS> {
+  target: Spec<Model<ModelType<TF, TR, TS>>, TF, TR, TS>;
+  alias: keyof SR;
 }
 
-export interface InheritorsOptions<TSource extends object, TTarget extends object> {
-  sharedExistingUniqueField: keyof TTarget;
-  aliasOnSubclasses: keyof TTarget;
-  typeIdentifierFieldName: keyof TSource;
+export interface InheritorsOptions<SF, SR, TF, TR, TS> {
+  sharedExistingUniqueField: keyof (SF | TF);
+  aliasOnSubclasses: keyof TR;
+  typeIdentifierFieldName: keyof SF;
   typeIdentifierEnumTypeName?: string;
   typeIdentifierRequired?: boolean;
-  inheritors: Inheritor<TSource, TTarget>[];
+  inheritors: Inheritor<SR, TF, TR, TS>[];
 }
 
-export interface MasterOptions<TSource extends object, TTarget extends object> {
-  target: Spec<TTarget>;
-  alias: keyof TSource;
-  ownAliasOnTarget: keyof TTarget;
-  foreignKey: keyof TSource;
+export interface MasterOptions<SF, SR, TF, TR, TS> {
+  target: Spec<Model<ModelType<TF, TR, TS>>, TF, TR, TS>;
+  alias: keyof SR;
+  ownAliasOnTarget: keyof TS;
+  foreignKey: keyof SF;
   foreignKeyType?: NormalType;
   required?: boolean;
   onDelete?: ModificationActions;
@@ -57,11 +57,11 @@ export interface MasterOptions<TSource extends object, TTarget extends object> {
   keyOwner?: Owner;
 }
 
-export interface InjectiveOptions<TSource extends object, TTarget extends object> {
-  target: Spec<TTarget>;
-  alias: keyof TSource;
-  ownAliasOnTarget: keyof TTarget;
-  foreignKey: keyof TSource;
+export interface InjectiveOptions<SF, SR, TF, TR, TS> {
+  target: Spec<Model<ModelType<TF, TR, TS>>, TF, TR, TS>;
+  alias: keyof SR;
+  ownAliasOnTarget: keyof TR;
+  foreignKey: keyof SF;
   foreignKeyType?: NormalType;
   required?: boolean;
   unique?: boolean;
@@ -74,15 +74,18 @@ export interface InjectiveOptions<TSource extends object, TTarget extends object
   keyOwner?: Owner;
 }
 
-export interface RecursiveOptions<T> {
-  alias: keyof T;
-  key: keyof T;
+export interface RecursiveOptions<F, R, S> {
+  alias: keyof R | keyof S;
+  key: keyof F;
   keyType?: NormalType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
 }
 
-export function appendRelation<T extends object>(spec: Spec<T>, relation: Relation<T>): void {
+export function appendRelation<F, R, S>(
+  spec: Spec<Model<ModelType<F, R, S>>, F, R, S>,
+  relation: Relation<R, S>,
+): void {
 
   if (process.env.NODE_ENV !== 'production') {
     if (!spec) {
@@ -161,11 +164,11 @@ export function appendRelation<T extends object>(spec: Spec<T>, relation: Relati
   spec.relations.push(relation);
 }
 
-function inheritors<TSource extends object, TTarget extends object>(
-  spec: Spec<TSource>,
-  options: InheritorsOptions<TSource, TTarget>,
+function inheritors<SF, SR, SS, TF, TR, TS>(
+  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
+  options: InheritorsOptions<SF, SR, TF, TR, TS>,
 ) {
-  const typeEnumValues: string[] = [];
+  const typeEnumValues: (keyof SR)[] = [];
 
   options.inheritors.forEach(inheritor => {
     appendRelation(spec, {
@@ -193,7 +196,7 @@ function inheritors<TSource extends object, TTarget extends object>(
     typeEnumValues.push(inheritor.alias);
   });
 
-  appendAttribute(spec, {
+  appendAttribute(spec, <EnumAttribute<any>>{
     mutable: true,
     name: options.typeIdentifierFieldName,
     owner: spec.owner,
@@ -204,9 +207,9 @@ function inheritors<TSource extends object, TTarget extends object>(
   });
 }
 
-function master<TSource extends object, TTarget extends object>(
-  spec: Spec<TSource>,
-  options: MasterOptions<TSource, TTarget>,
+function master<SF, SR, SS, TF, TR, TS>(
+  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
+  options: MasterOptions<SF, SR, TF, TR, TS>,
 ) {
   appendRelation(spec, {
     alias: options.alias,
@@ -239,9 +242,9 @@ function master<TSource extends object, TTarget extends object>(
   });
 }
 
-function injective<TSource extends object, TTarget extends object>(
-  spec: Spec<TSource>,
-  options: InjectiveOptions<TSource, TTarget>,
+function injective<SF, SR, SS, TF, TR, TS>(
+  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
+  options: InjectiveOptions<SF, SR, TF, TR, TS>,
 ) {
   appendRelation(spec, {
     alias: options.alias,
@@ -276,7 +279,10 @@ function injective<TSource extends object, TTarget extends object>(
   });
 }
 
-function recursive<T extends object>(spec: Spec<T>, options: RecursiveOptions<T>) {
+function recursive<SF, SR, SS>(
+  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
+  options: RecursiveOptions<SF, SR, SS>,
+) {
   appendRelation(spec, {
     alias: options.alias,
     key: options.key,
@@ -297,23 +303,23 @@ function recursive<T extends object>(spec: Spec<T>, options: RecursiveOptions<T>
   });
 }
 
-export interface RelationsBuilder<TSource extends object> {
-  inheritors<TTarget extends object>(options: InheritorsOptions<TSource, TTarget>): void;
-  master<TTarget extends object>(options: MasterOptions<TSource, TTarget>): void;
-  injective<TTarget extends object>(options: InjectiveOptions<TSource, TTarget>): void;
-  recursive(options: RecursiveOptions<TSource>): void;
+export interface RelationsBuilder<SF, SR, SS> {
+  inheritors<TF, TR, TS>(options: InheritorsOptions<SF, SR, TF, TR, TS>): void;
+  injective<TF, TR, TS>(options: InjectiveOptions<SF, SR, TF, TR, TS>): void;
+  master<TF, TR, TS>(options: MasterOptions<SF, SR, TF, TR, TS>): void;
+  recursive(options: RecursiveOptions<SF, SR, SS>): void;
 }
 
-export function createRelationBuilder<TSource extends object>(
-  spec: Spec<TSource>,
-): RelationsBuilder<TSource> {
+export function createRelationBuilder<SF, SR, SS>(
+  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
+): RelationsBuilder<SF, SR, SS> {
   return {
-    inheritors: <TTarget extends object>(options: InheritorsOptions<TSource, TTarget>) =>
+    inheritors: <TF, TR, TS>(options: InheritorsOptions<SF, SR, TF, TR, TS>) =>
       inheritors(spec, options),
-    injective: <TTarget extends object>(options: InjectiveOptions<TSource, TTarget>) =>
+    injective: <TF, TR, TS>(options: InjectiveOptions<SF, SR, TF, TR, TS>) =>
       injective(spec, options),
-    master: <TTarget extends object>(options: MasterOptions<TSource, TTarget>) =>
+    master: <TF, TR, TS>(options: MasterOptions<SF, SR, TF, TR, TS>) =>
       master(spec, options),
-    recursive: (options: RecursiveOptions<TSource>) => recursive(spec, options),
+    recursive: (options: RecursiveOptions<SF, SR, SS>) => recursive(spec, options),
   };
 }
