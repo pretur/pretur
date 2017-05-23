@@ -31,12 +31,12 @@ interface MockModel {
 
 function mockSpec(name: string): Spec<MockModel> {
   return {
-    name,
     attributes: [],
     indexes: { unique: [] },
     initialize: () => undefined!,
     join: false,
     model: undefined!,
+    name,
     relations: [],
     scope: undefined!,
     type: undefined!,
@@ -57,26 +57,26 @@ describe('joinSpec', () => {
         spec: undefined!,
       })).to.throw();
       expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
-        spec,
         aliasOnJoin: undefined!,
         aliasOnTarget: 'all_a',
         key: 'aId',
+        spec,
       })).to.throw();
       expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
-        spec,
         aliasOnJoin: 'a',
         aliasOnTarget: undefined!,
         key: 'aId',
+        spec,
       })).to.throw();
     });
 
     it('should return a joinee with valid defaults', () => {
       const spec = mockSpec('A');
       const joinee = joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
-        spec,
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',
         key: 'aId',
+        spec,
       });
 
       expect(joinee.aliasOnJoin).to.be.equals('a');
@@ -92,13 +92,13 @@ describe('joinSpec', () => {
     it('should return a joinee with overriden defaults', () => {
       const spec = mockSpec('A');
       const joinee = joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
-        spec,
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',
         key: 'someId',
         onDelete: 'SET NULL',
         onUpdate: 'NO ACTION',
         primary: false,
+        spec,
         type: 'STRING',
       });
 

@@ -52,28 +52,28 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
     if (typeof persistent === 'boolean') {
       return {
         component,
-        reducerBuilder,
-        titleKey,
         hidden: dynamicOrHidden,
         persistent,
+        reducerBuilder,
+        titleKey,
       };
     }
 
     return {
       component,
-      reducerBuilder,
-      titleKey,
       hidden: dynamicOrHidden,
       persistent: !dynamicOrHidden,
+      reducerBuilder,
+      titleKey,
     };
 
   }
   return {
     component,
-    reducerBuilder,
-    titleKey,
     hidden: false,
     persistent: true,
+    reducerBuilder,
+    titleKey,
   };
 }
 

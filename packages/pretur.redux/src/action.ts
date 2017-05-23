@@ -65,32 +65,31 @@ export function createTargetedActionDescriptor<TPayload = undefined, TMeta = und
   type: string,
 ): TargetedActionDescriptor<TPayload, TMeta> {
   return {
-    type,
     create: {
       unicast(target: ValidTargetType, payload?: TPayload, meta?: TMeta) {
         return {
-          type,
-          payload,
-          meta,
-          target,
           broadcast: false,
+          meta,
+          payload,
+          target,
+          type,
         };
       },
       multicast(targets: ValidTargetType[], payload?: TPayload, meta?: TMeta) {
         return {
-          type,
-          payload,
-          meta,
           broadcast: false,
+          meta,
+          payload,
           target: targets,
+          type,
         };
       },
       broadcast(payload?: TPayload, meta?: TMeta) {
         return {
-          type,
-          payload,
-          meta,
           broadcast: true,
+          meta,
+          payload,
+          type,
         };
       },
     },
@@ -110,5 +109,6 @@ export function createTargetedActionDescriptor<TPayload = undefined, TMeta = und
 
       return targeted.target === id;
     },
+    type,
   };
 }

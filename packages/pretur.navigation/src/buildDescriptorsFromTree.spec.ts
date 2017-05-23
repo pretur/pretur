@@ -43,8 +43,8 @@ const descriptors = buildDescriptorsFromTree({
     contents: {
       'h': {
         component,
-        reducerBuilder,
         hidden: true,
+        reducerBuilder,
         titleKey: 'H',
       },
     },
@@ -155,9 +155,9 @@ describe('buildDescriptorsFromTree', () => {
           'b': {
             contents: {
               'c': {
-                titleKey: 'C',
                 component,
                 reducerBuilder,
+                titleKey: 'C',
               },
             },
             titleKey: 'B',
@@ -165,9 +165,9 @@ describe('buildDescriptorsFromTree', () => {
           'd': {
             contents: {
               'e': {
-                titleKey: 'E',
                 component,
                 reducerBuilder,
+                titleKey: 'E',
               },
             },
             titleKey: 'D',

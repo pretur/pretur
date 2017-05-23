@@ -19,9 +19,9 @@ const tree: PageTreeRoot = {
       'd': {
         contents: {
           'e': {
-            titleKey: 'E',
             component,
             reducerBuilder,
+            titleKey: 'E',
           },
         },
         titleKey: 'D',

@@ -18,12 +18,12 @@ export function minimumLength<K extends string>(key: K, minLength: number, accep
 
     if (typeof str !== 'string' || str.length < minLength) {
       return {
-        key,
         data: {
           ACCEPT_EMPTY: acceptEmpty,
           MINIMUM_LENGTH: minLength,
           VALUE: str,
         },
+        key,
       };
     }
 

@@ -50,13 +50,13 @@ export function createSpec<T extends SpecType>(
   const spec = <Spec<T>>{
     attributes: [],
     indexes: { unique: [] },
+    initialize,
     join: false,
     model: undefined!,
     name: options.name,
     relations: [],
     scope: options.scope,
     type: undefined!,
-    initialize,
   };
 
   const builder = <SpecBuilder<T>>{

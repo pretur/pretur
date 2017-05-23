@@ -83,8 +83,8 @@ export function writeScaffolded(
 
 export function watch(paths: string[], listener: () => void) {
   watchr.watch({
-    paths,
-    listener,
     catchupDelay: 200,
+    listener,
+    paths,
   });
 }

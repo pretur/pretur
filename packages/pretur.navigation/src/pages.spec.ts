@@ -14,9 +14,9 @@ const tree: PageTreeRoot = {
       'b': {
         contents: {
           'c': {
-            titleKey: 'C',
             component,
             reducerBuilder,
+            titleKey: 'C',
           },
         },
         hidden: true,
@@ -26,8 +26,8 @@ const tree: PageTreeRoot = {
         contents: {
           'e': {
             component,
-            reducerBuilder,
             hidden: true,
+            reducerBuilder,
             titleKey: 'E',
           },
         },

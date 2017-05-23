@@ -252,9 +252,9 @@ export class Querier<T extends SpecType> implements Reducible {
     }
 
     dispatch(CLAY_SET_QUERY_ORDER.create.unicast(this.uniqueId, {
+      chain,
       field,
       ordering: targetOrdering,
-      chain,
     }));
   }
 

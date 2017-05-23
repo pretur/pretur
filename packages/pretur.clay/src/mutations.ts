@@ -213,16 +213,16 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
     } else {
       if (clay.state === 'removed') {
         requests.push(<MutateRequest<T>>{
-          model,
           action: 'remove',
           identifiers: extractRemoveIdentifiers(clay, model),
+          model,
           type: 'mutate',
         });
       } else if (clay.state === 'new') {
         requests.push(<MutateRequest<T>>{
-          model,
           action: 'insert',
           data: extractInsertData(clay, model),
+          model,
           type: 'mutate',
         });
       } else {
@@ -254,8 +254,8 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
 
   return {
     extractInsertData,
-    extractUpdateData,
     extractRemoveIdentifiers,
+    extractUpdateData,
     getMutations,
   };
 }

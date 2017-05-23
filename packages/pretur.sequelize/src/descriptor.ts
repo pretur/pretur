@@ -113,19 +113,19 @@ export function buildModelDescriptor<T extends SpecType>(
   }
 
   return {
-    spec,
-    sequelizeModel,
-    resolver,
-    synchronizer,
-    aliasModelMap,
     aliasKeyMap,
+    aliasModelMap,
     allowedAttributes,
-    mutableAttributes,
     defaultOrder,
-    sanitizeAttributes,
-    initialize,
-    primaryKeys,
     fieldWhereBuilders: (options && options.fieldWhereBuilders),
+    initialize,
+    mutableAttributes,
     name: spec.name,
+    primaryKeys,
+    resolver,
+    sanitizeAttributes,
+    sequelizeModel,
+    spec,
+    synchronizer,
   };
 }

@@ -159,9 +159,9 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
       const request: RequestQueueItem = {
         reject,
         request: <SelectRequest<T>>{
-          type: 'select',
           query,
           requestId,
+          type: 'select',
         },
         resolve(response: FetchResponse<SelectResponse<T>>) {
           resolve({
@@ -194,10 +194,10 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
       const request: RequestQueueItem = {
         reject,
         request: <OperateRequest<TData>>{
-          type: 'operate',
-          name,
           data,
+          name,
           requestId,
+          type: 'operate',
         },
         resolve(response: FetchResponse<OperateResponse<TResult>>) {
           resolve({
@@ -242,8 +242,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           action: 'insert',
           data: typeof model === 'string' ? data : model.data,
           model: typeof model === 'string' ? model : model.model,
-          type: 'mutate',
           requestId,
+          type: 'mutate',
         },
         resolve(response: FetchResponse<InsertMutateResponse<T>>) {
           resolve({
@@ -299,8 +299,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           attributes: typeof model === 'string' ? attributes : model.attributes,
           data: typeof model === 'string' ? data : model.data,
           model: typeof model === 'string' ? model : model.model,
-          type: 'mutate',
           requestId,
+          type: 'mutate',
         },
         resolve(response: FetchResponse<UpdateMutateResponse>) {
           resolve({
@@ -352,8 +352,8 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           action: 'remove',
           identifiers: typeof model === 'string' ? identifiers : model.identifiers,
           model: typeof model === 'string' ? model : model.model,
-          type: 'mutate',
           requestId,
+          type: 'mutate',
         },
         resolve(response: FetchResponse<RemoveMutateResponse>) {
           resolve({
@@ -394,10 +394,10 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
       const request: RequestQueueItem = {
         reject,
         request: <ValidateRequest<T>>{
-          type: 'validate',
-          name,
           data,
+          name,
           requestId,
+          type: 'validate',
         },
         resolve(response: FetchResponse<ValidateResponse>) {
           resolve({
@@ -489,15 +489,15 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   }
 
   return {
-    select,
-    operate,
-    insert,
-    update,
-    remove,
-    validate,
-    batchMutateStart,
     batchMutateEnd,
+    batchMutateStart,
     cancel,
     flush,
+    insert,
+    operate,
+    remove,
+    select,
+    update,
+    validate,
   };
 }

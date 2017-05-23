@@ -196,8 +196,8 @@ async function insert<T extends SpecType>(
       }
 
       const instance = await model.sequelizeModel.create(data, {
-        transaction,
         fields: model.allowedAttributes,
+        transaction,
       });
 
       const newData = instance.get({ plain: true });
@@ -337,8 +337,8 @@ async function update<T extends SpecType>(
 
     try {
       await model.sequelizeModel.update(<any>item.data, {
-        transaction,
         fields: buildUpdateAttributes(model.mutableAttributes, item.attributes),
+        transaction,
         validate: true,
         where: <any>filters,
       });

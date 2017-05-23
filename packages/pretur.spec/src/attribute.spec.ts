@@ -19,12 +19,12 @@ interface MockModel {
 
 function mockSpec(name: string): Spec<MockModel> {
   return {
-    name,
     attributes: [],
     indexes: { unique: [] },
     initialize: noop,
     join: false,
     model: undefined!,
+    name,
     relations: [],
     scope: undefined!,
     type: undefined!,

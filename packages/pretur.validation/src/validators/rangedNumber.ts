@@ -25,7 +25,6 @@ export function rangedNumber<K extends string>(
       (inclusiveTo ? num > to : num >= to)
     ) {
       return {
-        key,
         data: {
           FROM: from,
           INCLUSIVE_FROM: inclusiveFrom,
@@ -33,6 +32,7 @@ export function rangedNumber<K extends string>(
           TO: to,
           VALUE: num,
         },
+        key,
       };
     }
 
