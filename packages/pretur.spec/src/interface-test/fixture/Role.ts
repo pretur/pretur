@@ -1,5 +1,5 @@
 import { createSpec } from '../../main';
-import User, { UserType } from './User';
+import { UserType } from './User';
 
 export interface RoleType {
   name: 'Role';

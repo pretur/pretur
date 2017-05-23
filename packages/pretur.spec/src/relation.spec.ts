@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import { noop } from 'lodash';
-import { Spec } from './spec';
+import { Spec, SpecType } from './spec';
 import { EnumAttribute } from './attribute';
 import {
   Relation,
@@ -32,21 +32,39 @@ interface MockType {
 }
 
 interface Child1 {
-  id: number;
-  main: MockType;
-  a: number;
+  name: 'Child1';
+  fields: {
+    id: number;
+    a: number;
+  };
+  records: {
+    main: MockType;
+  };
+  sets: {};
 }
 
 interface Child2 {
-  id: number;
-  main: MockType;
-  b: number;
+  name: 'Child2';
+  fields: {
+    id: number;
+    b: number;
+  };
+  records: {
+    main: MockType;
+  };
+  sets: {};
 }
 
 interface Child3 {
-  id: number;
-  main: MockType;
-  c: number;
+  name: 'Child3';
+  fields: {
+    id: number;
+    c: number;
+  };
+  records: {
+    main: MockType;
+  };
+  sets: {};
 }
 
 function mockSpec(name: string): Spec<MockType> {
@@ -107,7 +125,10 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'some', key: undefined, type: 'RECURSIVE' }),
+        appendRelation(
+          spec,
+          { ...baseRelation, alias: 'some', key: <any>undefined, type: 'RECURSIVE' },
+        ),
       ).to.throw();
     });
 
@@ -185,14 +206,12 @@ describe('relation', () => {
       interface TestCase {
         (
           main: Spec<any>,
-          inheritor: <T extends object>(
-            name: string,
-            alias: keyof T,
+          inheritor: <T extends SpecType>(
+            name: T['name'],
+            alias: string,
             i18nKey: string,
           ) => Inheritor<MockType, MockType>,
-          appendInheritorGroup: <T extends object>(
-            options: InheritorsOptions<MockType, MockType>,
-          ) => void,
+          appendInheritorGroup: (options: InheritorsOptions<MockType, MockType>) => void,
         ): void;
       }
 
@@ -218,9 +237,9 @@ describe('relation', () => {
             append({
               aliasOnSubclasses: 'main',
               inheritors: [
-                inheritor<Child1 & Child2 & Child3>('Child1', 'a', 'A'),
-                inheritor<Child1 & Child2 & Child3>('Child2', 'b', 'A'),
-                inheritor<Child1 & Child2 & Child3>('Child3', 'c', 'A'),
+                inheritor<Child1 | Child2 | Child3>('Child1', 'a', 'A'),
+                inheritor<Child1 | Child2 | Child3>('Child2', 'b', 'A'),
+                inheritor<Child1 | Child2 | Child3>('Child3', 'c', 'A'),
               ],
               sharedExistingUniqueField: 'id',
               typeIdentifierFieldName: 'type',
@@ -234,9 +253,9 @@ describe('relation', () => {
           (main, inheritor, append) => {
             main.scope = 'scope';
 
-            const child1 = inheritor<Child1 & Child2 & Child3>('Child1', 'a', 'A');
-            const child2 = inheritor<Child1 & Child2 & Child3>('Child2', 'b', 'A');
-            const child3 = inheritor<Child1 & Child2 & Child3>('Child3', 'c', 'A');
+            const child1 = inheritor<Child1 | Child2 | Child3>('Child1', 'a', 'A');
+            const child2 = inheritor<Child1 | Child2 | Child3>('Child2', 'b', 'A');
+            const child3 = inheritor<Child1 | Child2 | Child3>('Child3', 'c', 'A');
 
             append({
               aliasOnSubclasses: 'main',

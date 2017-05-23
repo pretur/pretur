@@ -1,7 +1,7 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { Spec, Model } from './spec';
+import { Spec } from './spec';
 import { createJoinSpec, joineeValidateAndSetDefault } from './joinSpec';
 
 interface MockModel {
