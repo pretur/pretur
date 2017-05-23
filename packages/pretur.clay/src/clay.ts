@@ -1,10 +1,12 @@
 import { mapValues } from 'lodash';
+import { SpecType } from 'pretur.spec';
 import { ValidationError } from 'pretur.validation';
 import { Reducible, Dispatch } from 'pretur.redux';
 import { Value } from './Value';
 import { Record } from './Record';
 import { Set } from './Set';
 import { Querier } from './Querier';
+import { Fields } from './helpers';
 import { CLAY_REFRESH } from './actions';
 
 let id = 0;
@@ -26,11 +28,11 @@ export interface Clay extends Reducible {
   setState(dispatch: Dispatch, state: State): void;
 }
 
-export function refresh<T>(
+export function refresh<T extends SpecType>(
   dispatch: Dispatch,
-  set: Set<T>,
-  querier: Querier<any>,
-  payload: { data: Set<T>; count: number },
+  set: Set<Record<Fields<T>>>,
+  querier: Querier<T>,
+  payload: { data: Set<Record<Fields<T>>>; count: number },
 ): void {
   dispatch(CLAY_REFRESH.create.multicast([set.uniqueId, querier.uniqueId], payload));
 }

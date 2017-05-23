@@ -1,4 +1,5 @@
 import { isEqual, omit, compact, flatten, zip, fill, get, setWith, cloneDeep } from 'lodash';
+import { SpecType } from 'pretur.spec';
 import { Reducible, Action, Dispatch } from 'pretur.redux';
 import { Query, SubQuery, QueryFilters, Ordering } from 'pretur.sync';
 import { nextId } from './clay';
@@ -43,13 +44,17 @@ export function getInclude(query: Query<any>, path?: string[]): SubQuery<any> | 
   return include;
 }
 
-export function setInclude<T>(query: Query<T>, include: SubQuery<any>, path?: string[]): void {
+export function setInclude<T extends SpecType, S extends SpecType = SpecType>(
+  query: Query<T>,
+  include: SubQuery<S>,
+  path?: string[],
+): void {
   if (isPath(path)) {
     setWith(query, flatten(zip(fill(compact(path), 'include'), compact(path))), include, Object);
   }
 }
 
-export class Querier<T> implements Reducible {
+export class Querier<T extends SpecType> implements Reducible {
   public readonly uniqueId: number;
   public readonly count?: number;
   public readonly query: Query<T>;
@@ -69,7 +74,7 @@ export class Querier<T> implements Reducible {
       const newQuery = omit<Query<T>, Query<T>>(this.query, 'attributes');
 
       if (Array.isArray(action.payload)) {
-        const attributes = <(keyof T)[]>compact(action.payload);
+        const attributes = <(keyof T['fields'])[]>compact(action.payload);
         if (attributes.length > 0) {
           newQuery.attributes = attributes;
         }
@@ -183,15 +188,24 @@ export class Querier<T> implements Reducible {
     return this;
   }
 
-  public setAttributes(dispatch: Dispatch, attributes?: (keyof T)[]): void {
+  public setAttributes(dispatch: Dispatch, attributes?: (keyof T['fields'])[]): void {
     dispatch(CLAY_SET_QUERY_ATTRIBUTES.create.unicast(this.uniqueId, attributes));
   }
 
-  public resetFilters(dispatch: Dispatch, filters?: QueryFilters<T>, path?: string[]): void {
+  public resetFilters(
+    dispatch: Dispatch,
+    filters?: QueryFilters<T['fields']>,
+    path?: string[],
+  ): void {
     dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
   }
 
-  public setFilter(dispatch: Dispatch, field: keyof T, filter: any, path?: string[]): void {
+  public setFilter(
+    dispatch: Dispatch,
+    field: keyof T['fields'],
+    filter: any,
+    path?: string[],
+  ): void {
     const target = isPath(path) ? getInclude(this.query, path) : this.query;
     const filters = target ? { ...target.filters } : {};
 
@@ -200,7 +214,7 @@ export class Querier<T> implements Reducible {
     dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
   }
 
-  public clearFilter(dispatch: Dispatch, field: keyof T, path?: string[]): void {
+  public clearFilter(dispatch: Dispatch, field: keyof T['fields'], path?: string[]): void {
     const target = isPath(path) ? getInclude(this.query, path) : this.query;
 
     if (!target || !target.filters) {
