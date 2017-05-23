@@ -58,8 +58,8 @@ export function joineeValidateAndSetDefault<JF, JR, SF, SR, SS, TS>(
   };
 }
 
-export interface CreateJoinSpecOptions<JF, JR, FF, FR, FS, SF, SR, SS> {
-  name: string;
+export interface CreateJoinSpecOptions<JF, JR, JN extends string, FF, FR, FS, SF, SR, SS> {
+  name: JN;
   owner: Owner;
   firstJoinee: JoineeOptions<JF, JR, FF, FR, FS, SS>;
   secondJoinee: JoineeOptions<JF, JR, SF, SR, SS, FS>;
@@ -69,10 +69,11 @@ export function createJoinSpec<
   J extends Model<JT>,
   F extends Model<FT>,
   S extends Model<ST>,
-  JT extends ModelType<JF, JR, JS> = J['$type'],
+  JT extends ModelType<JF, JR, JS, JN> = J['$type'],
   JF = JT['fields'],
   JR = JT['records'],
   JS = JT['sets'],
+  JN extends string = JT['name'],
   FT extends ModelType<FF, FR, FS> = F['$type'],
   FF = FT['fields'],
   FR = FT['records'],
@@ -81,7 +82,7 @@ export function createJoinSpec<
   SF = ST['fields'],
   SR = ST['records'],
   SS = ST['sets']>(
-  options: CreateJoinSpecOptions<JF, JR, FF, FR, FS, SF, SR, SS>,
+  options: CreateJoinSpecOptions<JF, JR, JN, FF, FR, FS, SF, SR, SS>,
   initializer?: (specBuilder: JoinSpecBuilder<JF>) => void,
 ): Spec<J> {
 
@@ -89,6 +90,7 @@ export function createJoinSpec<
   const secondJoinee = joineeValidateAndSetDefault(options.secondJoinee);
 
   const spec: Spec<J> = {
+    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize,

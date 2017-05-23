@@ -5,11 +5,12 @@ import { Spec } from './spec';
 
 export type Owner = string | string[];
 
-export interface Indexes<T> {
-  unique: (keyof T)[][];
+export interface Indexes<F> {
+  unique: (keyof F)[][];
 }
 
-export type ModelType<F = any, R = any, S = any> = {
+export type ModelType<F = any, R = any, S = any, N = any> = {
+  name: N;
   fields: F;
   records: R;
   sets: S;
@@ -18,28 +19,30 @@ export type ModelType<F = any, R = any, S = any> = {
 export type Sets<S> = {[P in keyof S]: S[P][]};
 
 export type Model<
-  T extends ModelType<F, R, S> = ModelType,
+  T extends ModelType<F, R, S, N> = ModelType,
   F = T['fields'],
   R = T['records'],
-  S = T['sets']> = F & R & Sets<S> & { $type: T };
+  S = T['sets'],
+  N = T['name']> = F & R & Sets<S> & { $name: N; $type: T };
 
 export interface Spec<
-  M extends Model<ModelType<F, R, S>> = Model,
+  M extends Model<ModelType<F, R, S, N>> = Model,
   F = M['$type']['fields'],
   R = M['$type']['records'],
   S = M['$type']['sets'],
-  N extends string = string> {
+  N extends string = M['$type']['name']> {
+  $model: M;
   name: N;
   owner: Owner;
   join: boolean;
-  attributes: Attribute<F, keyof F>[];
+  attributes: Attribute<F>[];
   indexes: Indexes<F>;
   relations: Relation<R, S>[];
   initialize: () => void;
 }
 
-export interface CreateSpecOptions {
-  name: string;
+export interface CreateSpecOptions<N extends string> {
+  name: N;
   owner: Owner;
 }
 
@@ -51,14 +54,16 @@ export interface SpecBuilder<F, R, S> {
 
 export function createSpec<
   M extends Model<T>,
-  T extends ModelType<F, R, S> = M['$type'],
+  T extends ModelType<F, R, S, N> = M['$type'],
   F = T['fields'],
   R = T['records'],
-  S = T['sets']>(
-  options: CreateSpecOptions,
+  S = T['sets'],
+  N extends string = M['$type']['name']>(
+  options: CreateSpecOptions<N>,
   initializer?: (specBuilder: SpecBuilder<F, R, S>) => void,
 ): Spec<M> {
   const spec: Spec<M> = {
+    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     join: false,

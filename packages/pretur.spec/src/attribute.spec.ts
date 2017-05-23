@@ -6,6 +6,7 @@ import { Spec, Model } from './spec';
 import { appendAttribute, createAttributeBuilder } from './attribute';
 
 interface MockModel {
+  name: string;
   fields: {
     a: number;
     b: string;
@@ -19,6 +20,7 @@ interface MockModel {
 function mockSpec(name: string): Spec<Model<MockModel>> {
   return {
     name,
+    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize: noop,

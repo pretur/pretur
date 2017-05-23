@@ -5,6 +5,7 @@ import { Spec, Model } from './spec';
 import { createJoinSpec, joineeValidateAndSetDefault } from './joinSpec';
 
 type MockModel = Model<{
+  name: string;
   fields: {
     a: number;
     aId: number;
@@ -27,9 +28,10 @@ type MockModel = Model<{
   };
 }>;
 
-function mockSpec(name: string): Spec<MockModel> {
+function mockSpec<N extends string>(name: N): Spec<MockModel> {
   return {
     name,
+    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize: () => undefined!,

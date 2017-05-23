@@ -3,6 +3,7 @@ import RoleModel, { Role } from './Role';
 import { Permission } from './Permission';
 
 export type User = Model<{
+  name: 'User';
   fields: {
     id: number;
     firstName: string;
@@ -13,7 +14,7 @@ export type User = Model<{
     role: Role;
   };
   sets: {
-    permissions: Permission<any>;
+    permissions: Permission;
   }
 }>;
 

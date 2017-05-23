@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { createSpec, Model, ownersIntersect } from './spec';
 
 type MockModel = Model<{
+  name: 'a';
   fields: {
     a: number;
     b: string;

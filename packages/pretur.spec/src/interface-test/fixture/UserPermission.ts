@@ -3,18 +3,19 @@ import UserModel, { User } from './User';
 import PermissionModel, { Permission } from './Permission';
 
 export type UserPermission = Model<{
+  name: 'UserPermission';
   fields: {
     userId: number;
     permissionId: number;
   };
   records: {
     user: User;
-    permission: Permission<any>;
+    permission: Permission;
   };
   sets: {};
 }>;
 
-export default createJoinSpec<UserPermission, User, Permission<any>>({
+export default createJoinSpec<UserPermission, User, Permission>({
   firstJoinee: {
     aliasOnJoin: 'user',
     aliasOnTarget: 'users',

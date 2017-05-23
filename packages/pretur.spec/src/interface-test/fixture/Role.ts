@@ -2,6 +2,7 @@ import { createSpec, Spec, Model } from '../../main';
 import { User } from './User';
 
 export type Role = Model<{
+  name: 'Role';
   fields: {
     id: number;
     name: string;

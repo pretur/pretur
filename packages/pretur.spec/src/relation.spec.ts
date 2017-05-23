@@ -44,6 +44,7 @@ interface Child3 {
 function mockSpec(name: string): Spec<MockModel> {
   return {
     name,
+    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize: noop,

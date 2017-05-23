@@ -6,7 +6,8 @@ export interface PermissionValues<T> {
   value: T;
 }
 
-export type Permission<T> = Model<{
+export type Permission<T = any> = Model<{
+  name: 'Permission';
   fields: {
     id: number;
     name: string;
@@ -18,8 +19,8 @@ export type Permission<T> = Model<{
   }
 }>;
 
-export default createSpec<Permission<any>>(
-  { name: 'Role', owner: 'me' },
+export default createSpec<Permission>(
+  { name: 'Permission', owner: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });
     attribute({ name: 'name', type: 'STRING' });
