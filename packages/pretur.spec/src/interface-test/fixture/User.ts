@@ -19,7 +19,7 @@ export type User = Model<{
 }>;
 
 export default createSpec<User>(
-  { name: 'User', owner: 'me' },
+  { name: 'User', scope: 'me' },
   ({ attribute, relation }) => {
     attribute.primaryKey({ name: 'id' });
     attribute({ name: 'firstName', type: 'STRING' });

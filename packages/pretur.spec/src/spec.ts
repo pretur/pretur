@@ -3,7 +3,7 @@ import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 import { Spec } from './spec';
 
-export type Owner = string | string[];
+export type Scope = string | string[];
 
 export interface Indexes<F> {
   unique: (keyof F)[][];
@@ -33,7 +33,7 @@ export interface Spec<
   N extends string = M['$type']['name']> {
   $model: M;
   name: N;
-  owner: Owner;
+  scope: Scope;
   join: boolean;
   attributes: Attribute<F>[];
   indexes: Indexes<F>;
@@ -43,7 +43,7 @@ export interface Spec<
 
 export interface CreateSpecOptions<N extends string> {
   name: N;
-  owner: Owner;
+  scope: Scope;
 }
 
 export interface SpecBuilder<F, R, S> {
@@ -68,8 +68,8 @@ export function createSpec<
     indexes: { unique: [] },
     join: false,
     name: options.name,
-    owner: options.owner,
     relations: [],
+    scope: options.scope,
     initialize,
   };
 
@@ -105,17 +105,17 @@ export function buildSpecPool(...specs: Spec<any>[]): SpecPool {
   return pool;
 }
 
-function validateOwnder(owner: Owner): boolean {
-  if (typeof owner !== 'string') {
+function validateScope(scope: Scope): boolean {
+  if (typeof scope !== 'string') {
     return false;
   }
 
-  return trim(owner) !== '';
+  return trim(scope) !== '';
 }
 
-export function ownersIntersect(first: Owner, second: Owner): boolean {
+export function collide(first: Scope, second: Scope): boolean {
   const firstAsArray = castArray(first || undefined);
   const secondAsArray = castArray(second || undefined);
 
-  return intersection(firstAsArray, secondAsArray).filter(validateOwnder).length > 0;
+  return intersection(firstAsArray, secondAsArray).filter(validateScope).length > 0;
 }

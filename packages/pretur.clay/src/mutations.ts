@@ -1,4 +1,4 @@
-import { SpecPool, Owner, ownersIntersect } from 'pretur.spec';
+import { SpecPool, Scope, collide } from 'pretur.spec';
 import { MutateRequest, Requester, MutateResult } from 'pretur.sync';
 import { Set } from './Set';
 import { Record } from './Record';
@@ -73,7 +73,7 @@ export interface MutationsExtractor {
   getMutations(clay: Set<Record<any>> | Record<any>, model: string): MutateRequest<any>[];
 }
 
-export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): MutationsExtractor {
+export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): MutationsExtractor {
   function extractInsertData(clay: Record<any> | Set<Record<any>>, model: string): object {
     if (clay instanceof Set) {
       const items: any[] = [];
@@ -89,7 +89,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     const spec = specPool[model];
 
     const nonAutoIncrementedOwnedAttributes = spec.attributes
-      .filter(attrib => !attrib.autoIncrement && ownersIntersect(attrib.owner || [], owner))
+      .filter(attrib => !attrib.autoIncrement && collide(attrib.scope || [], scope))
       .map(attrib => attrib.name);
 
     for (const attribute of nonAutoIncrementedOwnedAttributes) {
@@ -100,7 +100,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     }
 
     const ownedTargetRelations = spec.relations
-      .filter(relation => ownersIntersect(relation.owner || [], owner))
+      .filter(relation => collide(relation.scope || [], scope))
       .filter(({ type }) =>
         type === 'SUBCLASS' ||
         type === 'MASTER' ||
@@ -134,7 +134,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
     }
 
     const mutables = spec.attributes
-      .filter(attrib => attrib.mutable && ownersIntersect(attrib.owner || [], owner))
+      .filter(attrib => attrib.mutable && collide(attrib.scope || [], scope))
       .map(attrib => attrib.name);
 
     for (const mutable of mutables) {
@@ -197,7 +197,7 @@ export function buildMutationsExtractor(specPool: SpecPool, owner: Owner): Mutat
         }
 
         const ownedRelations = spec.relations
-          .filter(relation => ownersIntersect(relation.owner || [], owner));
+          .filter(relation => collide(relation.scope || [], scope));
 
         for (const relation of ownedRelations) {
           if (clay.fields[relation.alias]) {

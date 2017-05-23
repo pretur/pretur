@@ -14,7 +14,7 @@ export type Role = Model<{
 }>;
 
 export default createSpec<Role>(
-  { name: 'Role', owner: 'me' },
+  { name: 'Role', scope: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ name: 'id' });
     attribute({ name: 'name', type: 'STRING' });

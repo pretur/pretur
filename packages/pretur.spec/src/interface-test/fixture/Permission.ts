@@ -20,7 +20,7 @@ export type Permission<T = any> = Model<{
 }>;
 
 export default createSpec<Permission>(
-  { name: 'Permission', owner: 'me' },
+  { name: 'Permission', scope: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });
     attribute({ name: 'name', type: 'STRING' });

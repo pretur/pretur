@@ -23,7 +23,7 @@ export default createJoinSpec<UserPermission, User, Permission>({
     spec: UserModel,
   },
   name: 'UserPermission',
-  owner: 'me',
+  scope: 'me',
   secondJoinee: {
     aliasOnJoin: 'permission',
     aliasOnTarget: 'permissions',

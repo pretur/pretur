@@ -1,9 +1,9 @@
 import { chain } from 'lodash';
-import { Spec, Model, ModelType, Owner } from './spec';
+import { Spec, Model, ModelType, Scope } from './spec';
 
 export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
-  owner?: Owner;
+  scope?: Scope;
   required?: boolean;
   unique?: boolean;
   primary?: boolean;
@@ -116,7 +116,7 @@ export function createAttributeBuilder<F, R, S>(
   }
 
   function attributeBuilder<K extends keyof F>(options: Attribute<F, K>): void {
-    appendAttribute(spec, { ...defaults, owner: spec.owner, ...options });
+    appendAttribute(spec, { ...defaults, scope: spec.scope, ...options });
   }
 
   const ab = <AttributeBuilder<F>>attributeBuilder;
@@ -127,7 +127,7 @@ export function createAttributeBuilder<F, R, S>(
     if (options && options.type && options.type !== 'INTEGER' && options.type !== 'BIGINT') {
       options.autoIncrement = false;
     }
-    appendAttribute(spec, { ...primaryDefaults, owner: spec.owner, ...(<any>options) });
+    appendAttribute(spec, { ...primaryDefaults, scope: spec.scope, ...(<any>options) });
   };
 
   return ab;

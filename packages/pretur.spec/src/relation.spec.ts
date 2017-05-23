@@ -49,8 +49,8 @@ function mockSpec(name: string): Spec<MockModel> {
     indexes: { unique: [] },
     initialize: noop,
     join: false,
-    owner: undefined!,
     relations: [],
+    scope: undefined!,
   };
 }
 
@@ -60,7 +60,7 @@ const baseRelation = <Relation>{
   model: 'A',
   onDelete: 'CASCADE',
   onUpdate: 'CASCADE',
-  owner: undefined!,
+  scope: undefined!,
   type: undefined!,
 };
 
@@ -223,7 +223,7 @@ describe('relation', () => {
         [
           'should correctly add the subclass/superclass relation pairs',
           (main, inheritor, append) => {
-            main.owner = 'owner';
+            main.scope = 'scope';
 
             const child1 = inheritor<Child1 & Child2 & Child3>('Child1', 'a', 'A');
             const child2 = inheritor<Child1 & Child2 & Child3>('Child2', 'b', 'A');
@@ -236,37 +236,37 @@ describe('relation', () => {
               typeIdentifierFieldName: 'type',
             });
 
-            expect(main.relations[0].owner).to.be.equals('owner');
+            expect(main.relations[0].scope).to.be.equals('scope');
             expect(main.relations[0].type).to.be.equals('SUBCLASS');
             expect(main.relations[0].model).to.be.equals('Child1');
             expect(main.relations[0].alias).to.be.equals('a');
             expect(main.relations[0].key).to.be.equals('id');
 
-            expect(child1.target.relations[0].owner).to.be.equals('owner');
+            expect(child1.target.relations[0].scope).to.be.equals('scope');
             expect(child1.target.relations[0].type).to.be.equals('SUPERCLASS');
             expect(child1.target.relations[0].model).to.be.equals('Main');
             expect(child1.target.relations[0].alias).to.be.equals('main');
             expect(child1.target.relations[0].key).to.be.equals('id');
 
-            expect(main.relations[1].owner).to.be.equals('owner');
+            expect(main.relations[1].scope).to.be.equals('scope');
             expect(main.relations[1].type).to.be.equals('SUBCLASS');
             expect(main.relations[1].model).to.be.equals('Child2');
             expect(main.relations[1].alias).to.be.equals('b');
             expect(main.relations[1].key).to.be.equals('id');
 
-            expect(child2.target.relations[0].owner).to.be.equals('owner');
+            expect(child2.target.relations[0].scope).to.be.equals('scope');
             expect(child2.target.relations[0].type).to.be.equals('SUPERCLASS');
             expect(child2.target.relations[0].model).to.be.equals('Main');
             expect(child2.target.relations[0].alias).to.be.equals('main');
             expect(child2.target.relations[0].key).to.be.equals('id');
 
-            expect(main.relations[2].owner).to.be.equals('owner');
+            expect(main.relations[2].scope).to.be.equals('scope');
             expect(main.relations[2].type).to.be.equals('SUBCLASS');
             expect(main.relations[2].model).to.be.equals('Child3');
             expect(main.relations[2].alias).to.be.equals('c');
             expect(main.relations[2].key).to.be.equals('id');
 
-            expect(child3.target.relations[0].owner).to.be.equals('owner');
+            expect(child3.target.relations[0].scope).to.be.equals('scope');
             expect(child3.target.relations[0].type).to.be.equals('SUPERCLASS');
             expect(child3.target.relations[0].model).to.be.equals('Main');
             expect(child3.target.relations[0].alias).to.be.equals('main');
@@ -333,13 +333,13 @@ describe('relation', () => {
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'details',
-          owner: 'owner',
           required: true,
+          scope: 'scope',
           target: master,
-          targetOwner: 'owner2',
+          targetScope: 'scope2',
         });
 
-        expect(master.relations[0].owner).to.be.equals('owner2');
+        expect(master.relations[0].scope).to.be.equals('scope2');
         expect(master.relations[0].type).to.be.equals('DETAIL');
         expect(master.relations[0].model).to.be.equals('Detail');
         expect(master.relations[0].alias).to.be.equals('details');
@@ -348,7 +348,7 @@ describe('relation', () => {
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
-        expect(detail.relations[0].owner).to.be.equals('owner');
+        expect(detail.relations[0].scope).to.be.equals('scope');
         expect(detail.relations[0].type).to.be.equals('MASTER');
         expect(detail.relations[0].model).to.be.equals('Master');
         expect(detail.relations[0].alias).to.be.equals('master');
@@ -410,14 +410,14 @@ describe('relation', () => {
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'details',
-          owner: 'owner',
           required: true,
+          scope: 'scope',
           target: master,
-          targetOwner: 'owner2',
+          targetScope: 'scope2',
           unique: false,
         });
 
-        expect(master.relations[0].owner).to.be.equals('owner2');
+        expect(master.relations[0].scope).to.be.equals('scope2');
         expect(master.relations[0].type).to.be.equals('INJECTIVE');
         expect(master.relations[0].model).to.be.equals('Injected');
         expect(master.relations[0].alias).to.be.equals('details');
@@ -426,7 +426,7 @@ describe('relation', () => {
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
-        expect(injected.relations[0].owner).to.be.equals('owner');
+        expect(injected.relations[0].scope).to.be.equals('scope');
         expect(injected.relations[0].type).to.be.equals('MASTER');
         expect(injected.relations[0].model).to.be.equals('Master');
         expect(injected.relations[0].alias).to.be.equals('master');
@@ -452,10 +452,10 @@ describe('relation', () => {
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'details',
-          owner: 'owner',
           primary: true,
+          scope: 'scope',
           target: master,
-          targetOwner: 'owner2',
+          targetScope: 'scope2',
         });
 
         expect(injected.attributes[0].mutable).to.be.false;
@@ -493,7 +493,7 @@ describe('relation', () => {
       it('should properly override the properties of the relation and the key', () => {
         const master = mockSpec('Master');
 
-        master.owner = 'owner';
+        master.scope = 'scope';
 
         createRelationBuilder(master).recursive({
           alias: 'parent',
@@ -503,7 +503,7 @@ describe('relation', () => {
           onUpdate: 'NO ACTION',
         });
 
-        expect(master.relations[0].owner).to.be.equals('owner');
+        expect(master.relations[0].scope).to.be.equals('scope');
         expect(master.relations[0].type).to.be.equals('RECURSIVE');
         expect(master.relations[0].model).to.be.equals('Master');
         expect(master.relations[0].alias).to.be.equals('parent');

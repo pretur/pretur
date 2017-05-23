@@ -1,5 +1,5 @@
 import { ModificationActions, appendRelation } from './relation';
-import { Spec, Model, ModelType, Owner } from './spec';
+import { Spec, Model, ModelType, Scope } from './spec';
 import { AttributeBuilder, createAttributeBuilder, NormalType } from './attribute';
 
 export interface JoinSpecBuilder<F> {
@@ -60,7 +60,7 @@ export function joineeValidateAndSetDefault<JF, JR, SF, SR, SS, TS>(
 
 export interface CreateJoinSpecOptions<JF, JR, JN extends string, FF, FR, FS, SF, SR, SS> {
   name: JN;
-  owner: Owner;
+  scope: Scope;
   firstJoinee: JoineeOptions<JF, JR, FF, FR, FS, SS>;
   secondJoinee: JoineeOptions<JF, JR, SF, SR, SS, FS>;
 }
@@ -96,8 +96,8 @@ export function createJoinSpec<
     initialize,
     join: true,
     name: options.name,
-    owner: options.owner,
     relations: [],
+    scope: options.scope,
   };
 
   const builder = <JoinSpecBuilder<J>>{
@@ -127,8 +127,8 @@ export function createJoinSpec<
     model: firstJoinee.spec.name,
     onDelete: firstJoinee.onDelete,
     onUpdate: firstJoinee.onUpdate,
-    owner: options.owner,
     required: true,
+    scope: options.scope,
     type: 'MASTER',
   });
 
@@ -138,8 +138,8 @@ export function createJoinSpec<
     model: secondJoinee.spec.name,
     onDelete: secondJoinee.onDelete,
     onUpdate: secondJoinee.onUpdate,
-    owner: options.owner,
     required: true,
+    scope: options.scope,
     type: 'MASTER',
   });
 
@@ -149,8 +149,8 @@ export function createJoinSpec<
     model: secondJoinee.spec.name,
     onDelete: firstJoinee.onDelete,
     onUpdate: firstJoinee.onUpdate,
-    owner: options.owner,
     required: true,
+    scope: options.scope,
     through: spec.name,
     type: 'MANY_TO_MANY',
   });
@@ -161,8 +161,8 @@ export function createJoinSpec<
     model: firstJoinee.spec.name,
     onDelete: secondJoinee.onDelete,
     onUpdate: secondJoinee.onUpdate,
-    owner: options.owner,
     required: true,
+    scope: options.scope,
     through: spec.name,
     type: 'MANY_TO_MANY',
   });

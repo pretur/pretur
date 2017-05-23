@@ -1,5 +1,5 @@
 import { appendAttribute, NormalType, EnumAttribute } from './attribute';
-import { Spec, Model, ModelType, Owner } from './spec';
+import { Spec, Model, ModelType, Scope } from './spec';
 
 export type ModificationActions =
   'RESTRICT' |
@@ -20,7 +20,7 @@ export type RelationType =
 export interface Relation<R = any, S = any> {
   type: RelationType;
   model: string;
-  owner?: Owner;
+  scope?: Scope;
   alias: keyof R | keyof S;
   key: string;
   through?: string;
@@ -52,9 +52,9 @@ export interface MasterOptions<SF, SR, TF, TR, TS> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  owner?: Owner;
-  targetOwner?: Owner;
-  keyOwner?: Owner;
+  scope?: Scope;
+  targetScope?: Scope;
+  keyScope?: Scope;
 }
 
 export interface InjectiveOptions<SF, SR, TF, TR, TS> {
@@ -69,9 +69,9 @@ export interface InjectiveOptions<SF, SR, TF, TR, TS> {
   mutable?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  owner?: Owner;
-  targetOwner?: Owner;
-  keyOwner?: Owner;
+  scope?: Scope;
+  targetScope?: Scope;
+  keyScope?: Scope;
 }
 
 export interface RecursiveOptions<F, R, S> {
@@ -177,8 +177,8 @@ function inheritors<SF, SR, SS, TF, TR, TS>(
       model: inheritor.target.name,
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
-      owner: spec.owner,
       required: false,
+      scope: spec.scope,
       type: 'SUBCLASS',
     });
 
@@ -188,8 +188,8 @@ function inheritors<SF, SR, SS, TF, TR, TS>(
       model: spec.name,
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
-      owner: spec.owner,
       required: false,
+      scope: spec.scope,
       type: 'SUPERCLASS',
     });
 
@@ -199,8 +199,8 @@ function inheritors<SF, SR, SS, TF, TR, TS>(
   appendAttribute(spec, <EnumAttribute<any>>{
     mutable: true,
     name: options.typeIdentifierFieldName,
-    owner: spec.owner,
     required: options.typeIdentifierRequired || false,
+    scope: spec.scope,
     type: 'ENUM',
     typename: options.typeIdentifierEnumTypeName || spec.name + 'SubclassType',
     values: typeEnumValues,
@@ -217,8 +217,8 @@ function master<SF, SR, SS, TF, TR, TS>(
     model: options.target.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
-    owner: options.owner || spec.owner,
     required: options.required || false,
+    scope: options.scope || spec.scope,
     type: 'MASTER',
   });
 
@@ -228,16 +228,16 @@ function master<SF, SR, SS, TF, TR, TS>(
     model: spec.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
-    owner: options.targetOwner || spec.owner,
     required: options.required || false,
+    scope: options.targetScope || spec.scope,
     type: 'DETAIL',
   });
 
   appendAttribute(spec, {
     mutable: true,
     name: options.foreignKey,
-    owner: options.keyOwner || options.owner || spec.owner,
     required: options.required || false,
+    scope: options.keyScope || options.scope || spec.scope,
     type: (options.foreignKeyType || 'INTEGER'),
   });
 }
@@ -252,8 +252,8 @@ function injective<SF, SR, SS, TF, TR, TS>(
     model: options.target.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
-    owner: options.owner || spec.owner,
     required: options.required || false,
+    scope: options.scope || spec.scope,
     type: 'MASTER',
   });
 
@@ -263,17 +263,17 @@ function injective<SF, SR, SS, TF, TR, TS>(
     model: spec.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
-    owner: options.targetOwner || spec.owner,
     required: options.required || false,
+    scope: options.targetScope || spec.scope,
     type: 'INJECTIVE',
   });
 
   appendAttribute(spec, {
     mutable: typeof options.mutable === 'boolean' ? options.mutable : !options.primary,
     name: options.foreignKey,
-    owner: options.keyOwner || options.owner || spec.owner,
     primary: options.primary || false,
     required: options.required || false,
+    scope: options.keyScope || options.scope || spec.scope,
     type: options.foreignKeyType || 'INTEGER',
     unique: typeof options.unique === 'boolean' ? options.unique : !options.primary,
   });
@@ -289,16 +289,16 @@ function recursive<SF, SR, SS>(
     model: spec.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
-    owner: spec.owner,
     required: false,
+    scope: spec.scope,
     type: 'RECURSIVE',
   });
 
   appendAttribute(spec, {
     mutable: true,
     name: options.key,
-    owner: spec.owner,
     required: false,
+    scope: spec.scope,
     type: options.keyType || 'INTEGER',
   });
 }

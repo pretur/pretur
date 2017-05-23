@@ -25,8 +25,8 @@ function mockSpec(name: string): Spec<Model<MockModel>> {
     indexes: { unique: [] },
     initialize: noop,
     join: false,
-    owner: undefined!,
     relations: [],
+    scope: undefined!,
   };
 }
 
