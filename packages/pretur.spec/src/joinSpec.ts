@@ -1,37 +1,40 @@
 import { ModificationActions, appendRelation } from './relation';
-import { Spec, Model, ModelType, Scope } from './spec';
+import { Spec, SpecType, Scope } from './spec';
 import { AttributeBuilder, createAttributeBuilder, NormalType } from './attribute';
 
-export interface JoinSpecBuilder<F> {
-  attribute: AttributeBuilder<F>;
-  multicolumnUniqueIndex(...fields: (keyof F)[]): void;
+export interface JoinSpecBuilder<J extends SpecType> {
+  attribute: AttributeBuilder<J['fields']>;
+  multicolumnUniqueIndex(...fields: (keyof J['fields'])[]): void;
 }
 
-export interface JoineeOptions<JF, JR, SF, SR, SS, TS> {
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>;
-  aliasOnJoin: keyof JR;
-  aliasOnTarget: keyof TS;
-  key: keyof JF;
+export interface JoineeOptions<J extends SpecType, S extends SpecType, T extends SpecType> {
+  spec: Spec<S>;
+  aliasOnJoin: keyof J['records'];
+  aliasOnTarget: keyof T['sets'];
+  key: keyof J['fields'];
   type?: NormalType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   primary?: boolean;
 }
 
-export interface Joinee<JF, JR, SF, SR, SS, TS> {
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>;
-  aliasOnJoin: keyof JR;
-  aliasOnTarget: keyof TS;
-  key: keyof JF;
+export interface Joinee<J extends SpecType, S extends SpecType, T extends SpecType> {
+  spec: Spec<S>;
+  aliasOnJoin: keyof J['records'];
+  aliasOnTarget: keyof T['sets'];
+  key: keyof J['fields'];
   primary: boolean;
   type: NormalType;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
 }
 
-export function joineeValidateAndSetDefault<JF, JR, SF, SR, SS, TS>(
-  options: JoineeOptions<JF, JR, SF, SR, SS, TS>,
-): Joinee<JF, JR, SF, SR, SS, TS> {
+export function joineeValidateAndSetDefault<
+  J extends SpecType,
+  S extends SpecType,
+  T extends SpecType>(
+  options: JoineeOptions<J, S, T>,
+): Joinee<J, S, T> {
   if (process.env.NODE_ENV !== 'production') {
     if (!options.spec) {
       throw new Error('spec is not provided');
@@ -58,51 +61,39 @@ export function joineeValidateAndSetDefault<JF, JR, SF, SR, SS, TS>(
   };
 }
 
-export interface CreateJoinSpecOptions<JF, JR, JN extends string, FF, FR, FS, SF, SR, SS> {
-  name: JN;
+export interface CreateJoinSpecOptions<J extends SpecType, F extends SpecType, S extends SpecType> {
+  name: J['name'];
   scope: Scope;
-  firstJoinee: JoineeOptions<JF, JR, FF, FR, FS, SS>;
-  secondJoinee: JoineeOptions<JF, JR, SF, SR, SS, FS>;
+  firstJoinee: JoineeOptions<J, F, S>;
+  secondJoinee: JoineeOptions<J, S, F>;
 }
 
 export function createJoinSpec<
-  J extends Model<JT>,
-  F extends Model<FT>,
-  S extends Model<ST>,
-  JT extends ModelType<JF, JR, JS, JN> = J['$type'],
-  JF = JT['fields'],
-  JR = JT['records'],
-  JS = JT['sets'],
-  JN extends string = JT['name'],
-  FT extends ModelType<FF, FR, FS> = F['$type'],
-  FF = FT['fields'],
-  FR = FT['records'],
-  FS = FT['sets'],
-  ST extends ModelType<SF, SR, SS> = S['$type'],
-  SF = ST['fields'],
-  SR = ST['records'],
-  SS = ST['sets']>(
-  options: CreateJoinSpecOptions<JF, JR, JN, FF, FR, FS, SF, SR, SS>,
-  initializer?: (specBuilder: JoinSpecBuilder<JF>) => void,
+  J extends SpecType = SpecType,
+  F extends SpecType = SpecType,
+  S extends SpecType = SpecType>(
+  options: CreateJoinSpecOptions<J, F, S>,
+  initializer?: (specBuilder: JoinSpecBuilder<J>) => void,
 ): Spec<J> {
 
   const firstJoinee = joineeValidateAndSetDefault(options.firstJoinee);
   const secondJoinee = joineeValidateAndSetDefault(options.secondJoinee);
 
   const spec: Spec<J> = {
-    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize,
     join: true,
+    model: undefined!,
     name: options.name,
     relations: [],
     scope: options.scope,
+    type: undefined!,
   };
 
   const builder = <JoinSpecBuilder<J>>{
     attribute: createAttributeBuilder(spec),
-    multicolumnUniqueIndex(...fields: (keyof JF)[]) {
+    multicolumnUniqueIndex(...fields: (keyof J['fields'])[]) {
       spec.indexes.unique.push(fields);
     },
   };

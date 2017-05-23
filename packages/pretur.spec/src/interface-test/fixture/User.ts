@@ -1,8 +1,8 @@
-import { createSpec, Spec, Model } from '../../main';
-import RoleModel, { Role } from './Role';
-import { Permission } from './Permission';
+import { createSpec } from '../../main';
+import Role, { RoleType } from './Role';
+import { PermissionType } from './Permission';
 
-export type User = Model<{
+export interface UserType {
   name: 'User';
   fields: {
     id: number;
@@ -11,14 +11,14 @@ export type User = Model<{
     roleId: number;
   };
   records: {
-    role: Role;
+    role: RoleType;
   };
   sets: {
-    permissions: Permission;
-  }
-}>;
+    permissions: PermissionType;
+  };
+}
 
-export default createSpec<User>(
+export default createSpec<UserType>(
   { name: 'User', scope: 'me' },
   ({ attribute, relation }) => {
     attribute.primaryKey({ name: 'id' });
@@ -29,7 +29,7 @@ export default createSpec<User>(
       alias: 'role',
       foreignKey: 'roleId',
       ownAliasOnTarget: 'users',
-      target: RoleModel,
+      target: Role,
     });
   },
 );

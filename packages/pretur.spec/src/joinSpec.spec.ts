@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { Spec, Model } from './spec';
 import { createJoinSpec, joineeValidateAndSetDefault } from './joinSpec';
 
-type MockModel = Model<{
+interface MockModel {
   name: string;
   fields: {
     a: number;
@@ -17,6 +17,7 @@ type MockModel = Model<{
     f: number;
     g: number;
     count: number;
+    someId: number;
   };
   records: {
     a: MockModel;
@@ -26,18 +27,19 @@ type MockModel = Model<{
     all_a: MockModel;
     all_b: MockModel;
   };
-}>;
+}
 
-function mockSpec<N extends string>(name: N): Spec<MockModel> {
+function mockSpec(name: string): Spec<MockModel> {
   return {
     name,
-    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize: () => undefined!,
     join: false,
+    model: undefined!,
     relations: [],
     scope: undefined!,
+    type: undefined!,
   };
 }
 
@@ -48,19 +50,19 @@ describe('joinSpec', () => {
     it('should fail if provided invalid input', () => {
       const spec = mockSpec('A');
 
-      expect(() => joineeValidateAndSetDefault<any, any, any, any, any, any>({
+      expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',
         key: 'aId',
         spec: undefined!,
       })).to.throw();
-      expect(() => joineeValidateAndSetDefault<any, any, any, any, any, any>({
+      expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
         spec,
         aliasOnJoin: undefined!,
         aliasOnTarget: 'all_a',
         key: 'aId',
       })).to.throw();
-      expect(() => joineeValidateAndSetDefault<any, any, any, any, any, any>({
+      expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
         spec,
         aliasOnJoin: 'a',
         aliasOnTarget: undefined!,
@@ -70,7 +72,7 @@ describe('joinSpec', () => {
 
     it('should return a joinee with valid defaults', () => {
       const spec = mockSpec('A');
-      const joinee = joineeValidateAndSetDefault<any, any, any, any, any, any>({
+      const joinee = joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
         spec,
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',
@@ -89,7 +91,7 @@ describe('joinSpec', () => {
 
     it('should return a joinee with overriden defaults', () => {
       const spec = mockSpec('A');
-      const joinee = joineeValidateAndSetDefault<any, any, any, any, any, any>({
+      const joinee = joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
         spec,
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',

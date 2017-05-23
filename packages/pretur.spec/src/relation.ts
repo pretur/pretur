@@ -1,5 +1,5 @@
-import { appendAttribute, NormalType, EnumAttribute } from './attribute';
-import { Spec, Model, ModelType, Scope } from './spec';
+import { appendAttribute, NormalType } from './attribute';
+import { Spec, SpecType, Scope } from './spec';
 
 export type ModificationActions =
   'RESTRICT' |
@@ -17,11 +17,11 @@ export type RelationType =
   'MANY_TO_MANY' |
   'INJECTIVE';
 
-export interface Relation<R = any, S = any> {
+export interface Relation<T extends SpecType> {
   type: RelationType;
   model: string;
   scope?: Scope;
-  alias: keyof R | keyof S;
+  alias: keyof T['records'] | keyof T['sets'];
   key: string;
   through?: string;
   required?: boolean;
@@ -29,25 +29,25 @@ export interface Relation<R = any, S = any> {
   onUpdate: ModificationActions;
 }
 
-export interface Inheritor<SR, TF, TR, TS> {
-  target: Spec<Model<ModelType<TF, TR, TS>>, TF, TR, TS>;
-  alias: keyof SR;
+export interface Inheritor<S extends SpecType, T extends SpecType> {
+  target: Spec<T>;
+  alias: keyof S['records'];
 }
 
-export interface InheritorsOptions<SF, SR, TF, TR, TS> {
-  sharedExistingUniqueField: keyof (SF | TF);
-  aliasOnSubclasses: keyof TR;
-  typeIdentifierFieldName: keyof SF;
+export interface InheritorsOptions<S extends SpecType, T extends SpecType> {
+  sharedExistingUniqueField: keyof (S['fields'] | T['fields']);
+  aliasOnSubclasses: keyof T['records'];
+  typeIdentifierFieldName: keyof S['fields'];
   typeIdentifierEnumTypeName?: string;
   typeIdentifierRequired?: boolean;
-  inheritors: Inheritor<SR, TF, TR, TS>[];
+  inheritors: Inheritor<S, T>[];
 }
 
-export interface MasterOptions<SF, SR, TF, TR, TS> {
-  target: Spec<Model<ModelType<TF, TR, TS>>, TF, TR, TS>;
-  alias: keyof SR;
-  ownAliasOnTarget: keyof TS;
-  foreignKey: keyof SF;
+export interface MasterOptions<S extends SpecType, T extends SpecType> {
+  target: Spec<T>;
+  alias: keyof S['records'];
+  ownAliasOnTarget: keyof T['sets'];
+  foreignKey: keyof S['fields'];
   foreignKeyType?: NormalType;
   required?: boolean;
   onDelete?: ModificationActions;
@@ -57,11 +57,11 @@ export interface MasterOptions<SF, SR, TF, TR, TS> {
   keyScope?: Scope;
 }
 
-export interface InjectiveOptions<SF, SR, TF, TR, TS> {
-  target: Spec<Model<ModelType<TF, TR, TS>>, TF, TR, TS>;
-  alias: keyof SR;
-  ownAliasOnTarget: keyof TR;
-  foreignKey: keyof SF;
+export interface InjectiveOptions<S extends SpecType, T extends SpecType> {
+  target: Spec<T>;
+  alias: keyof S['records'];
+  ownAliasOnTarget: keyof T['records'];
+  foreignKey: keyof S['fields'];
   foreignKeyType?: NormalType;
   required?: boolean;
   unique?: boolean;
@@ -74,19 +74,15 @@ export interface InjectiveOptions<SF, SR, TF, TR, TS> {
   keyScope?: Scope;
 }
 
-export interface RecursiveOptions<F, R, S> {
-  alias: keyof R | keyof S;
-  key: keyof F;
+export interface RecursiveOptions<S extends SpecType> {
+  alias: keyof S['records'] | keyof S['sets'];
+  key: keyof S['fields'];
   keyType?: NormalType;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
 }
 
-export function appendRelation<F, R, S>(
-  spec: Spec<Model<ModelType<F, R, S>>, F, R, S>,
-  relation: Relation<R, S>,
-): void {
-
+export function appendRelation<T extends SpecType>(spec: Spec<T>, relation: Relation<T>): void {
   if (process.env.NODE_ENV !== 'production') {
     if (!spec) {
       throw new Error('Spec must be provided.');
@@ -164,11 +160,11 @@ export function appendRelation<F, R, S>(
   spec.relations.push(relation);
 }
 
-function inheritors<SF, SR, SS, TF, TR, TS>(
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
-  options: InheritorsOptions<SF, SR, TF, TR, TS>,
+function inheritors<S extends SpecType, T extends SpecType>(
+  spec: Spec<S>,
+  options: InheritorsOptions<S, T>,
 ) {
-  const typeEnumValues: (keyof SR)[] = [];
+  const typeEnumValues: (keyof S['records'])[] = [];
 
   options.inheritors.forEach(inheritor => {
     appendRelation(spec, {
@@ -196,7 +192,7 @@ function inheritors<SF, SR, SS, TF, TR, TS>(
     typeEnumValues.push(inheritor.alias);
   });
 
-  appendAttribute(spec, <EnumAttribute<any>>{
+  appendAttribute(spec, {
     mutable: true,
     name: options.typeIdentifierFieldName,
     required: options.typeIdentifierRequired || false,
@@ -207,9 +203,9 @@ function inheritors<SF, SR, SS, TF, TR, TS>(
   });
 }
 
-function master<SF, SR, SS, TF, TR, TS>(
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
-  options: MasterOptions<SF, SR, TF, TR, TS>,
+function master<S extends SpecType, T extends SpecType>(
+  spec: Spec<S>,
+  options: MasterOptions<S, T>,
 ) {
   appendRelation(spec, {
     alias: options.alias,
@@ -242,9 +238,9 @@ function master<SF, SR, SS, TF, TR, TS>(
   });
 }
 
-function injective<SF, SR, SS, TF, TR, TS>(
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
-  options: InjectiveOptions<SF, SR, TF, TR, TS>,
+function injective<S extends SpecType, T extends SpecType>(
+  spec: Spec<S>,
+  options: InjectiveOptions<S, T>,
 ) {
   appendRelation(spec, {
     alias: options.alias,
@@ -279,10 +275,7 @@ function injective<SF, SR, SS, TF, TR, TS>(
   });
 }
 
-function recursive<SF, SR, SS>(
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
-  options: RecursiveOptions<SF, SR, SS>,
-) {
+function recursive<S extends SpecType>(spec: Spec<S>, options: RecursiveOptions<S>) {
   appendRelation(spec, {
     alias: options.alias,
     key: options.key,
@@ -303,23 +296,18 @@ function recursive<SF, SR, SS>(
   });
 }
 
-export interface RelationsBuilder<SF, SR, SS> {
-  inheritors<TF, TR, TS>(options: InheritorsOptions<SF, SR, TF, TR, TS>): void;
-  injective<TF, TR, TS>(options: InjectiveOptions<SF, SR, TF, TR, TS>): void;
-  master<TF, TR, TS>(options: MasterOptions<SF, SR, TF, TR, TS>): void;
-  recursive(options: RecursiveOptions<SF, SR, SS>): void;
+export interface RelationsBuilder<S extends SpecType> {
+  inheritors<T extends SpecType>(options: InheritorsOptions<S, T>): void;
+  injective<T extends SpecType>(options: InjectiveOptions<S, T>): void;
+  master<T extends SpecType>(options: MasterOptions<S, T>): void;
+  recursive(options: RecursiveOptions<S>): void;
 }
 
-export function createRelationBuilder<SF, SR, SS>(
-  spec: Spec<Model<ModelType<SF, SR, SS>>, SF, SR, SS>,
-): RelationsBuilder<SF, SR, SS> {
+export function createRelationBuilder<S extends SpecType>(spec: Spec<S>): RelationsBuilder<S> {
   return {
-    inheritors: <TF, TR, TS>(options: InheritorsOptions<SF, SR, TF, TR, TS>) =>
-      inheritors(spec, options),
-    injective: <TF, TR, TS>(options: InjectiveOptions<SF, SR, TF, TR, TS>) =>
-      injective(spec, options),
-    master: <TF, TR, TS>(options: MasterOptions<SF, SR, TF, TR, TS>) =>
-      master(spec, options),
-    recursive: (options: RecursiveOptions<SF, SR, SS>) => recursive(spec, options),
+    inheritors: <T extends SpecType>(options: InheritorsOptions<S, T>) => inheritors(spec, options),
+    injective: <T extends SpecType>(options: InjectiveOptions<S, T>) => injective(spec, options),
+    master: <T extends SpecType>(options: MasterOptions<S, T>) => master(spec, options),
+    recursive: (options: RecursiveOptions<S>) => recursive(spec, options),
   };
 }

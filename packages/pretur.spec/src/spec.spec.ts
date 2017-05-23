@@ -1,9 +1,9 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { createSpec, Model, collide } from './spec';
+import { createSpec, collide } from './spec';
 
-type MockModel = Model<{
+type MockModel = {
   name: 'a';
   fields: {
     a: number;
@@ -16,7 +16,7 @@ type MockModel = Model<{
   };
   records: {};
   sets: {};
-}>;
+};
 
 describe('collide', () => {
 

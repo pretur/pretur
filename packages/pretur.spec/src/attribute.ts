@@ -1,5 +1,5 @@
 import { chain } from 'lodash';
-import { Spec, Model, ModelType, Scope } from './spec';
+import { Spec, SpecType, Scope } from './spec';
 
 export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
@@ -78,9 +78,9 @@ export function validateAttribute(attribute: Attribute) {
   }
 }
 
-export function appendAttribute<F, R, S>(
-  spec: Spec<Model<ModelType<F, R, S>>, F, R, S>,
-  attribute: Attribute<F>,
+export function appendAttribute<T extends SpecType>(
+  spec: Spec<T>,
+  attribute: Attribute<T['fields']>,
 ): void {
   if (process.env.NODE_ENV !== 'production') {
     if (!spec) {
@@ -108,21 +108,23 @@ export interface AttributeBuilder<F> {
   primaryKey<K extends keyof F>(options?: PrimaryKeyOptions<F, K>): void;
 }
 
-export function createAttributeBuilder<F, R, S>(
-  spec: Spec<Model<ModelType<F, R, S>>, F, R, S>,
-): AttributeBuilder<F> {
+export function createAttributeBuilder<T extends SpecType>(
+  spec: Spec<T>,
+): AttributeBuilder<T['fields']> {
   if (process.env.NODE_ENV !== 'production' && !spec) {
     throw new Error('spec must be provided');
   }
 
-  function attributeBuilder<K extends keyof F>(options: Attribute<F, K>): void {
+  function attributeBuilder<K extends keyof T['fields']>(
+    options: Attribute<T['fields'], K>,
+  ): void {
     appendAttribute(spec, { ...defaults, scope: spec.scope, ...options });
   }
 
-  const ab = <AttributeBuilder<F>>attributeBuilder;
+  const ab = <AttributeBuilder<T['fields']>>attributeBuilder;
 
-  ab.primaryKey = function buildPrimaryKey<K extends keyof F>(
-    options?: PrimaryKeyOptions<F, K>,
+  ab.primaryKey = function buildPrimaryKey<K extends keyof T['fields']>(
+    options?: PrimaryKeyOptions<T['fields'], K>,
   ): void {
     if (options && options.type && options.type !== 'INTEGER' && options.type !== 'BIGINT') {
       options.autoIncrement = false;

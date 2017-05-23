@@ -1,7 +1,6 @@
 import { trim, castArray, intersection } from 'lodash';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
-import { Spec } from './spec';
 
 export type Scope = string | string[];
 
@@ -9,35 +8,27 @@ export interface Indexes<F> {
   unique: (keyof F)[][];
 }
 
-export type ModelType<F = any, R = any, S = any, N = any> = {
-  name: N;
-  fields: F;
-  records: R;
-  sets: S;
-};
+export type Records = { [alias: string]: SpecType };
+export type Sets = { [alias: string]: SpecType };
 
-export type Sets<S> = {[P in keyof S]: S[P][]};
+export type SpecType<
+  F = {},
+  R extends Records = Records,
+  S extends Sets = Sets,
+  N extends string = string> = { name: N; fields: F; records: R; sets: S };
 
-export type Model<
-  T extends ModelType<F, R, S, N> = ModelType,
-  F = T['fields'],
-  R = T['records'],
-  S = T['sets'],
-  N = T['name']> = F & R & Sets<S> & { $name: N; $type: T };
+export type Model<T extends SpecType>
+  = T['fields'] & T['records'] & {[P in keyof T['sets']]: T['sets'][P][]};
 
-export interface Spec<
-  M extends Model<ModelType<F, R, S, N>> = Model,
-  F = M['$type']['fields'],
-  R = M['$type']['records'],
-  S = M['$type']['sets'],
-  N extends string = M['$type']['name']> {
-  $model: M;
-  name: N;
+export interface Spec<T extends SpecType = SpecType> {
+  model: Model<T>;
+  type: T;
+  name: T['name'];
   scope: Scope;
   join: boolean;
-  attributes: Attribute<F>[];
-  indexes: Indexes<F>;
-  relations: Relation<R, S>[];
+  attributes: Attribute<T['fields']>[];
+  indexes: Indexes<T['fields']>;
+  relations: Relation<T>[];
   initialize: () => void;
 }
 
@@ -46,38 +37,33 @@ export interface CreateSpecOptions<N extends string> {
   scope: Scope;
 }
 
-export interface SpecBuilder<F, R, S> {
-  attribute: AttributeBuilder<F>;
-  relation: RelationsBuilder<F, R, S>;
-  multicolumnUniqueIndex(...fields: (keyof F)[]): void;
+export interface SpecBuilder<T extends SpecType> {
+  attribute: AttributeBuilder<T['fields']>;
+  relation: RelationsBuilder<T>;
+  multicolumnUniqueIndex(...fields: (keyof T['fields'])[]): void;
 }
 
-export function createSpec<
-  M extends Model<T>,
-  T extends ModelType<F, R, S, N> = M['$type'],
-  F = T['fields'],
-  R = T['records'],
-  S = T['sets'],
-  N extends string = M['$type']['name']>(
-  options: CreateSpecOptions<N>,
-  initializer?: (specBuilder: SpecBuilder<F, R, S>) => void,
-): Spec<M> {
-  const spec: Spec<M> = {
-    $model: undefined!,
+export function createSpec<T extends SpecType>(
+  options: CreateSpecOptions<T['name']>,
+  initializer?: (specBuilder: SpecBuilder<T>) => void,
+): Spec<T> {
+  const spec = <Spec<T>>{
     attributes: [],
     indexes: { unique: [] },
     join: false,
+    model: undefined!,
     name: options.name,
     relations: [],
     scope: options.scope,
+    type: undefined!,
     initialize,
   };
 
-  const builder = <SpecBuilder<F, R, S>>{
+  const builder = <SpecBuilder<T>>{
     attribute: createAttributeBuilder(spec),
     relation: createRelationBuilder(spec),
 
-    multicolumnUniqueIndex(...fields: (keyof F)[]) {
+    multicolumnUniqueIndex(...fields: (keyof T['fields'])[]) {
       spec.indexes.unique.push(fields);
     },
   };

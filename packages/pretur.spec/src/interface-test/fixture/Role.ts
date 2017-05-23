@@ -1,7 +1,7 @@
-import { createSpec, Spec, Model } from '../../main';
-import { User } from './User';
+import { createSpec } from '../../main';
+import User, { UserType } from './User';
 
-export type Role = Model<{
+export interface RoleType {
   name: 'Role';
   fields: {
     id: number;
@@ -9,11 +9,11 @@ export type Role = Model<{
   };
   records: {};
   sets: {
-    users: User;
-  }
-}>;
+    users: UserType;
+  };
+}
 
-export default createSpec<Role>(
+export default createSpec<RoleType>(
   { name: 'Role', scope: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ name: 'id' });

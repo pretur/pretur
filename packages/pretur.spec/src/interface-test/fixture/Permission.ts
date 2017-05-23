@@ -1,12 +1,12 @@
-import { createSpec, Spec, Model } from '../../main';
-import { User } from './User';
+import { createSpec } from '../../main';
+import { UserType } from './User';
 
 export interface PermissionValues<T> {
   type: 'list' | 'switch' | 'graph';
   value: T;
 }
 
-export type Permission<T = any> = Model<{
+export interface PermissionType<T = any> {
   name: 'Permission';
   fields: {
     id: number;
@@ -15,11 +15,11 @@ export type Permission<T = any> = Model<{
   };
   records: {};
   sets: {
-    users: User;
-  }
-}>;
+    users: UserType;
+  };
+}
 
-export default createSpec<Permission>(
+export default createSpec<PermissionType>(
   { name: 'Permission', scope: 'me' },
   ({ attribute }) => {
     attribute.primaryKey({ autoIncrement: false, name: 'id' });

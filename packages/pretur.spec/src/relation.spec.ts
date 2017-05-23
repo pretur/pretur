@@ -12,49 +12,58 @@ import {
   createRelationBuilder,
 } from './relation';
 
-interface MockModel {
-  id: number;
-  type: string;
-  main: MockModel;
-  master: MockModel;
-  masterId: number;
-  someId: number;
-  details: MockModel[];
-  parent: MockModel;
+interface MockType {
+  name: string;
+  fields: {
+    id: number;
+    type: string;
+    masterId: number;
+    someId: number;
+  };
+  records: {
+    main: MockType;
+    master: MockType;
+    some: MockType;
+    parent: MockType;
+  };
+  sets: {
+    details: MockType;
+  };
 }
 
 interface Child1 {
   id: number;
-  main: MockModel;
+  main: MockType;
   a: number;
 }
 
 interface Child2 {
   id: number;
-  main: MockModel;
+  main: MockType;
   b: number;
 }
 
 interface Child3 {
   id: number;
-  main: MockModel;
+  main: MockType;
   c: number;
 }
 
-function mockSpec(name: string): Spec<MockModel> {
-  return {
+function mockSpec(name: string): Spec<MockType> {
+  return <Spec<MockType>>{
     name,
-    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize: noop,
     join: false,
+    model: undefined!,
     relations: [],
     scope: undefined!,
+    type: undefined!,
   };
 }
 
-const baseRelation = <Relation>{
+const baseRelation = <Relation<MockType>>{
   alias: undefined!,
   key: 'aId',
   model: 'A',
@@ -71,11 +80,11 @@ describe('relation', () => {
     it('should properly append the relation to the model', () => {
       const spec = mockSpec('A');
 
-      appendRelation(spec, { ...baseRelation, alias: 'id', type: 'RECURSIVE' });
-      appendRelation(spec, { ...baseRelation, alias: 'type', type: 'RECURSIVE' });
+      appendRelation(spec, { ...baseRelation, alias: 'main', type: 'RECURSIVE' });
+      appendRelation(spec, { ...baseRelation, alias: 'master', type: 'RECURSIVE' });
 
-      expect(spec.relations[0].alias).to.be.equals('id');
-      expect(spec.relations[1].alias).to.be.equals('type');
+      expect(spec.relations[0].alias).to.be.equals('main');
+      expect(spec.relations[1].alias).to.be.equals('master');
     });
 
     it('should fail when spec is invalid', () => {
@@ -90,7 +99,7 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: undefined!, type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: <any>undefined, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -98,7 +107,7 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'id', key: undefined, type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'some', key: undefined, type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -106,11 +115,11 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'id', type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'some', type: 'RECURSIVE' }),
       ).not.to.throw();
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'id', type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'some', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -118,7 +127,7 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'id', type: <any>'BLAH' }),
+        appendRelation(spec, { ...baseRelation, alias: 'some', type: <any>'BLAH' }),
       ).to.throw();
     });
 
@@ -126,7 +135,7 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'id', type: 'MANY_TO_MANY' }),
+        appendRelation(spec, { ...baseRelation, alias: 'some', type: 'MANY_TO_MANY' }),
       ).to.throw();
     });
 
@@ -134,7 +143,7 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'id', model: 'B', type: 'RECURSIVE' }),
+        appendRelation(spec, { ...baseRelation, alias: 'some', model: 'B', type: 'RECURSIVE' }),
       ).to.throw();
     });
 
@@ -144,7 +153,7 @@ describe('relation', () => {
       expect(() =>
         appendRelation(spec, {
           ...baseRelation,
-          alias: 'id',
+          alias: 'some',
           onDelete: <any>'A',
           type: 'RECURSIVE',
         }),
@@ -153,7 +162,7 @@ describe('relation', () => {
       expect(() =>
         appendRelation(spec, {
           ...baseRelation,
-          alias: 'id',
+          alias: 'some',
           onUpdate: <any>'A',
           type: 'RECURSIVE',
         }),
@@ -180,9 +189,9 @@ describe('relation', () => {
             name: string,
             alias: keyof T,
             i18nKey: string,
-          ) => Inheritor<any, any, any, any>,
+          ) => Inheritor<MockType, MockType>,
           appendInheritorGroup: <T extends object>(
-            options: InheritorsOptions<any, any, any, any, any>,
+            options: InheritorsOptions<MockType, MockType>,
           ) => void,
         ): void;
       }
@@ -381,11 +390,11 @@ describe('relation', () => {
         createRelationBuilder(injected).injective({
           alias: 'master',
           foreignKey: 'masterId',
-          ownAliasOnTarget: 'someId',
+          ownAliasOnTarget: 'some',
           target: master,
         });
 
-        expect(master.relations[0].alias).to.be.equals('someId');
+        expect(master.relations[0].alias).to.be.equals('some');
         expect(master.relations[0].type).to.be.equals('INJECTIVE');
 
         expect(injected.relations[0].alias).to.be.equals('master');
@@ -409,7 +418,7 @@ describe('relation', () => {
           mutable: false,
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
-          ownAliasOnTarget: 'details',
+          ownAliasOnTarget: 'some',
           required: true,
           scope: 'scope',
           target: master,
@@ -420,7 +429,7 @@ describe('relation', () => {
         expect(master.relations[0].scope).to.be.equals('scope2');
         expect(master.relations[0].type).to.be.equals('INJECTIVE');
         expect(master.relations[0].model).to.be.equals('Injected');
-        expect(master.relations[0].alias).to.be.equals('details');
+        expect(master.relations[0].alias).to.be.equals('some');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.true;
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
@@ -451,7 +460,7 @@ describe('relation', () => {
           foreignKey: 'someId',
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
-          ownAliasOnTarget: 'details',
+          ownAliasOnTarget: 'some',
           primary: true,
           scope: 'scope',
           target: master,

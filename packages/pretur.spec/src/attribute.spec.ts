@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import { noop } from 'lodash';
-import { Spec, Model } from './spec';
+import { Spec } from './spec';
 import { appendAttribute, createAttributeBuilder } from './attribute';
 
 interface MockModel {
@@ -17,16 +17,17 @@ interface MockModel {
   sets: {};
 }
 
-function mockSpec(name: string): Spec<Model<MockModel>> {
+function mockSpec(name: string): Spec<MockModel> {
   return {
     name,
-    $model: undefined!,
     attributes: [],
     indexes: { unique: [] },
     initialize: noop,
     join: false,
+    model: undefined!,
     relations: [],
     scope: undefined!,
+    type: undefined!,
   };
 }
 
