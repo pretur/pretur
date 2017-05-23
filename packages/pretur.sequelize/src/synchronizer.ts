@@ -1,7 +1,7 @@
 import * as Sequelize from 'sequelize';
 import { intersection, pick } from 'lodash';
 import { I18nBundle } from 'pretur.i18n';
-import { Spec } from 'pretur.spec';
+import { Spec, SpecType, Model } from 'pretur.spec';
 import { ModelDescriptor } from './descriptor';
 import { Pool } from './pool';
 import {
@@ -20,16 +20,16 @@ export interface ErrorHandler<T> {
   (data: T, error: any, rip: ResultItemAppender): Promise<void>;
 }
 
-export interface Insert<T> {
+export interface Insert<T extends SpecType> {
   (
     transaction: Sequelize.Transaction,
     item: InsertMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Promise<Partial<T> | void>;
+  ): Promise<Partial<T['fields']> | void>;
 }
 
-export interface Update<T> {
+export interface Update<T extends SpecType> {
   (
     transaction: Sequelize.Transaction,
     item: UpdateMutateRequest<T>,
@@ -38,7 +38,7 @@ export interface Update<T> {
   ): Promise<void>;
 }
 
-export interface Remove<T> {
+export interface Remove<T extends SpecType> {
   (
     transaction: Sequelize.Transaction,
     item: RemoveMutateRequest<T>,
@@ -47,21 +47,21 @@ export interface Remove<T> {
   ): Promise<void>;
 }
 
-export interface Synchronizer<T> {
+export interface Synchronizer<T extends SpecType> {
   (
     transaction: Sequelize.Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Promise<Partial<T> | void>;
+  ): Promise<Partial<T['fields']> | void>;
 }
 
-export interface UnitializedSynchronizer<T> {
+export interface UnitializedSynchronizer<T extends SpecType> {
   synchronizer: Synchronizer<T>;
   initialize(pool: Pool): void;
 }
 
-export interface SynchronizationInterceptor<T, R> {
+export interface SyncInterceptor<T, R> {
   (
     transaction: Sequelize.Transaction,
     item: T,
@@ -71,16 +71,16 @@ export interface SynchronizationInterceptor<T, R> {
   ): Promise<R>;
 }
 
-export interface BuildSynchronizerOptions<T> {
+export interface BuildSynchronizerOptions<T extends SpecType> {
   insertErrorHandler?: ErrorHandler<InsertMutateRequest<T>>;
   updateErrorHandler?: ErrorHandler<UpdateMutateRequest<T>>;
   removeErrorHandler?: ErrorHandler<RemoveMutateRequest<T>>;
-  insertInterceptor?: SynchronizationInterceptor<InsertMutateRequest<T>, Partial<T> | boolean>;
-  updateInterceptor?: SynchronizationInterceptor<UpdateMutateRequest<T>, boolean>;
-  removeInterceptor?: SynchronizationInterceptor<RemoveMutateRequest<T>, boolean>;
+  insertInterceptor?: SyncInterceptor<InsertMutateRequest<T>, Partial<T['fields']> | boolean>;
+  updateInterceptor?: SyncInterceptor<UpdateMutateRequest<T>, boolean>;
+  removeInterceptor?: SyncInterceptor<RemoveMutateRequest<T>, boolean>;
 }
 
-export function buildSynchronizer<T extends object>(
+export function buildSynchronizer<T extends SpecType>(
   spec: Spec<T>,
   options?: BuildSynchronizerOptions<T>,
 ): UnitializedSynchronizer<T> {
@@ -91,7 +91,7 @@ export function buildSynchronizer<T extends object>(
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Promise<Partial<T> | void> {
+  ): Promise<Partial<T['fields']> | void> {
 
     if (item.action === 'insert') {
       return insert(
@@ -144,24 +144,24 @@ export function buildSynchronizer<T extends object>(
 
 const INJECTED_MASTER_RESOLUTION_KEY = '__INJECTED_MASTER_RESOLUTION_KEY';
 
-async function insert<T extends object>(
+async function insert<T extends SpecType>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<InsertMutateRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<InsertMutateRequest<T>, Partial<T> | boolean> | undefined,
+  interceptor: SyncInterceptor<InsertMutateRequest<T>, Partial<T['fields']> | boolean> | undefined,
   transaction: Sequelize.Transaction,
   item: InsertMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
-): Promise<Partial<T> | void> {
+): Promise<Partial<T['fields']> | void> {
   const model = <ModelDescriptor<T>>pool.models[modelName];
 
   if (!model) {
     throw new Error(`model ${modelName} does not exist`);
   }
 
-  async function defaultInsertBehavior(): Promise<void | Partial<T>> {
-    const data: Partial<T> = { ...(<any>item.data) };
+  async function defaultInsertBehavior(): Promise<void | Partial<T['fields']>> {
+    const data: Partial<Model<T>> = { ...(<any>item.data) };
 
     if (!model.sequelizeModel) {
       throw new Error(`model ${model.name} must have a sequelize model`);
@@ -169,7 +169,7 @@ async function insert<T extends object>(
 
     try {
       for (const master of model.spec.relations.filter(({ type }) => type === 'MASTER')) {
-        const masterData = data[<keyof T>master.alias];
+        const masterData = data[master.alias];
         data[master.alias] = undefined;
 
         if (masterData) {
@@ -304,11 +304,11 @@ async function insert<T extends object>(
   return defaultInsertBehavior();
 }
 
-async function update<T extends object>(
+async function update<T extends SpecType>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<UpdateMutateRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<UpdateMutateRequest<T>, boolean> | undefined,
+  interceptor: SyncInterceptor<UpdateMutateRequest<T>, boolean> | undefined,
   transaction: Sequelize.Transaction,
   item: UpdateMutateRequest<T>,
   rip: ResultItemAppender,
@@ -329,14 +329,14 @@ async function update<T extends object>(
       throw new Error(`model ${model.name} must have at least one primaryKey`);
     }
 
-    const filters = pick<Partial<T>, Partial<T>>(item.data, model.primaryKeys);
+    const filters = pick(item.data, model.primaryKeys);
 
     if (Object.keys(filters).length === 0) {
       throw new Error(`a primaryKey field must be provided to narrow the update`);
     }
 
     try {
-      await model.sequelizeModel.update(item.data, {
+      await model.sequelizeModel.update(<any>item.data, {
         transaction,
         fields: buildUpdateAttributes(model.mutableAttributes, item.attributes),
         validate: true,
@@ -359,11 +359,11 @@ async function update<T extends object>(
   return defaultUpdateBehavior();
 }
 
-async function remove<T extends object>(
+async function remove<T extends SpecType>(
   pool: Pool,
   modelName: string,
   errorHandler: ErrorHandler<RemoveMutateRequest<T>> | undefined,
-  interceptor: SynchronizationInterceptor<RemoveMutateRequest<T>, boolean> | undefined,
+  interceptor: SyncInterceptor<RemoveMutateRequest<T>, boolean> | undefined,
   transaction: Sequelize.Transaction,
   item: RemoveMutateRequest<T>,
   rip: ResultItemAppender,
@@ -384,7 +384,7 @@ async function remove<T extends object>(
       throw new Error(`model ${model.name} must have at least one primaryKey`);
     }
 
-    const identifiers = pick<Partial<T>, Partial<T>>(item.identifiers, model.primaryKeys);
+    const identifiers = pick(item.identifiers, model.primaryKeys);
 
     if (Object.keys(identifiers).length === 0) {
       throw new Error(`a primaryKey field must be provided to narrow the delete`);

@@ -1,4 +1,5 @@
 import * as Sequelize from 'sequelize';
+import { SpecType } from 'pretur.spec';
 import { Query, MutateRequest } from 'pretur.sync';
 import { ResolveResult } from './resolver';
 import { ModelDescriptor } from './descriptor';
@@ -10,13 +11,13 @@ export interface ModelDescriptorMap {
 
 export interface Pool {
   models: ModelDescriptorMap;
-  resolve<T>(query: Query<T>, context: any): Promise<ResolveResult<T>>;
-  sync<T>(
+  resolve<T extends SpecType>(query: Query<T>, context: any): Promise<ResolveResult<T>>;
+  sync<T extends SpecType>(
     transaction: Sequelize.Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Promise<Partial<T> | void>;
+  ): Promise<Partial<T['fields']> | void>;
 }
 
 export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
@@ -30,7 +31,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     ),
   };
 
-  pool.resolve = async function resolve<T>(
+  pool.resolve = async function resolve<T extends SpecType>(
     query: Query<T>,
     context: any,
   ): Promise<ResolveResult<T>> {
@@ -51,12 +52,12 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     return model.resolver(query, context);
   };
 
-  pool.sync = async function sync<T>(
+  pool.sync = async function sync<T extends SpecType>(
     transaction: Sequelize.Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
-  ): Promise<Partial<T> | void> {
+  ): Promise<Partial<T['fields']> | void> {
     if (!item.model) {
       throw new Error('item.model was not specified.');
     }

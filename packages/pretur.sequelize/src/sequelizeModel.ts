@@ -1,22 +1,25 @@
 import * as Sequelize from 'sequelize';
 import { Pool } from './pool';
-import { Spec, Attribute } from 'pretur.spec';
+import { Spec, SpecType, Model, Attribute } from 'pretur.spec';
 
-export type SequelizeInstance<T> = Sequelize.Instance<Partial<T>> & Partial<T>;
-export type SequelizeModel<T> = Sequelize.Model<SequelizeInstance<T>, Partial<T>>;
+export type SequelizeInstance<T extends SpecType>
+  = Sequelize.Instance<Partial<Model<T>>> & Partial<Model<T>>;
 
-export interface UninitializedSequelizeModel<T> {
+export type SequelizeModel<T extends SpecType>
+  = Sequelize.Model<SequelizeInstance<T>, Partial<Model<T>>>;
+
+export interface UninitializedSequelizeModel<T extends SpecType> {
   sequelizeModel: SequelizeModel<T>;
   initialize(pool: Pool): void;
 }
 
-export interface BuildSequelizeModelOptions<T> {
-  attributeToFieldMap?: {[P in keyof T]?: string };
+export interface BuildSequelizeModelOptions<T extends SpecType> {
+  attributeToFieldMap?: {[P in keyof T['fields']]?: string };
   tableName?: string;
   createDatabase?(sequelizeModel: SequelizeModel<T>): void;
 }
 
-export function buildSequelizeModel<T extends object>(
+export function buildSequelizeModel<T extends SpecType>(
   spec: Spec<T>,
   sequelize: Sequelize.Sequelize,
   options?: BuildSequelizeModelOptions<T>,
@@ -48,7 +51,7 @@ export function buildSequelizeModel<T extends object>(
     defineOptions.indexes = spec.indexes.unique.map(fields => ({ unique: true, fields }));
   }
 
-  const model = sequelize.define<SequelizeInstance<T>, T>(spec.name, attributes, defineOptions);
+  const model = sequelize.define(spec.name, attributes, defineOptions);
 
   function initialize(pool: Pool) {
     for (const relation of spec.relations) {

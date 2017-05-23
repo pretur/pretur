@@ -1,56 +1,56 @@
 import * as Sequelize from 'sequelize';
 import { intersection } from 'lodash';
-import { Spec } from 'pretur.spec';
+import { Spec, SpecType } from 'pretur.spec';
 import { Resolver, UnitializedResolver } from './resolver';
 import { Synchronizer, UnitializedSynchronizer } from './synchronizer';
 import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
 import { Pool } from './pool';
 
-export type FieldWhereClause<T> = T |
+export type FieldWhereClause<F> = F |
   Sequelize.WhereOptions | Sequelize.WhereOptions |
   Sequelize.col | Sequelize.and | Sequelize.or |
-  Sequelize.WhereGeometryOptions | T[] | object;
+  Sequelize.WhereGeometryOptions | F[] | object;
 
-export type AliasModelMap<T> = {
-  [P in keyof T]: string;
+export type AliasModelMap<T extends SpecType> = {
+  [P in keyof T['records'] | keyof T['sets']]: string;
 };
 
-export type AliasKeyMap<T> = {
-  [P in keyof T]: keyof T;
+export type AliasKeyMap<T extends SpecType> = {
+  [P in keyof T['records'] | keyof T['sets']]: keyof T['fields'];
 };
 
-export type FieldWhereBuilders<T> = {
-  [P in keyof T]?: (value: T[P]) => FieldWhereClause<T[P]>;
+export type FieldWhereBuilders<T extends SpecType> = {
+  [P in keyof T['fields']]?: (value: T['fields'][P]) => FieldWhereClause<T['fields'][P]>;
 };
 
-export interface ModelDescriptor<T extends object> {
+export interface ModelDescriptor<T extends SpecType> {
   spec: Spec<T>;
   name: string;
-  primaryKeys: (keyof T)[];
+  primaryKeys: (keyof T['fields'])[];
   sequelizeModel?: SequelizeModel<T>;
   resolver?: Resolver<T>;
   synchronizer?: Synchronizer<T>;
   aliasModelMap: AliasModelMap<T>;
   aliasKeyMap: AliasKeyMap<T>;
-  allowedAttributes: (keyof T)[];
-  mutableAttributes: (keyof T)[];
-  defaultOrder: [keyof T, 'ASC' | 'DESC'];
+  allowedAttributes: (keyof T['fields'])[];
+  mutableAttributes: (keyof T['fields'])[];
+  defaultOrder: [keyof T['fields'], 'ASC' | 'DESC'];
   fieldWhereBuilders?: FieldWhereBuilders<T>;
-  sanitizeAttributes(attributes?: (keyof T)[] | keyof T): (keyof T)[];
+  sanitizeAttributes(attributes?: (keyof T['fields'])[] | keyof T['fields']): (keyof T['fields'])[];
   initialize(pool: Pool): void;
 }
 
-export interface BuildModelDescriptorOptions<T> {
+export interface BuildModelDescriptorOptions<T extends SpecType> {
   sequelizeModel?: UninitializedSequelizeModel<T>;
   resolver?: UnitializedResolver<T>;
   synchronizer?: UnitializedSynchronizer<T>;
-  defaultOrder?: [keyof T, 'ASC' | 'DESC'];
+  defaultOrder?: [keyof T['fields'], 'ASC' | 'DESC'];
   fieldWhereBuilders?: FieldWhereBuilders<T>;
-  allowedAttributes?: (keyof T)[];
-  allowedMutableAttributes?: (keyof T)[];
+  allowedAttributes?: (keyof T['fields'])[];
+  allowedMutableAttributes?: (keyof T['fields'])[];
 }
 
-export function buildModelDescriptor<T extends object>(
+export function buildModelDescriptor<T extends SpecType>(
   spec: Spec<T>,
   options?: BuildModelDescriptorOptions<T>,
 ): ModelDescriptor<T> {
@@ -73,7 +73,7 @@ export function buildModelDescriptor<T extends object>(
 
   const aliasKeyMap = spec.relations.reduce(
     (m, r) => {
-      m[r.alias] = <keyof T>r.key;
+      m[r.alias] = <keyof T['fields']>r.key;
       return m;
     },
     <AliasKeyMap<T>>{},
@@ -89,7 +89,9 @@ export function buildModelDescriptor<T extends object>(
     || (primaryKeys[0] && [primaryKeys[0], 'ASC'])
     || undefined;
 
-  function sanitizeAttributes(attributes?: (keyof T)[] | keyof T): (keyof T)[] {
+  function sanitizeAttributes(
+    attributes?: (keyof T['fields'])[] | keyof T['fields'],
+  ): (keyof T['fields'])[] {
     if (Array.isArray(attributes)) {
       return intersection(attributes, allowedAttributes);
     } else if (typeof attributes === 'string') {
