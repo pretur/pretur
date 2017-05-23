@@ -1,3 +1,4 @@
+import { SpecType, Model } from 'pretur.spec';
 import { debounce, find, compact } from 'lodash';
 import { Query } from './query';
 import { fetch, FetchResponse } from './fetch';
@@ -31,19 +32,41 @@ import {
   Response,
 } from './response';
 
-export type InsertOptions<T> = { data: Partial<T>, model: string };
-export type UpdateOptions<T> = { data: Partial<T>, attributes: (keyof T)[], model: string };
-export type RemoveOptions<T> = { identifiers: Partial<T>, model: string };
+export type InsertOptions<T extends SpecType> = {
+  data: Partial<Model<T>>;
+  model: T['name'];
+};
+
+export type UpdateOptions<T extends SpecType> = {
+  data: Partial<T['fields']>;
+  attributes: (keyof T['fields'])[];
+  model: T['name'];
+};
+
+export type RemoveOptions<T extends SpecType> = {
+  identifiers: Partial<T['fields']>;
+  model: T['name'];
+};
 
 export interface Requester {
-  select<T>(query: Query<T>): Promise<SelectResult<T>>;
+  select<T extends SpecType>(query: Query<T>): Promise<SelectResult<T>>;
   operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>>;
-  insert<T>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
-  insert<T>(model: string, data: Partial<T>): Promise<InsertMutateResult<T>>;
-  update<T>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
-  update<T>(model: string, attributes: (keyof T)[], data: Partial<T>): Promise<UpdateMutateResult>;
-  remove<T>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
-  remove<T>(model: string, identifiers: Partial<T>): Promise<RemoveMutateResult>;
+  insert<T extends SpecType>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
+  insert<T extends SpecType>(
+    model: T['name'],
+    data: Partial<Model<T>>,
+  ): Promise<InsertMutateResult<T>>;
+  update<T extends SpecType>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
+  update<T extends SpecType>(
+    model: T['name'],
+    attributes: (keyof T['fields'])[],
+    data: Partial<T['fields']>,
+  ): Promise<UpdateMutateResult>;
+  remove<T extends SpecType>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
+  remove<T extends SpecType>(
+    model: T['name'],
+    identifiers: Partial<T['fields']>,
+  ): Promise<RemoveMutateResult>;
   validate<T>(name: string, data: T): Promise<ValidateResult>;
   batchMutateStart(): void;
   batchMutateEnd(): void;
@@ -130,7 +153,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     }
   }
 
-  function select<T>(query: Query<T>): Promise<SelectResult<T>> {
+  function select<T extends SpecType>(query: Query<T>): Promise<SelectResult<T>> {
     return new Promise<SelectResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: RequestQueueItem = {
@@ -202,9 +225,15 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function insert<T>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
-  function insert<T>(model: string, data: Partial<T>): Promise<InsertMutateResult<T>>;
-  function insert<T>(model: string | InsertOptions<T>, data?: T): Promise<InsertMutateResult<T>> {
+  function insert<T extends SpecType>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
+  function insert<T extends SpecType>(
+    model: T['name'],
+    data: Partial<Model<T>>,
+  ): Promise<InsertMutateResult<T>>;
+  function insert<T extends SpecType>(
+    model: T['name'] | InsertOptions<T>,
+    data?: Partial<Model<T>>,
+  ): Promise<InsertMutateResult<T>> {
     return new Promise<InsertMutateResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
       const request: BatchableRequestQueueItem = {
@@ -250,12 +279,16 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function update<T>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
-  function update<T>(model: string, attributes: (keyof T)[], data: T): Promise<UpdateMutateResult>;
-  function update<T>(
-    model: string | UpdateOptions<T>,
-    attributes?: (keyof T)[],
-    data?: T,
+  function update<T extends SpecType>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
+  function update<T extends SpecType>(
+    model: T['name'],
+    attributes: (keyof T['fields'])[],
+    data: Partial<T['fields']>,
+  ): Promise<UpdateMutateResult>;
+  function update<T extends SpecType>(
+    model: T['name'] | UpdateOptions<T>,
+    attributes?: (keyof T['fields'])[],
+    data?: Partial<T['fields']>,
   ): Promise<UpdateMutateResult> {
     return new Promise<UpdateMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
@@ -302,11 +335,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     });
   }
 
-  function remove<T>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
-  function remove<T>(model: string, identifiers: T): Promise<RemoveMutateResult>;
-  function remove<T>(
-    model: string | RemoveOptions<T>,
-    identifiers?: T,
+  function remove<T extends SpecType>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
+  function remove<T extends SpecType>(
+    model: T['name'],
+    identifiers: Partial<T['fields']>,
+  ): Promise<RemoveMutateResult>;
+  function remove<T extends SpecType>(
+    model: T['name'] | RemoveOptions<T>,
+    identifiers?: Partial<T['fields']>,
   ): Promise<RemoveMutateResult> {
     return new Promise<RemoveMutateResult>((resolve, reject) => {
       const requestId = uniqueId();

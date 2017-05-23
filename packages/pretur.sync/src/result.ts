@@ -1,3 +1,4 @@
+import { SpecType, Model } from 'pretur.spec';
 import { I18nBundle } from 'pretur.i18n';
 import { ValidationError } from 'pretur.validation';
 
@@ -16,9 +17,9 @@ export interface MutateResultBase extends ResultBase {
   validationError: ValidationError;
 }
 
-export interface SelectResult<T> extends ResultBase {
+export interface SelectResult<T extends SpecType> extends ResultBase {
   type: 'select';
-  data?: T[];
+  data?: Model<T>[];
   count?: number;
 }
 
@@ -35,9 +36,9 @@ export interface OperateResult<T> extends ResultBase {
   data?: T;
 }
 
-export interface InsertMutateResult<T> extends MutateResultBase {
+export interface InsertMutateResult<T extends SpecType> extends MutateResultBase {
   action: 'insert';
-  generatedId?: Partial<T>;
+  generatedId?: Partial<T['fields']>;
 }
 
 export interface UpdateMutateResult extends MutateResultBase {
@@ -48,7 +49,7 @@ export interface RemoveMutateResult extends MutateResultBase {
   action: 'remove';
 }
 
-export type MutateResult<T> =
+export type MutateResult<T extends SpecType> =
   | InsertMutateResult<T>
   | UpdateMutateResult
   | RemoveMutateResult;

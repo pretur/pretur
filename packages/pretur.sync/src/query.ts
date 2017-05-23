@@ -1,3 +1,5 @@
+import { SpecType } from 'pretur.spec';
+
 export type Ordering = 'NONE' | 'ASC' | 'DESC';
 
 export interface QueryOrder {
@@ -6,8 +8,8 @@ export interface QueryOrder {
   chain?: string[];
 }
 
-export type QueryFilters<T> = {
-  [P in keyof T]?: any;
+export type QueryFilters<F> = {
+  [P in keyof F]?: any;
 };
 
 export interface QueryPagination {
@@ -15,26 +17,26 @@ export interface QueryPagination {
   take: number;
 }
 
-export type QueryInclude<T> = {
-  [P in keyof T]?: SubQuery<any> | boolean;
-};
+export type QueryInclude<T extends SpecType> =
+  & {[P in keyof T['records']]?: SubQuery<T['records'][P]> }
+  & {[P in keyof T['sets']]?: SubQuery<T['sets'][P]> };
 
-export interface SubQuery<T> {
+export interface SubQuery<T extends SpecType> {
   extra?: any;
   include?: QueryInclude<T>;
-  filters?: QueryFilters<T>;
-  attributes?: (keyof T)[];
+  filters?: QueryFilters<T['fields']>;
+  attributes?: (keyof T['fields'])[];
   required?: boolean;
 }
 
-export interface Query<T> {
-  model: string;
-  byId?: Partial<T>;
+export interface Query<T extends SpecType> {
+  model: T['name'];
+  byId?: Partial<T['fields']>;
   count?: boolean;
   extra?: any;
   include?: QueryInclude<T>;
-  filters?: QueryFilters<T>;
-  attributes?: (keyof T)[];
+  filters?: QueryFilters<T['fields']>;
+  attributes?: (keyof T['fields'])[];
   pagination?: QueryPagination;
   order?: QueryOrder;
 }

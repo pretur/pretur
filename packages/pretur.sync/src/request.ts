@@ -1,15 +1,16 @@
+import { SpecType, Model } from 'pretur.spec';
 import { Query } from './query';
 
 export interface RequestBase {
   requestId: number;
 }
 
-export interface MutateRequestBase extends RequestBase {
+export interface MutateRequestBase<T extends SpecType> extends RequestBase {
   type: 'mutate';
-  model: string;
+  model: T['name'];
 }
 
-export interface SelectRequest<T> extends RequestBase {
+export interface SelectRequest<T extends SpecType> extends RequestBase {
   type: 'select';
   query: Query<T>;
 }
@@ -26,23 +27,23 @@ export interface OperateRequest<T> extends RequestBase {
   data?: T;
 }
 
-export interface InsertMutateRequest<T> extends MutateRequestBase {
+export interface InsertMutateRequest<T extends SpecType> extends MutateRequestBase<T> {
   action: 'insert';
-  data: Partial<T>;
+  data: Partial<Model<T>>;
 }
 
-export interface UpdateMutateRequest<T> extends MutateRequestBase {
+export interface UpdateMutateRequest<T extends SpecType> extends MutateRequestBase<T> {
   action: 'update';
-  attributes: (keyof T)[];
-  data: Partial<T>;
+  attributes: (keyof T['fields'])[];
+  data: Partial<T['fields']>;
 }
 
-export interface RemoveMutateRequest<T> extends MutateRequestBase {
+export interface RemoveMutateRequest<T extends SpecType> extends MutateRequestBase<T> {
   action: 'remove';
-  identifiers: Partial<T>;
+  identifiers: Partial<T['fields']>;
 }
 
-export type MutateRequest<T> =
+export type MutateRequest<T extends SpecType> =
   | InsertMutateRequest<T>
   | UpdateMutateRequest<T>
   | RemoveMutateRequest<T>;
