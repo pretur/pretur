@@ -123,7 +123,11 @@ export async function selectAndRefresh<T extends SpecType>(
   querier: Querier<T>,
   extra?: Partial<Query<T>>,
 ) {
-  const { data = [], count = 0 } = await requester.select<T>({ ...querier.query, ...extra });
+  const { data = [], count = 0 } = await requester.select<T>({
+    ...querier.query,
+    ...extra,
+    model: spec.name,
+  });
   refresh(dispatch, set, querier, { data: buildSet<T>(pool, spec, data), count });
   return { data, count };
 }

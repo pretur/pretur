@@ -37,10 +37,10 @@
     "pretur.spec": "^0.18.0",
     "pretur.sync": "^0.18.0",
     "pretur.validation": "^0.18.0",
-    "tslib": "^1.7.0"
+    "tslib": "^1.7.1"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.4.0-dev.20170502"
+    "typescript": "^2.4.0-dev.20170523"
   }
 }
