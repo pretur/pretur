@@ -9,8 +9,8 @@ import { Set } from './Set';
 
 export type Fields<T extends SpecType> =
   & {[P in keyof T['fields']]: Value<T['fields'][P]>}
-  & {[P in keyof T['records']]: Record<T['records'][P]>}
-  & {[P in keyof T['sets']]: Set<Record<T['sets'][P]>>};
+  & {[P in keyof T['records']]: Record<Fields<T['records'][P]>>}
+  & {[P in keyof T['sets']]: Set<Record<Fields<T['sets'][P]>>>};
 
 function buildFields<T extends SpecType>(
   pool: SpecPool,

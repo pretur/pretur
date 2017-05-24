@@ -17,8 +17,10 @@ export type SpecType<
   S extends Sets = Sets,
   N extends string = string> = { name: N; fields: F; records: R; sets: S };
 
-export type Model<T extends SpecType>
-  = T['fields'] & T['records'] & {[P in keyof T['sets']]: T['sets'][P][]};
+export type Model<T extends SpecType> =
+  & T['fields']
+  & {[P in keyof T['records']]: Model<T['records'][P]>}
+  & {[P in keyof T['sets']]: Model<T['sets'][P]>[]};
 
 export interface Spec<T extends SpecType = SpecType> {
   model: Model<T>;
