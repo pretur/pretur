@@ -1,7 +1,9 @@
 import { xor, isEqual, mapValues } from 'lodash';
+import { SpecType, Model } from 'pretur.spec';
 import { ValidationError } from 'pretur.validation';
 import { Action, Dispatch } from 'pretur.redux';
 import { nextId, from, Clay, State } from './clay';
+import { Fields } from './fields';
 import {
   CLAY_CLEAR,
   CLAY_REPLACE,
@@ -11,7 +13,7 @@ import {
   CLAY_REMOVE,
 } from './actions';
 
-function FieldsEqual<T>(fields1: T, fields2: T): boolean {
+function FieldsEqual<T extends SpecType>(fields1: Fields<T>, fields2: Fields<T>): boolean {
   const fields1Keys = Object.keys(fields1);
   const fields2Keys = Object.keys(fields2);
   if (fields1Keys.length !== fields2Keys.length) {
@@ -27,22 +29,22 @@ function FieldsEqual<T>(fields1: T, fields2: T): boolean {
   }
 
   for (const key of fields1Keys) {
-    if ((<any>fields1)[key] !== (<any>fields2)[key]) {
+    if (fields1[key] !== fields2[key]) {
       return false;
     }
   }
   return true;
 }
 
-export class Record<T> implements Clay {
+export class Record<T extends SpecType> implements Clay {
   public readonly uniqueId: number;
   public readonly original: this;
   public readonly state: State;
-  public readonly fields: T;
+  public readonly fields: Fields<T>;
   public readonly error: ValidationError;
 
   constructor(
-    fields?: T,
+    fields?: Fields<T> | Model<T>,
     error?: ValidationError,
     state: State = 'normal',
     original?: Record<T>,
@@ -54,7 +56,7 @@ export class Record<T> implements Clay {
     this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
     this.original = original ? <this>original : this;
     this.state = state;
-    this.fields = fields ? <any>mapValues(fields, from) : <T>{};
+    this.fields = fields ? <any>mapValues(fields, from) : <Fields<T>>{};
     this.error = error;
   }
 
@@ -64,7 +66,7 @@ export class Record<T> implements Clay {
 
   public get valid(): boolean {
     for (const key of Object.keys(this.fields)) {
-      if (!(<Clay>(<any>this.fields)[key]).valid) {
+      if (!this.fields[key].valid) {
         return false;
       }
     }
@@ -86,11 +88,11 @@ export class Record<T> implements Clay {
         return this;
       }
 
-      if ((<any>this.fields)[action.payload.field] === action.payload.value) {
+      if (this.fields[action.payload.field] === action.payload.value) {
         return this;
       }
 
-      const newFields: T = {
+      const newFields = <Fields<T>>{
         ...(<any>this.fields),
         [action.payload.field]: action.payload.value,
       };
@@ -165,18 +167,18 @@ export class Record<T> implements Clay {
     }
 
     const fieldKeys = Object.keys(this.fields);
-    const newFields: any = {};
+    const newFields = <Fields<T>>{};
     let modified = false;
     let original = true;
 
     for (const key of fieldKeys) {
-      newFields[key] = (<Clay>(<any>this.fields)[key]).reduce(action);
+      newFields[key] = this.fields[key].reduce(action);
 
-      if (newFields[key] !== (<any>this.fields)[key]) {
+      if (newFields[key] !== this.fields[key]) {
         modified = true;
       }
 
-      if (newFields[key] !== (<any>this.original.fields)[key]) {
+      if (newFields[key] !== this.original.fields[key]) {
         original = false;
       }
     }
@@ -210,7 +212,7 @@ export class Record<T> implements Clay {
     dispatch(CLAY_REPLACE.create.unicast(this.uniqueId, by));
   }
 
-  public setField<K extends keyof T>(dispatch: Dispatch, field: K, value: T[K]) {
+  public setField<K extends keyof Fields<T>>(dispatch: Dispatch, field: K, value: Fields<T>[K]) {
     dispatch(CLAY_SET_FIELD.create.unicast(this.uniqueId, { field, value: from(value) }));
   }
 

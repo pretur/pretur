@@ -1,7 +1,9 @@
 import { isEqual, findIndex } from 'lodash';
+import { SpecType, Model } from 'pretur.spec';
 import { Action, Dispatch } from 'pretur.redux';
 import { ValidationError } from 'pretur.validation';
 import { nextId, from, Clay, State } from './clay';
+import { Record } from './Record';
 import {
   CLAY_CLEAR,
   CLAY_REPLACE,
@@ -12,7 +14,7 @@ import {
   CLAY_REFRESH,
 } from './actions';
 
-function itemsEqual<T>(items1: T[], items2: T[]): boolean {
+function itemsEqual<T extends SpecType>(items1: Record<T>[], items2: Record<T>[]): boolean {
   if (items1.length !== items2.length) {
     return false;
   }
@@ -30,15 +32,15 @@ function itemsEqual<T>(items1: T[], items2: T[]): boolean {
   return true;
 }
 
-export class Set<T> implements Clay {
+export class Set<T extends SpecType> implements Clay {
   public readonly uniqueId: number;
   public readonly original: this;
   public readonly state: State;
-  public readonly items: T[];
+  public readonly items: Record<T>[];
   public readonly error: ValidationError;
 
   constructor(
-    items?: T[],
+    items?: Record<T>[] | Model<T>[],
     error?: ValidationError,
     state: State = 'normal',
     original?: Set<T>,
@@ -50,7 +52,7 @@ export class Set<T> implements Clay {
     this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
     this.original = original ? <this>original : this;
     this.state = state;
-    this.items = Array.isArray(items) ? <any>items.map(from) : [];
+    this.items = Array.isArray(items) ? (<any>items).map(from) : [];
     this.error = error;
   }
 
@@ -60,7 +62,7 @@ export class Set<T> implements Clay {
 
   public get valid(): boolean {
     for (const item of this.items) {
-      if (!(<Clay><any>item).valid) {
+      if (item.valid) {
         return false;
       }
     }
@@ -126,7 +128,7 @@ export class Set<T> implements Clay {
 
     if (CLAY_ADD.is(this.uniqueId, action)) {
       return <this>new Set(
-        [...this.items, from(action.payload)],
+        [...this.items, <any>from(action.payload)],
         this.error,
         this.state,
         this.original,
@@ -135,7 +137,7 @@ export class Set<T> implements Clay {
     }
 
     if (CLAY_REMOVE.is(this.uniqueId, action)) {
-      const index = findIndex<Clay>(<any>this.items, item => item.uniqueId === action.payload);
+      const index = findIndex(this.items, item => item.uniqueId === action.payload);
       if (index !== -1) {
         const newItems = [...this.items];
         newItems.splice(index, 1);
@@ -154,10 +156,10 @@ export class Set<T> implements Clay {
 
     let original = true;
     let modified = false;
-    const newItems: T[] = [];
+    const newItems: Record<T>[] = [];
 
     for (let i = 0; i < this.items.length; i++) {
-      const newItem = <T><any>(<Clay><any>this.items[i]).reduce(action);
+      const newItem = this.items[i].reduce(action);
 
       if (this.items[i] !== newItem) {
         modified = true;
@@ -201,7 +203,7 @@ export class Set<T> implements Clay {
     dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, state));
   }
 
-  public add(dispatch: Dispatch, item: T): void {
+  public add(dispatch: Dispatch, item: Model<T> | Record<T>): void {
     dispatch(CLAY_ADD.create.unicast(this.uniqueId, from(item)));
   }
 }

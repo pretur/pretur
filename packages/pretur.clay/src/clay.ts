@@ -1,12 +1,11 @@
 import { mapValues } from 'lodash';
-import { SpecType } from 'pretur.spec';
+import { SpecType, Model } from 'pretur.spec';
 import { ValidationError } from 'pretur.validation';
 import { Reducible, Dispatch } from 'pretur.redux';
 import { Value } from './Value';
 import { Record } from './Record';
 import { Set } from './Set';
 import { Querier } from './Querier';
-import { Fields } from './helpers';
 import { CLAY_REFRESH } from './actions';
 
 let id = 0;
@@ -30,20 +29,23 @@ export interface Clay extends Reducible {
 
 export function refresh<T extends SpecType>(
   dispatch: Dispatch,
-  set: Set<Record<Fields<T>>>,
+  set: Set<T>,
   querier: Querier<T>,
-  payload: { data: Set<Record<Fields<T>>>; count: number },
+  payload: { data: Set<T>; count: number },
 ): void {
   dispatch(CLAY_REFRESH.create.multicast([set.uniqueId, querier.uniqueId], payload));
 }
 
+export function from<T extends SpecType>(list: Model<T>[] | Set<T>): Set<T>;
+export function from<T extends SpecType>(model: Model<T> | Record<T>): Record<T>;
+export function from<T>(value: T | Value<T>): Value<T>;
 export function from(value: any): Clay {
   if (value instanceof Value || value instanceof Record || value instanceof Set) {
     return value;
   }
 
   if (Array.isArray(value)) {
-    return new Set(value.map(from));
+    return new Set(<any>value.map(from));
   }
 
   if (typeof value === 'object' && value) {
@@ -57,6 +59,9 @@ export function from(value: any): Clay {
   return new Value(value);
 }
 
+export function toPlain<T extends SpecType>(set: Set<T>): Model<T>[];
+export function toPlain<T extends SpecType>(record: Record<T>): Model<T>;
+export function toPlain<T>(value: Value<T>): T;
 export function toPlain(clay: Clay): any {
   if (clay instanceof Value) {
     return clay.value;
