@@ -303,7 +303,7 @@ describe('relation', () => {
         ],
       ];
 
-      testCases.forEach(([expectation, testCase]) => {
+      for (const [expectation, testCase] of testCases) {
         const main = mockSpec('Main');
         const inheritor = (name: string, alias: string, i18nKey: string) => ({
           alias,
@@ -315,7 +315,7 @@ describe('relation', () => {
         it(expectation, () => {
           testCase(main, <any>inheritor, appendInheritorGroup);
         });
-      });
+      }
 
     });
 

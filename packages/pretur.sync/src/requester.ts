@@ -456,10 +456,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
           }
         },
         reject(error: any) {
-          previousBatch.queue.forEach(item => item.reject(error));
+          for (const item of previousBatch.queue) {
+             item.reject(error);
+          }
         },
         cancel() {
-          previousBatch.queue.forEach(item => item.cancel());
+          for (const item of previousBatch.queue) {
+             item.cancel();
+          }
         },
       });
       debouncedSend();

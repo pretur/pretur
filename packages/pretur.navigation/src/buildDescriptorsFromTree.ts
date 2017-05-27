@@ -55,7 +55,7 @@ function buildPageFolderTree(
   pathTree.push(chain.join('/'));
   filteredPathTree.push(chain.join('/'));
 
-  Object.keys(root).forEach(path => {
+  for (const path of Object.keys(root)) {
     const newChain = chain.concat(path);
     const absolutePath = newChain.join('/');
 
@@ -116,7 +116,7 @@ function buildPageFolderTree(
 
     }
 
-  });
+  }
 }
 
 function buildFolderContents(folders: string[], pages: string[]): FolderContents {
@@ -124,15 +124,17 @@ function buildFolderContents(folders: string[], pages: string[]): FolderContents
 
   folderContents[''] = pages.slice();
 
-  folders.forEach(folder => {
+  for (const folder of folders) {
     folderContents[folder] = [];
-    pages.forEach(page => {
+
+    for (const page of pages) {
       if (page.indexOf(folder) !== -1) {
         folderContents[folder].push(page);
       }
-    });
+    }
+
     folderContents[folder].sort();
-  });
+  }
 
   return folderContents;
 }

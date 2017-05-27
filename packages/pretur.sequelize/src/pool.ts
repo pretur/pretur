@@ -75,7 +75,9 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
     return model.synchronizer(transaction, item, rip, context);
   };
 
-  descriptors.forEach(d => d.initialize(pool));
+  for (const descriptor of descriptors) {
+    descriptor.initialize(pool);
+  }
 
   return pool;
 }

@@ -118,7 +118,7 @@ function buildPath(prefix: string | undefined, key: string) {
 }
 
 function processDescriptor(tree: any, language: Language, prefix?: string, path?: string): void {
-  Object.keys(tree).forEach(key => {
+  for (const key of Object.keys(tree)) {
     const processedKey = buildKey(prefix, key);
     const processedPath = buildPath(path, key);
     if (typeof tree[key] === 'function') {
@@ -129,7 +129,7 @@ function processDescriptor(tree: any, language: Language, prefix?: string, path?
     } else if (tree[key] && typeof tree[key] === 'object') {
       processDescriptor(tree[key], language, processedKey, processedPath);
     }
-  });
+  }
 }
 
 export interface LanguageMap {
@@ -153,11 +153,11 @@ export function internationalize<T>(
   processDescriptor(mainLanguageDescriptor.tree, mainLanguage);
   languages[mainLanguageDescriptor.locale] = mainLanguage;
 
-  otherLanguageDescriptors.forEach(languageDescriptor => {
+  for (const languageDescriptor of otherLanguageDescriptors) {
     const lang: Language = {};
     processDescriptor(languageDescriptor.tree, lang);
     languages[languageDescriptor.locale] = lang;
-  });
+  }
 
   const mainLocale = mainLanguageDescriptor.locale;
 

@@ -165,11 +165,11 @@ function buildOrder<T extends SpecType>(
 
     if (Array.isArray(query.order.chain)) {
       let currentModel = model;
-      query.order.chain.forEach(alias => {
+      for (const alias of query.order.chain) {
         const nextModel = pool.models[currentModel].aliasModelMap[alias];
         parameters.push({ as: alias, model: pool.models[nextModel].sequelizeModel });
         currentModel = nextModel;
-      });
+      }
     }
 
     parameters.push(query.order.field);
@@ -255,7 +255,7 @@ function buildNestedInclude<T extends SpecType>(
   if (queryInclude || orderChain) {
     const include: Sequelize.IncludeOptions[] = [];
 
-    Object.keys(aliasModelMap).forEach(alias => {
+    for (const alias of Object.keys(aliasModelMap) {
       if (
         (queryInclude && queryInclude[alias]) ||
         (orderChain && orderChain[0] === alias)
@@ -298,7 +298,7 @@ function buildNestedInclude<T extends SpecType>(
 
         include.push(includedModel);
       }
-    });
+    }
 
     return include;
   }

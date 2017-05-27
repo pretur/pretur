@@ -18,13 +18,13 @@ export default class Units<U extends string> {
   private matrix: ConversionMatrix<U> = <any>{};
 
   constructor(units: U[], conversions?: (Conversion<U>)[]) {
-    units.filter(unit => typeof unit === 'string').forEach(unit => {
+    for (const unit of units.filter(u => typeof u === 'string')) {
       if (this.units.indexOf(unit) === -1) {
         this.units.push(unit);
         this.matrix[unit] = <any>{};
         this.matrix[unit][unit] = 1;
       }
-    });
+    }
 
     if (Array.isArray(conversions)) {
       conversions.filter(Array.isArray).forEach(conversion => this.addConversion(conversion));
@@ -65,8 +65,7 @@ export default class Units<U extends string> {
       if (!visited[current]) {
         visited[current] = true;
 
-        Object.keys(this.matrix[current]).forEach(next => {
-
+        for (const next of Object.keys(this.matrix[current])) {
           stack.push(next);
 
           // Populate the matrix if possible
@@ -77,8 +76,7 @@ export default class Units<U extends string> {
               this.matrix[next][source] = Math.pow(ratio, -1);
             }
           }
-
-        });
+        }
       }
     }
 
@@ -92,10 +90,10 @@ export default class Units<U extends string> {
 
     // None of the visited units can reach destination
     // if source has no path to destination.
-    Object.keys(visited).forEach(key => {
+    for (const key of Object.keys(visited)) {
       this.matrix[key][destination] = Infinity;
       this.matrix[destination][key] = Infinity;
-    });
+    }
 
     return Infinity;
   }
@@ -138,16 +136,16 @@ export default class Units<U extends string> {
       case 'nested':
         const nestedMatrix: ConversionMatrix<U> = <any>{};
 
-        this.units.forEach(source => {
+        for (const source of this.units) {
           nestedMatrix[source] = <any>{};
 
-          this.units.forEach(destination => {
+          for (const destination of this.units) {
             nestedMatrix[source][destination] = this.matrix[source][destination]
               ? this.matrix[source][destination]
               : this.calculateCoefficient(source, destination);
-          });
+          }
 
-        });
+        }
 
         return nestedMatrix;
       case 'grid':
@@ -168,15 +166,15 @@ export default class Units<U extends string> {
       case 'array':
         const array: Conversion<U>[] = [];
 
-        this.units.forEach(source => {
-          this.units.forEach(destination => {
+        for (const source of this.units) {
+          for (const destination of this.units) {
             const ratio = this.matrix[source][destination]
               ? this.matrix[source][destination]
               : this.calculateCoefficient(source, destination);
             array.push([source, destination, ratio]);
-          });
+          }
 
-        });
+        }
 
         return array;
     }

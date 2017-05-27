@@ -166,7 +166,7 @@ function inheritors<S extends SpecType, T extends SpecType>(
 ) {
   const typeEnumValues: (keyof S['records'])[] = [];
 
-  options.inheritors.forEach(inheritor => {
+  for (const inheritor of options.inheritors) {
     appendRelation(spec, {
       alias: inheritor.alias,
       key: options.sharedExistingUniqueField,
@@ -190,7 +190,7 @@ function inheritors<S extends SpecType, T extends SpecType>(
     });
 
     typeEnumValues.push(inheritor.alias);
-  });
+  }
 
   appendAttribute(spec, {
     mutable: true,

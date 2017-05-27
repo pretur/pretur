@@ -122,11 +122,16 @@ export class Pages {
 
   constructor(root: PageTreeRoot) {
     const descriptors = buildDescriptorsFromTree(root);
+
     this.pages = {};
-    descriptors.pages.forEach(d => this.pages[d.path] = d);
+    for (const page of descriptors.pages) {
+      this.pages[page.path] = page;
+    }
 
     this.folders = {};
-    descriptors.folders.forEach(d => this.folders[d.path] = d);
+    for (const folder of descriptors.folders) {
+      this.pages[folder.path] = folder;
+    }
 
     this.calculatedPathTree = descriptors.pathTree;
     this.calculatedFolderContents = descriptors.folderContents;
