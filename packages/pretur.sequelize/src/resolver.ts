@@ -255,7 +255,7 @@ function buildNestedInclude<T extends SpecType>(
   if (queryInclude || orderChain) {
     const include: Sequelize.IncludeOptions[] = [];
 
-    for (const alias of Object.keys(aliasModelMap) {
+    for (const alias of Object.keys(aliasModelMap)) {
       if (
         (queryInclude && queryInclude[alias]) ||
         (orderChain && orderChain[0] === alias)
