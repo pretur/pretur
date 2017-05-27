@@ -222,6 +222,26 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'f', 'a/d/e'], '1');
       });
 
+      it('should properly update active children', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f', parent: '1' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '4', path: 'f', parent: '3' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '4');
+        expect(nav.getActiveChild('1')).to.be.equals('2');
+        expect(nav.getActiveChild('3')).to.be.equals('4');
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '1');
+        expect(nav.getActiveChild('1')).to.be.equals(undefined);
+      });
+
     });
 
     describe('replace', () => {
@@ -341,6 +361,31 @@ describe('Navigator', () => {
         checkStore(nav, ['a/d/e', 'a/d/e'], '3');
       });
 
+      it('should properly update active children', () => {
+        persist.clear('ADMIN');
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f', parent: '1' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '4', path: 'f', parent: '3' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '4');
+        expect(nav.getActiveChild('1')).to.be.equals('2');
+        expect(nav.getActiveChild('3')).to.be.equals('4');
+
+        nav.replace(dispatch, '2', { mutex: '5', path: 'a/d/e', parent: '1' });
+
+        check(nav, ['a/d/e', 'a/d/e', 'a/d/e', 'f'], '5');
+        expect(nav.getActiveChild('1')).to.be.equals('5');
+
+        nav.replace(dispatch, '3', { mutex: '6', path: 'a/d/e' });
+        check(nav, ['a/d/e', 'a/d/e', 'a/d/e'], '6');
+        expect(nav.getActiveChild('3')).to.be.equals(undefined);
+        expect(nav.getActiveChild('6')).to.be.equals(undefined);
+      });
+
     });
 
     describe('close', () => {
@@ -449,7 +494,7 @@ describe('Navigator', () => {
         nav.open(dispatch, { mutex: '8', path: 'a/d/e' });
         check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e'], '8');
         nav.close(dispatch, '8');
-        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f'], '5');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f'], '7');
       });
 
       it('should properly change the active page when there are nesting present (messy)', () => {
@@ -555,6 +600,54 @@ describe('Navigator', () => {
         check(nav, [], undefined);
       });
 
+      it('should properly update active children', () => {
+        nav.open(dispatch, { mutex: '5', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '7', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '8', path: 'f', parent: '5' });
+        nav.open(dispatch, { mutex: '9', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '10', path: 'f', parent: '9' });
+
+        nav.transit(dispatch, '1');
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'f', 'a/d/e', 'f'], '1');
+        expect(nav.getActiveChild('5')).to.be.equals('8');
+        expect(nav.getActiveChild('9')).to.be.equals('10');
+
+        nav.close(dispatch, '8');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f', 'a/d/e', 'f'], '1');
+        expect(nav.getActiveChild('5')).to.be.equals(undefined);
+
+        nav.close(dispatch, '9');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'f'], '1');
+        expect(nav.getActiveChild('9')).to.be.equals(undefined);
+
+        nav.close(dispatch, '5');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f'], '1');
+        expect(nav.getActiveChild('5')).to.be.equals(undefined);
+
+        nav.open(dispatch, { mutex: '11', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '12', path: 'f', parent: '11' });
+        nav.open(dispatch, { mutex: '13', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '14', path: 'f', parent: '13' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f'], '14');
+        expect(nav.getActiveChild('11')).to.be.equals('12');
+        expect(nav.getActiveChild('13')).to.be.equals('14');
+
+        nav.close(dispatch, '13');
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e', 'f'], '12');
+        expect(nav.getActiveChild('11')).to.be.equals('12');
+        expect(nav.getActiveChild('13')).to.be.equals(undefined);
+
+        nav.close(dispatch, '12');
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'f', 'a/d/e'], '11');
+        expect(nav.getActiveChild('11')).to.be.equals(undefined);
+        expect(nav.getActiveChild('13')).to.be.equals(undefined);
+      });
+
     });
 
     describe('transit', () => {
@@ -604,8 +697,8 @@ describe('Navigator', () => {
         checkStore(nav, ['a/d/e', 'f', 'a/d/e'], '3');
 
         nav.transit(dispatch, '2');
-        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/g/e', 'a/g/e'], '2', false);
-        checkStore(nav, ['a/d/e', 'f', 'a/d/e'], '2');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/g/e', 'a/g/e'], '3', false);
+        checkStore(nav, ['a/d/e', 'f', 'a/d/e'], '3');
       });
 
       it('should peroperly transit to the target mutex', () => {
@@ -615,6 +708,36 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
         nav.transit(dispatch, '2');
         check(nav, ['a/d/e', 'f', 'a/d/e'], '2');
+      });
+
+      it('should peroperly update the active children', () => {
+        expect(nav.getActiveChild('1')).to.be.equals(undefined);
+        expect(nav.getActiveChild('2')).to.be.equals('3');
+        expect(nav.getActiveChild('3')).to.be.equals(undefined);
+
+        nav.open(dispatch, { mutex: '4', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '5', path: 'f', parent: '4' });
+        nav.open(dispatch, { mutex: '6', path: 'f', parent: '4' });
+        nav.open(dispatch, { mutex: '7', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '8', path: 'a/d/e', parent: '7' });
+        nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '2' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/d/e', 'f', 'f', 'a/d/e', 'a/d/e', 'a/d/e'], '9');
+        expect(nav.getActiveChild('2')).to.be.equals('9');
+        expect(nav.getActiveChild('4')).to.be.equals('6');
+        expect(nav.getActiveChild('5')).to.be.equals(undefined);
+        expect(nav.getActiveChild('6')).to.be.equals(undefined);
+        expect(nav.getActiveChild('7')).to.be.equals('8');
+        expect(nav.getActiveChild('8')).to.be.equals(undefined);
+        expect(nav.getActiveChild('9')).to.be.equals(undefined);
+
+        nav.transit(dispatch, '3');
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/d/e', 'f', 'f', 'a/d/e', 'a/d/e', 'a/d/e'], '3');
+        expect(nav.getActiveChild('2')).to.be.equals('3');
+
+        nav.transit(dispatch, '2');
+        expect(nav.getActiveChild('2')).to.be.equals(undefined);
+        check(nav, ['a/d/e', 'f', 'a/d/e', 'a/d/e', 'f', 'f', 'a/d/e', 'a/d/e', 'a/d/e'], '2');
       });
 
     });
@@ -674,6 +797,7 @@ describe('Navigator', () => {
         nav.load(dispatch);
 
         check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+        expect(nav.getActiveChild('2')).to.be.equals('3');
       });
 
       it('should ignore unknown paths', () => {
@@ -956,11 +1080,34 @@ describe('Navigator', () => {
       nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
       nav.open(dispatch, { mutex: '10', path: 'a/d/e', parent: '8' });
 
+      nav.transit(dispatch, '6');
       nav.transit(dispatch, '5');
       expect(nav.indexAsChildOfActiveRoot).to.be.equals(-1);
 
+      nav.transit(dispatch, '9');
       nav.transit(dispatch, '8');
       expect(nav.indexAsChildOfActiveRoot).to.be.equals(-1);
+    });
+
+    it('should return the proper index when transiting to previous roots', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'a/d/e', parent: '8' });
+
+      nav.transit(dispatch, '9');
+
+      nav.transit(dispatch, '5');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(1);
+
+      nav.transit(dispatch, '8');
+      expect(nav.indexAsChildOfActiveRoot).to.be.equals(0);
     });
 
     it('should return the index relative to it\'s siblings when active page is a child', () => {
@@ -1090,6 +1237,32 @@ describe('Navigator', () => {
       expect(nav.pageFromMutex('10')).not.to.be.undefined;
       expect(nav.pageFromMutex('10')!.path).be.equals('f');
       expect(nav.pageFromMutex('11')).to.be.undefined;
+    });
+
+  });
+
+  describe('getActiveChild', () => {
+
+    it('should return the active child by mutex', () => {
+      persist.clear('ADMIN');
+      let nav = navigator;
+      const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+      nav.open(dispatch, { mutex: '5', path: 'f' });
+      nav.open(dispatch, { mutex: '6', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '7', path: 'a/d/e', parent: '5' });
+      nav.open(dispatch, { mutex: '8', path: 'f' });
+      nav.open(dispatch, { mutex: '9', path: 'a/d/e', parent: '8' });
+      nav.open(dispatch, { mutex: '10', path: 'f' });
+      nav.open(dispatch, { mutex: '11', path: 'f' });
+
+      expect(nav.getActiveChild('5')).to.be.equals('7');
+      expect(nav.getActiveChild('6')).to.be.equals(undefined);
+      expect(nav.getActiveChild('7')).to.be.equals(undefined);
+      expect(nav.getActiveChild('8')).to.be.equals('9');
+      expect(nav.getActiveChild('9')).to.be.equals(undefined);
+      expect(nav.getActiveChild('10')).to.be.equals(undefined);
+      expect(nav.getActiveChild('11')).to.be.equals(undefined);
     });
 
   });

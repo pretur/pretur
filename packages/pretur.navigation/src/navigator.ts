@@ -35,6 +35,10 @@ interface Instances {
   pages: InstanceMap;
 }
 
+interface ActiveChildren {
+  [root: string]: string;
+}
+
 function orderedPages(instances: Instances): PageInstance<any, any, any>[] {
   return instances.pageOrder.map(path => instances.pages[path]);
 }
@@ -161,12 +165,83 @@ function replacePage(instances: Instances, options: PageReplaceOptions, pages: P
   return newInstances;
 }
 
+function cloneActiveChildren(instances: Instances, currentActives: ActiveChildren): ActiveChildren {
+  const newActives: ActiveChildren = {};
+  const roots = orderedPages(instances).filter(page => !page.parent).map(page => page.mutex);
+
+  for (const root of roots) {
+    if (currentActives[root] && instances.pages[currentActives[root]]) {
+      newActives[root] = currentActives[root];
+    }
+  }
+
+  return newActives;
+}
+
+function updateActiveChildren(
+  instances: Instances,
+  actives: ActiveChildren,
+  target?: string,
+): ActiveChildren {
+  const newActives = cloneActiveChildren(instances, actives);
+
+  if (!target) {
+    return newActives;
+  }
+
+  const targetPage = instances.pages[target];
+
+  // target is root
+  if (targetPage && !targetPage.parent) {
+    if (!newActives[target]) {
+      return newActives;
+    }
+    delete newActives[target];
+    return newActives;
+  }
+
+  const root = targetPage && targetPage.parent;
+
+  if (!root) {
+    return newActives;
+  }
+
+  return { ...newActives, [root]: target };
+}
+
+function getTransitionTarget(
+  instances: Instances,
+  actives: ActiveChildren,
+  currentActive: string | undefined,
+  desiredTarget: string,
+): string {
+  const desiredTargetPage = instances.pages[desiredTarget];
+  const currentPage = currentActive && instances.pages[currentActive];
+
+  // non-root
+  if (desiredTargetPage && desiredTargetPage.parent) {
+    return desiredTarget;
+  }
+
+  // transiting to own root
+  if (currentPage && desiredTarget === currentPage.parent) {
+    return desiredTarget;
+  }
+
+  if (actives[desiredTarget] && instances.pages[actives[desiredTarget]]) {
+    return actives[desiredTarget];
+  }
+
+  return desiredTarget;
+}
+
 export class Navigator implements Reducible {
   private _pages: Pages;
   private _prefix: string;
 
   private _instances: Instances = { pageOrder: [], pages: {} };
   private _activePageMutex: string | undefined;
+  private _activeChildren: ActiveChildren = {};
 
   constructor(pages: Pages, prefix = '') {
     this._pages = pages;
@@ -244,6 +319,10 @@ export class Navigator implements Reducible {
     return typeof mutex === 'string' ? this._instances.pages[mutex] : undefined;
   }
 
+  public getActiveChild(mutex: string | undefined): string | undefined {
+    return mutex ? this._activeChildren[mutex] : undefined;
+  }
+
   private persistInstances(instances: Instances): void {
     const toSave: PageInstantiationData<any>[] = [];
 
@@ -293,6 +372,7 @@ export class Navigator implements Reducible {
         this.persistActivePage(this._instances, undefined);
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
+        newNav._activeChildren = this._activeChildren;
         return newNav;
       }
 
@@ -300,11 +380,20 @@ export class Navigator implements Reducible {
         return this;
       }
 
-      this.persistActivePage(this._instances, action.payload);
+      const transitionTarget = getTransitionTarget(
+        this._instances,
+        this._activeChildren,
+        this._activePageMutex,
+        action.payload,
+      );
+
+      this.persistActivePage(this._instances, transitionTarget);
 
       const newNav = <this>new Navigator(this._pages, this._prefix);
       newNav._instances = this._instances;
-      newNav._activePageMutex = action.payload;
+      newNav._activePageMutex = transitionTarget;
+      newNav._activeChildren
+        = updateActiveChildren(this._instances, this._activeChildren, transitionTarget);
       return newNav;
     }
 
@@ -322,6 +411,7 @@ export class Navigator implements Reducible {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
         newNav._activePageMutex = mutex;
+        newNav._activeChildren = updateActiveChildren(this._instances, this._activeChildren, mutex);
         return newNav;
       }
 
@@ -334,6 +424,7 @@ export class Navigator implements Reducible {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = newInstances;
         newNav._activePageMutex = mutex;
+        newNav._activeChildren = updateActiveChildren(newInstances, this._activeChildren, mutex);
         return newNav;
       }
       return this;
@@ -353,6 +444,7 @@ export class Navigator implements Reducible {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = this._instances;
         newNav._activePageMutex = mutex;
+        newNav._activeChildren = updateActiveChildren(this._instances, this._activeChildren, mutex);
         return newNav;
       }
 
@@ -365,6 +457,7 @@ export class Navigator implements Reducible {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = newInstances;
         newNav._activePageMutex = mutex;
+        newNav._activeChildren = updateActiveChildren(newInstances, this._activeChildren, mutex);
         return newNav;
       }
       return this;
@@ -383,6 +476,7 @@ export class Navigator implements Reducible {
 
       const newNav = <this>new Navigator(this._pages, this._prefix);
       newNav._activePageMutex = this._activePageMutex;
+      const newInstances = closePage(this._instances, mutex);
 
       const isParentOfActive = this._activePageMutex &&
         this._instances.pages[this._activePageMutex].parent === mutex;
@@ -394,17 +488,24 @@ export class Navigator implements Reducible {
           goto,
         );
 
+        const transitionTarget = targetMutex && getTransitionTarget(
+          newInstances,
+          this._activeChildren,
+          this._activePageMutex,
+          targetMutex,
+        );
+
         this.persistActivePage(this._instances, undefined);
-        this.persistActivePage(this._instances, targetMutex);
+        this.persistActivePage(this._instances, transitionTarget);
 
-        newNav._activePageMutex = targetMutex;
+        newNav._activePageMutex = transitionTarget;
       }
-
-      const newInstances = closePage(this._instances, mutex);
 
       this.persistInstances(newInstances);
 
       newNav._instances = newInstances;
+      newNav._activeChildren
+        = updateActiveChildren(newInstances, this._activeChildren, newNav._activePageMutex);
       return newNav;
     }
 
@@ -419,24 +520,26 @@ export class Navigator implements Reducible {
       if (instantiationData && instantiationData.length > 0) {
         instances = { pageOrder: [], pages: {} };
 
-        instantiationData.forEach(insData => {
-          if (this._pages.hasPage(insData.path)) {
-            const pageInstance = this._pages.buildInstance(insData);
+        for (const instanceData of instantiationData) {
+          if (this._pages.hasPage(instanceData.path)) {
+            const pageInstance = this._pages.buildInstance(instanceData);
 
             if (pageInstance.mutex === loadedActivePageMutex) {
               activePageMutex = loadedActivePageMutex;
             }
 
-            instances!.pageOrder.push(pageInstance.mutex);
-            instances!.pages[pageInstance.mutex] = pageInstance;
+            instances.pageOrder.push(pageInstance.mutex);
+            instances.pages[pageInstance.mutex] = pageInstance;
           }
-        });
+        }
       }
 
       if (instances && instances.pageOrder.length > 0) {
         const newNav = <this>new Navigator(this._pages, this._prefix);
         newNav._instances = instances;
         newNav._activePageMutex = activePageMutex;
+        newNav._activeChildren
+          = updateActiveChildren(instances, this._activeChildren, activePageMutex);
         return newNav;
       }
       return this;
@@ -450,18 +553,19 @@ export class Navigator implements Reducible {
     const newInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
     let modified = false;
 
-    orderedPages(this._instances).forEach(instance => {
+    for (const instance of orderedPages(this._instances)) {
       const newInstance = instance.reduce(action);
       if (newInstance !== instance) {
         modified = true;
       }
       newInstances.pages[instance.mutex] = newInstance;
-    });
+    }
 
     if (modified) {
       const newNav = <this>new Navigator(this._pages, this._prefix);
       newNav._activePageMutex = this._activePageMutex;
       newNav._instances = newInstances;
+      newNav._activeChildren = this._activeChildren;
       return newNav;
     }
     return this;
