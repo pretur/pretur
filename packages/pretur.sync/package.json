@@ -1,6 +1,6 @@
 {
   "name": "pretur.sync",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "Front-end back-end communication infrastructure",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -33,9 +33,9 @@
     "@types/node": "^7.0.22",
     "lodash": "^4.17.4",
     "pretur.fetch": "^0.19.0",
-    "pretur.i18n": "^0.19.0",
-    "pretur.spec": "^0.19.0",
-    "pretur.validation": "^0.19.0",
+    "pretur.i18n": "^0.19.1",
+    "pretur.spec": "^0.19.1",
+    "pretur.validation": "^0.19.1",
     "tslib": "^1.7.1"
   },
   "devDependencies": {

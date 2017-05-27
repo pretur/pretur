@@ -1,6 +1,6 @@
 {
   "name": "pretur.units",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "Unit conversion library",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
