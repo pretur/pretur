@@ -130,7 +130,7 @@ export class Pages {
 
     this.folders = {};
     for (const folder of descriptors.folders) {
-      this.pages[folder.path] = folder;
+      this.folders[folder.path] = folder;
     }
 
     this.calculatedPathTree = descriptors.pathTree;
