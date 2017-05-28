@@ -62,7 +62,7 @@ export class Set<T extends SpecType> implements Clay {
 
   public get valid(): boolean {
     for (const item of this.items) {
-      if (item.valid) {
+      if (!item.valid) {
         return false;
       }
     }
