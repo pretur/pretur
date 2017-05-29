@@ -264,7 +264,7 @@ function buildNestedInclude<T extends SpecType>(
         const targetModel = pool.models[aliasModelMap[alias]];
 
         if (!targetModel.sequelizeModel) {
-          return;
+          continue;
         }
 
         const includedModel: Sequelize.IncludeOptions = {
