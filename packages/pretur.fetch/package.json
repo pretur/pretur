@@ -27,13 +27,13 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.fetch",
   "dependencies": {
-    "@types/node": "^7.0.22",
-    "node-fetch": "^1.7.0",
+    "@types/node": "^7.0.29",
+    "node-fetch": "^1.7.1",
     "tslib": "^1.7.1",
     "whatwg-fetch": "^2.0.3"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.4.0-dev.20170523"
+    "typescript": "^2.4.0-dev.20170611"
   }
 }

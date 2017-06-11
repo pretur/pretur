@@ -28,8 +28,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.spec",
   "dependencies": {
-    "@types/lodash": "^4.14.64",
-    "@types/node": "^7.0.22",
+    "@types/lodash": "^4.14.65",
+    "@types/node": "^7.0.29",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.19.1",
     "pretur.validation": "^0.19.1",
@@ -37,6 +37,6 @@
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "^2.4.0-dev.20170523"
+    "typescript": "^2.4.0-dev.20170611"
   }
 }
