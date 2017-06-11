@@ -1,12 +1,12 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 
-export type ValidationError<B extends I18nBundle = I18nBundle> = undefined | B | B[];
+export type ValidationError<B extends Bundle = Bundle> = undefined | B | B[];
 
-export interface Validator<T, B extends I18nBundle = I18nBundle> {
+export interface Validator<T, B extends Bundle = Bundle> {
   (value: T): Promise<ValidationError<B>>;
 }
 
-export function combineValidators<T, B extends I18nBundle = I18nBundle>(
+export function combineValidators<T, B extends Bundle = Bundle>(
   ...validators: Validator<T, B>[],
 ): Validator<T, B> {
   return async function combinedValidator(value: T) {

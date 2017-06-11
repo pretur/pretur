@@ -1,10 +1,10 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 
 export interface IntegerBundleData {
   VALUE: number;
 }
 
-export type IntegerError<K extends string> = undefined | I18nBundle<K, IntegerBundleData>;
+export type IntegerError<K extends string> = undefined | Bundle<K, IntegerBundleData>;
 
 export function integer<K extends string>(key: K) {
   return async function integerValidator(num: number): Promise<IntegerError<K>> {

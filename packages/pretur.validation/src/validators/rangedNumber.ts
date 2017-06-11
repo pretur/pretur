@@ -1,4 +1,4 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 
 export interface RangedNumberBundleData {
   FROM: number;
@@ -8,7 +8,7 @@ export interface RangedNumberBundleData {
   VALUE: number;
 }
 
-export type RangedNumberError<K extends string> = undefined | I18nBundle<K, RangedNumberBundleData>;
+export type RangedNumberError<K extends string> = undefined | Bundle<K, RangedNumberBundleData>;
 
 export function rangedNumber<K extends string>(
   key: K,

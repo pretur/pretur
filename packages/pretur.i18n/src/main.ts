@@ -1,180 +1,121 @@
-export interface I18nBundle<K extends string = string, D extends object = any> {
+export interface Bundle<K extends string = string, D = any> {
   key: K;
   data?: D;
 }
 
-export interface I18nFormatter {
-  <B extends I18nBundle = I18nBundle>(bundle: B): string;
-  <K extends string = string, D extends object | undefined = undefined>(
-    key: K,
-  ): I18nStringBuilder<K, D>;
-}
-
-export interface I18nStringBuilder<K extends string = string, D extends object | undefined = any> {
+export interface StringBuilder<D = any> {
   (data?: D): string;
-  datatype?: D;
-  key: K;
-  path: string;
 }
 
-export interface Language {
-  [key: string]: I18nStringBuilder;
+export interface StringBuilders {
+  constant(str: string): StringBuilder<undefined>;
+  callback<D>(callback: (data?: D) => string): StringBuilder<D>;
+  messageFormat<D>(formatString: string): StringBuilder<D>;
 }
 
-export function format<B extends I18nBundle = I18nBundle>(
-  language: Language,
-  fallback: Language | undefined,
-  bundle: B,
-): string;
-export function format(
-  language: Language,
-  fallback: Language | undefined,
-  key: string,
-): I18nStringBuilder;
-export function format(
-  language: Language,
-  fallback: Language | undefined,
-  nothing: undefined,
-): undefined;
-export function format<B extends I18nBundle = I18nBundle>(
-  language: Language,
-  fallback: Language | undefined,
-  bundleOrKeyOrNothing: B | string | undefined,
-): string | I18nStringBuilder<string, any> | undefined {
-  if (process.env.NODE_ENV !== 'production' && !language) {
-    throw new TypeError('language must be provided');
-  }
+export type Definition<T> = {
+  [P in keyof T]: StringBuilder<T[P]>;
+};
 
-  if (typeof bundleOrKeyOrNothing === 'object') {
-    const targetKey
-      = language[bundleOrKeyOrNothing.key] || (fallback && fallback[bundleOrKeyOrNothing.key]);
-    if (process.env.NODE_ENV !== 'production' && !targetKey) {
-      throw new TypeError('provided bundle key does not exist in lanugage or the fallback');
-    }
-    return targetKey(bundleOrKeyOrNothing.data);
-  }
-
-  if (typeof bundleOrKeyOrNothing === 'string') {
-    const targetKey
-      = language[bundleOrKeyOrNothing] || (fallback && fallback[bundleOrKeyOrNothing]);
-    if (process.env.NODE_ENV !== 'production' && !targetKey) {
-      throw new TypeError('provided key does not exist in lanugage or the fallback');
-    }
-    return targetKey;
-  }
-
-  return;
-}
-
-export function buildFormatter<F = I18nFormatter>(
-  language: Language,
-  fallback: Language | undefined = undefined,
-): F {
-  return <any>((input: any) => format(language, fallback, input));
-}
-
-export interface Compiler {
-  constant(str: string): I18nStringBuilder<string, undefined>;
-  callback<D>(callback: (data?: D) => string): I18nStringBuilder<string, D>;
-  messageFormat<D extends object>(formatString: string): I18nStringBuilder<string, D>;
-  describe<T>(tree: T): LanguageDescriptor<T>;
-}
-
-export interface LanguageDescriptor<T> {
+export interface Locale<T> {
   locale: string;
-  tree: T;
+  definition: (builders: StringBuilders) => Definition<T>;
 }
 
-export function buildCompiler(locale: string): Compiler {
+export function buildLocale<T>(
+  locale: string,
+  definition: (stringBuilders: StringBuilders) => Definition<T>,
+): Locale<T> {
+  return { locale, definition };
+}
+
+export interface Formatter<T> {
+  <K extends keyof T>(key: K, data?: T[K]): string;
+  <K extends keyof T>(bundle: Bundle<K, T[K]>): string;
+}
+
+export interface Bundler<T> {
+  <K extends keyof T>(key: K, data?: T[K]): Bundle<K, T[K]>;
+}
+
+export interface Internationalization<T> {
+  bundle: Bundler<T>;
+  buildFormatter(locale: string): Formatter<T>;
+}
+
+function createStringBuilders(locale: string): StringBuilders {
   const MessageFormat = require('messageformat');
   const mf = new MessageFormat(locale);
 
   return {
-    constant(str) {
-      return <I18nStringBuilder<string, any>>(() => str);
+    constant(str: string) {
+      return () => str;
     },
     callback(cb: (data?: any) => string) {
-      return <I18nStringBuilder<string, any>>(d => cb(d));
+      return cb;
     },
     messageFormat(formatString: string) {
-      const formatter = mf.compile(formatString);
-      return <I18nStringBuilder<string, any>>((d) => formatter(d));
-    },
-    describe(tree: any) {
-      return {
-        locale,
-        tree,
-      };
+      return mf.compile(formatString);
     },
   };
 }
 
-function buildKey(prefix: string | undefined, key: string) {
-  return `${prefix || ''}${prefix ? '_' : ''}${key.toUpperCase()}`;
-}
-
-function buildPath(prefix: string | undefined, key: string) {
-  return `${prefix || ''}${prefix ? '.' : ''}${key}`;
-}
-
-function processDescriptor(tree: any, language: Language, prefix?: string, path?: string): void {
-  for (const key of Object.keys(tree)) {
-    const processedKey = buildKey(prefix, key);
-    const processedPath = buildPath(path, key);
-    if (typeof tree[key] === 'function') {
-      const stringBuilder = <I18nStringBuilder<string, any>>tree[key];
-      stringBuilder.key = processedKey;
-      stringBuilder.path = processedPath;
-      language[processedKey] = stringBuilder;
-    } else if (tree[key] && typeof tree[key] === 'object') {
-      processDescriptor(tree[key], language, processedKey, processedPath);
-    }
+function format<T>(
+  definition: Definition<T>,
+  fallback: Definition<T> | undefined,
+  bundleOrKey: Bundle | string,
+  data?: any,
+): string {
+  if (process.env.NODE_ENV !== 'production' && !definition) {
+    throw new TypeError('definition must be provided');
   }
-}
 
-export interface LanguageMap {
-  [locale: string]: Language;
-}
+  if (bundleOrKey && typeof bundleOrKey === 'object') {
+    const targetKey = definition[bundleOrKey.key] || (fallback && fallback[bundleOrKey.key]);
+    if (process.env.NODE_ENV !== 'production' && !targetKey) {
+      throw new TypeError('provided bundle key does not exist in definition or the fallback');
+    }
+    return targetKey(bundleOrKey.data);
+  }
 
-export interface Internationalizer<T> {
-  mainTree: T;
-  mainLocale: string;
-  languages: LanguageMap;
-  buildFormatter: <F extends I18nFormatter>(locale: string) => F;
+  if (typeof bundleOrKey === 'string') {
+    const targetKey = definition[bundleOrKey] || (fallback && fallback[bundleOrKey]);
+    if (process.env.NODE_ENV !== 'production' && !targetKey) {
+      throw new TypeError('provided key does not exist in definition or the fallback');
+    }
+    return targetKey(data);
+  }
+
+  return '';
 }
 
 export function internationalize<T>(
-  mainLanguageDescriptor: LanguageDescriptor<T>,
-  ...otherLanguageDescriptors: LanguageDescriptor<any>[],
-): Internationalizer<T> {
-  const languages: LanguageMap = {};
+  main: Locale<T>,
+  ...alts: Locale<Partial<T>>[],
+): Internationalization<T> {
+  const mainDefinition = main.definition(createStringBuilders(main.locale));
 
-  const mainLanguage: Language = {};
-  processDescriptor(mainLanguageDescriptor.tree, mainLanguage);
-  languages[mainLanguageDescriptor.locale] = mainLanguage;
+  function buildFormatter(locale: string): Formatter<T> {
+    if (locale === main.locale) {
+      return (bundleOrKey: Bundle | string, data?: any) =>
+        format(mainDefinition, undefined, bundleOrKey, data);
+    }
 
-  for (const languageDescriptor of otherLanguageDescriptors) {
-    const lang: Language = {};
-    processDescriptor(languageDescriptor.tree, lang);
-    languages[languageDescriptor.locale] = lang;
+    const target = alts.find(alt => alt.locale === locale);
+
+    if (!target) {
+      throw new Error(`The provided locale ${locale} does not exist in the list of languages.`);
+    }
+
+    const targetDefinition = target.definition(createStringBuilders(locale));
+
+    return (bundleOrKey: Bundle | string, data?: any) =>
+      format(targetDefinition, mainDefinition, bundleOrKey, data);
   }
 
-  const mainLocale = mainLanguageDescriptor.locale;
+  function bundle(key: keyof T, data?: any) {
+    return { key, data };
+  }
 
-  return {
-    languages,
-    mainLocale,
-    mainTree: mainLanguageDescriptor.tree,
-    buildFormatter(locale: string) {
-      if (locale === mainLocale) {
-        return buildFormatter(mainLanguage);
-      }
-
-      if (process.env.NODE_ENV !== 'production' && !languages[locale]) {
-        throw new Error(`The provided locale ${locale} does not exist in the list of languages.`);
-      }
-
-      return buildFormatter(languages[locale], mainLanguage);
-    },
-  };
+  return { buildFormatter, bundle };
 }

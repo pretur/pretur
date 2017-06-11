@@ -1,11 +1,11 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 import * as IBANValidator from 'iban';
 
 export interface IbanBundleData {
   VALUE: string;
 }
 
-export type IbanError<K extends string> = undefined | I18nBundle<K, IbanBundleData>;
+export type IbanError<K extends string> = undefined | Bundle<K, IbanBundleData>;
 
 export function iban<K extends string>(key: K) {
   return async function ibanValidator(str: string) {

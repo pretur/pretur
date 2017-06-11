@@ -1,11 +1,11 @@
 import { SpecType, Model } from 'pretur.spec';
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 import { ValidationError } from 'pretur.validation';
 
 export interface ResponseBase {
   requestId: number;
-  warnings?: I18nBundle[];
-  errors?: I18nBundle[];
+  warnings?: Bundle[];
+  errors?: Bundle[];
 }
 
 export interface MutateResponseBase extends ResponseBase {

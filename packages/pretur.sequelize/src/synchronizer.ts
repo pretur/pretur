@@ -1,6 +1,6 @@
 import * as Sequelize from 'sequelize';
 import { intersection, pick } from 'lodash';
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 import { Spec, SpecType, Model } from 'pretur.spec';
 import { ModelDescriptor } from './descriptor';
 import { Pool } from './pool';
@@ -12,8 +12,8 @@ import {
 } from 'pretur.sync';
 
 export interface ResultItemAppender {
-  appendError(error: I18nBundle): void;
-  appendWarning(warning: I18nBundle): void;
+  appendError(error: Bundle): void;
+  appendWarning(warning: Bundle): void;
 }
 
 export interface ErrorHandler<T> {

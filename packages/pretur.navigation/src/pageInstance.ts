@@ -1,4 +1,4 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 import { Reducer, Reducible, Action } from 'pretur.redux';
 import { PageInstantiationData, PageDescriptor } from './pages';
 
@@ -6,7 +6,7 @@ interface PageInstanceParams<TProps, TState, TReducerBuilderData> {
   reducer: Reducer<TState>;
   instantiationData: PageInstantiationData<TReducerBuilderData>;
   descriptor: PageDescriptor<TProps, TState, TReducerBuilderData>;
-  title: I18nBundle;
+  title: Bundle;
 }
 
 export class PageInstance<TProps, TState, TReducerBuilderData> implements Reducible {
@@ -52,7 +52,7 @@ export class PageInstance<TProps, TState, TReducerBuilderData> implements Reduci
     return this.params.instantiationData.openedFrom;
   }
 
-  public get title(): I18nBundle {
+  public get title(): Bundle {
     return this.params.title;
   }
 

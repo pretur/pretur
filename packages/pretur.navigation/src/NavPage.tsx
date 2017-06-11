@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 
 import { Navigator } from './navigator';
 
@@ -9,7 +9,7 @@ export interface NavPagePassedProps<TState> {
   path: string;
   openedFrom: string | undefined;
   state: TState;
-  title: I18nBundle;
+  title: Bundle;
   navigator: Navigator;
 }
 

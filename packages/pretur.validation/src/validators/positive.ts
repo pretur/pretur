@@ -1,10 +1,10 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 
 export interface PositiveBundleData {
   VALUE: number;
 }
 
-export type PositiveError<K extends string> = undefined | I18nBundle<K, PositiveBundleData>;
+export type PositiveError<K extends string> = undefined | Bundle<K, PositiveBundleData>;
 
 export function positive<K extends string>(key: K) {
   return async function positiveValidator(num: number): Promise<PositiveError<K>> {

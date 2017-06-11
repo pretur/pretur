@@ -1,4 +1,4 @@
-import { I18nBundle } from 'pretur.i18n';
+import { Bundle } from 'pretur.i18n';
 
 export interface MinimumLengthBundleData {
   ACCEPT_EMPTY: boolean;
@@ -7,7 +7,7 @@ export interface MinimumLengthBundleData {
 }
 
 export type MinimumLengthError<K extends string>
-  = undefined | I18nBundle<K, MinimumLengthBundleData>;
+  = undefined | Bundle<K, MinimumLengthBundleData>;
 
 export function minimumLength<K extends string>(key: K, minLength: number, acceptEmpty = false) {
   return async function minimumLengthValidator(str: string): Promise<MinimumLengthError<K>> {
