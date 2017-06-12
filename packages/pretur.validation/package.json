@@ -28,9 +28,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.validation",
   "dependencies": {
-    "@types/iban": "0.0.28",
-    "iban": "^0.0.8",
     "pretur.i18n": "^0.19.1",
+    "pretur.sync": "^0.19.1",
     "tslib": "^1.7.1"
   },
   "devDependencies": {

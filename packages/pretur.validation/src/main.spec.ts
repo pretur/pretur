@@ -1,7 +1,7 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { combineValidators } from './validator';
+import { combineValidators } from './main';
 
 describe('combine', () => {
 
