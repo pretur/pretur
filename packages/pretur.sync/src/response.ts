@@ -1,6 +1,5 @@
-import { SpecType, Model } from 'pretur.spec';
+import { SpecType, EmptySpec, Model } from 'pretur.spec';
 import { Bundle } from 'pretur.i18n';
-import { ValidationError } from 'pretur.validation';
 
 export interface ResponseBase {
   requestId: number;
@@ -11,10 +10,9 @@ export interface ResponseBase {
 export interface MutateResponseBase extends ResponseBase {
   type: 'mutate';
   transactionFailed: boolean;
-  validationError: ValidationError;
 }
 
-export interface SelectResponse<T extends SpecType> extends ResponseBase {
+export interface SelectResponse<T extends SpecType = EmptySpec> extends ResponseBase {
   type: 'select';
   data?: Model<T>[];
   count?: number;
@@ -23,16 +21,16 @@ export interface SelectResponse<T extends SpecType> extends ResponseBase {
 export interface ValidateResponse extends ResponseBase {
   type: 'validate';
   name: string;
-  validationError: ValidationError;
+  validationError?: Bundle | Bundle[];
 }
 
-export interface OperateResponse<T> extends ResponseBase {
+export interface OperateResponse<T = any> extends ResponseBase {
   type: 'operate';
   name: string;
   data?: T;
 }
 
-export interface InsertMutateResponse<T extends SpecType> extends MutateResponseBase {
+export interface InsertMutateResponse<T extends SpecType = EmptySpec> extends MutateResponseBase {
   action: 'insert';
   generatedId?: Partial<T['fields']>;
 }
@@ -45,19 +43,19 @@ export interface RemoveMutateResponse extends MutateResponseBase {
   action: 'remove';
 }
 
-export type MutateResponse<T extends SpecType> =
+export type MutateResponse<T extends SpecType = EmptySpec> =
   | InsertMutateResponse<T>
   | UpdateMutateResponse
   | RemoveMutateResponse;
 
 export interface BatchMutateResponse extends ResponseBase {
   type: 'batchMutate';
-  queue: MutateResponse<any>[];
+  queue: MutateResponse[];
 }
 
 export type Response =
-  | SelectResponse<any>
-  | OperateResponse<any>
-  | MutateResponse<any>
+  | SelectResponse
+  | OperateResponse
+  | MutateResponse
   | BatchMutateResponse
   | ValidateResponse;

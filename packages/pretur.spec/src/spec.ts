@@ -17,6 +17,9 @@ export type SpecType<
   S extends Sets = Sets,
   N extends string = string> = { name: N; fields: F; records: R; sets: S };
 
+export type EmptySpec = SpecType<{}, {}, {}, string>;
+export type AnySpec = SpecType<any, any, any, string>;
+
 export type Model<T extends SpecType> =
   & T['fields']
   & {[P in keyof T['records']]: Model<T['records'][P]>}

@@ -5,6 +5,8 @@ import { ResolveResult } from './resolver';
 import { ModelDescriptor } from './descriptor';
 import { ResultItemAppender } from './synchronizer';
 
+export type Transaction = Sequelize.Transaction;
+
 export interface ModelDescriptorMap {
   [model: string]: ModelDescriptor<any>;
 }
@@ -13,7 +15,7 @@ export interface Pool {
   models: ModelDescriptorMap;
   resolve<T extends SpecType>(query: Query<T>, context: any): Promise<ResolveResult<T>>;
   sync<T extends SpecType>(
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
@@ -53,7 +55,7 @@ export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
   };
 
   pool.sync = async function sync<T extends SpecType>(
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,

@@ -3,7 +3,7 @@ import { intersection, pick } from 'lodash';
 import { Bundle } from 'pretur.i18n';
 import { Spec, SpecType, Model } from 'pretur.spec';
 import { ModelDescriptor } from './descriptor';
-import { Pool } from './pool';
+import { Pool, Transaction } from './pool';
 import {
   InsertMutateRequest,
   UpdateMutateRequest,
@@ -22,7 +22,7 @@ export interface ErrorHandler<T> {
 
 export interface Insert<T extends SpecType> {
   (
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: InsertMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
@@ -31,7 +31,7 @@ export interface Insert<T extends SpecType> {
 
 export interface Update<T extends SpecType> {
   (
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: UpdateMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
@@ -40,7 +40,7 @@ export interface Update<T extends SpecType> {
 
 export interface Remove<T extends SpecType> {
   (
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: RemoveMutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
@@ -49,7 +49,7 @@ export interface Remove<T extends SpecType> {
 
 export interface Synchronizer<T extends SpecType> {
   (
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
@@ -63,7 +63,7 @@ export interface UnitializedSynchronizer<T extends SpecType> {
 
 export interface SyncInterceptor<T, R> {
   (
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: T,
     rip: ResultItemAppender,
     pool: Pool,
@@ -87,7 +87,7 @@ export function buildSynchronizer<T extends SpecType>(
   let pool: Pool = <any>undefined;
 
   async function synchronizer(
-    transaction: Sequelize.Transaction,
+    transaction: Transaction,
     item: MutateRequest<T>,
     rip: ResultItemAppender,
     context: any,
@@ -149,7 +149,7 @@ async function insert<T extends SpecType>(
   modelName: string,
   errorHandler: ErrorHandler<InsertMutateRequest<T>> | undefined,
   interceptor: SyncInterceptor<InsertMutateRequest<T>, Partial<T['fields']> | boolean> | undefined,
-  transaction: Sequelize.Transaction,
+  transaction: Transaction,
   item: InsertMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
@@ -309,7 +309,7 @@ async function update<T extends SpecType>(
   modelName: string,
   errorHandler: ErrorHandler<UpdateMutateRequest<T>> | undefined,
   interceptor: SyncInterceptor<UpdateMutateRequest<T>, boolean> | undefined,
-  transaction: Sequelize.Transaction,
+  transaction: Transaction,
   item: UpdateMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,
@@ -364,7 +364,7 @@ async function remove<T extends SpecType>(
   modelName: string,
   errorHandler: ErrorHandler<RemoveMutateRequest<T>> | undefined,
   interceptor: SyncInterceptor<RemoveMutateRequest<T>, boolean> | undefined,
-  transaction: Sequelize.Transaction,
+  transaction: Transaction,
   item: RemoveMutateRequest<T>,
   rip: ResultItemAppender,
   context: any,

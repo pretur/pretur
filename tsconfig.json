@@ -16,6 +16,7 @@
     "forceConsistentCasingInFileNames": false,
     "newLine": "LF",
     "noImplicitAny": true,
+    "noEmitOnError": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
