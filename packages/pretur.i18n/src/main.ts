@@ -29,16 +29,21 @@ export function buildLocale<T>(
   return { locale, definition };
 }
 
-export interface Formatter<T> {
-  <K extends keyof T>(key: K, data?: T[K]): string;
-  <K extends keyof T>(bundle: Bundle<K, T[K]>): string;
-}
+export type Keys<T> = {
+  [P in keyof T]: P;
+};
 
 export interface Bundler<T> {
   <K extends keyof T>(key: K, data?: T[K]): Bundle<K, T[K]>;
 }
 
+export interface Formatter<T> {
+  <K extends keyof T>(key: K, data?: T[K]): string;
+  <K extends keyof T>(bundle: Bundle<K, T[K]>): string;
+}
+
 export interface Internationalization<T> {
+  keys: Keys<T>;
   bundle: Bundler<T>;
   buildFormatter(locale: string): Formatter<T>;
 }
@@ -95,6 +100,16 @@ export function internationalize<T>(
 ): Internationalization<T> {
   const mainDefinition = main.definition(createStringBuilders(main.locale));
 
+  const keys = <Keys<T>>{};
+
+  for (const key of Object.keys(mainDefinition)) {
+    keys[key] = key;
+  }
+
+  function bundle(key: keyof T, data?: any) {
+    return { key, data };
+  }
+
   function buildFormatter(locale: string): Formatter<T> {
     if (locale === main.locale) {
       return (bundleOrKey: Bundle | string, data?: any) =>
@@ -113,9 +128,5 @@ export function internationalize<T>(
       format(targetDefinition, mainDefinition, bundleOrKey, data);
   }
 
-  function bundle(key: keyof T, data?: any) {
-    return { key, data };
-  }
-
-  return { buildFormatter, bundle };
+  return { keys, bundle, buildFormatter };
 }
