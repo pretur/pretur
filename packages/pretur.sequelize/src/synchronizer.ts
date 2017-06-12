@@ -1,4 +1,3 @@
-import * as Sequelize from 'sequelize';
 import { intersection, pick } from 'lodash';
 import { Bundle } from 'pretur.i18n';
 import { Spec, SpecType, Model } from 'pretur.spec';

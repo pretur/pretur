@@ -13,7 +13,6 @@ export interface ResultBase {
 export interface MutateResultBase extends ResultBase {
   type: 'mutate';
   transactionFailed: boolean;
-  validationError?: Bundle | Bundle[];
 }
 
 export interface SelectResult<T extends SpecType = EmptySpec> extends ResultBase {

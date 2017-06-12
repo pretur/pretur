@@ -7,22 +7,22 @@ import {
 } from './response';
 
 // Manually import some types to decouple the librarires
-interface Transaction {
+export interface TransactionLike {
   commit(): Promise<void>;
   rollback(): Promise<void>;
 }
 
-export interface Pool<C> {
+export interface PoolLike<C> {
   resolve(query: Query<EmptySpec>, context: C): Promise<{ data: any[], count?: number }>;
-  sync(transaction: Transaction, item: MutateRequest, rip: any, context: C): Promise<any | void>;
+  sync(transaction: TransactionLike, item: MutateRequest, rip: any, context: C): Promise<any>;
 }
 
 export interface ResponderOptions<C> {
   errorToBundle: (error: Error) => Bundle;
-  pool?: Pool<C>;
+  pool?: PoolLike<C>;
   operator?: (request: OperateRequest, context: C) => Promise<OperateResponse>;
   validator?: (request: ValidateRequest, context: C) => Promise<ValidateResponse>;
-  transact?: () => Promise<Transaction>;
+  transact?: () => Promise<TransactionLike>;
 }
 
 export function buildResponder<C>(options: ResponderOptions<C>) {
@@ -95,7 +95,7 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
           const transaction = await transact();
           try {
             const generatedId = await pool.sync(transaction, request, rip, context);
-            if (errors.length > 0) {
+            if (errors && errors.length > 0) {
               await transaction.rollback();
               responses.push(<MutateResponse>{
                 action: request.action,
@@ -120,7 +120,7 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
             await transaction.rollback();
             responses.push(<MutateResponse>{
               action: request.action,
-              errors: [...errors, errorToBundle(error)],
+              errors: errors ? [...errors, errorToBundle(error)] : [errorToBundle(error)],
               requestId,
               transactionFailed: true,
               type: request.type,
@@ -222,7 +222,7 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
           break;
         case 'validate':
           try {
-            if (!operator) {
+            if (!validator) {
               throw new Error('validate requests require a validator.');
             }
             responses.push(await validator(request, context));

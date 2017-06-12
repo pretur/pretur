@@ -256,7 +256,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             statusText: response.statusText,
             transactionFailed: response.body.transactionFailed,
             type: 'mutate',
-            validationError: response.body.validationError,
             warnings: response.body.warnings,
           });
         },
@@ -266,7 +265,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             action: 'insert',
             transactionFailed: false,
             type: 'mutate',
-            validationError: undefined,
           });
         },
       };
@@ -312,7 +310,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             statusText: response.statusText,
             transactionFailed: response.body.transactionFailed,
             type: 'mutate',
-            validationError: response.body.validationError,
             warnings: response.body.warnings,
           });
         },
@@ -322,7 +319,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             action: 'update',
             transactionFailed: false,
             type: 'mutate',
-            validationError: undefined,
           });
         },
       };
@@ -365,7 +361,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             statusText: response.statusText,
             transactionFailed: response.body.transactionFailed,
             type: 'mutate',
-            validationError: response.body.validationError,
             warnings: response.body.warnings,
           });
         },
@@ -375,7 +370,6 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
             action: 'remove',
             transactionFailed: false,
             type: 'mutate',
-            validationError: undefined,
           });
         },
       };

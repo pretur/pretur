@@ -55,7 +55,6 @@ export async function applyMutations(
       !result.ok ||
       result.cancelled ||
       result.transactionFailed ||
-      result.validationError ||
       (result.errors && result.errors.length > 0)
     ) {
       applied = false;
