@@ -14,15 +14,15 @@ export interface TransactionLike {
 
 export interface PoolLike<C> {
   resolve(query: Query<EmptySpec>, context: C): Promise<{ data: any[], count?: number }>;
-  sync(transaction: TransactionLike, item: MutateRequest, rip: any, context: C): Promise<any>;
+  sync(transaction: any, item: MutateRequest, rip: any, context: C): Promise<any>;
 }
 
 export interface ResponderOptions<C> {
   errorToBundle: (error: Error) => Bundle;
   pool?: PoolLike<C>;
-  operator?: (request: OperateRequest, context: C) => Promise<OperateResponse>;
-  validator?: (request: ValidateRequest, context: C) => Promise<ValidateResponse>;
-  transact?: () => Promise<TransactionLike>;
+  operator?: (request: OperateRequest, context: C) => PromiseLike<OperateResponse>;
+  validator?: (request: ValidateRequest, context: C) => PromiseLike<ValidateResponse>;
+  transact?: () => PromiseLike<TransactionLike>;
 }
 
 export function buildResponder<C>(options: ResponderOptions<C>) {
