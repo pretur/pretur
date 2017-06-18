@@ -1,6 +1,6 @@
 import * as Sequelize from 'sequelize';
 import { Pool } from './pool';
-import { Spec, SpecType, Model, Attribute } from 'pretur.spec';
+import { Spec, SpecType, Model, Attribute, NormalType, RangeType, ArraySubtype } from 'pretur.spec';
 
 export type SequelizeInstance<T extends SpecType>
   = Sequelize.Instance<Partial<Model<T>>> & Partial<Model<T>>;
@@ -95,8 +95,8 @@ export function buildSequelizeModel<T extends SpecType>(
   return { sequelizeModel: model, initialize };
 }
 
-function datatypeToSequelizeType(attribute: Attribute): any {
-  switch (attribute.type) {
+function getNormalSequelizeType(type: NormalType): any {
+  switch (type) {
     case 'BIGINT':
       return Sequelize.BIGINT;
     case 'INTEGER':
@@ -105,19 +105,43 @@ function datatypeToSequelizeType(attribute: Attribute): any {
       return Sequelize.TEXT;
     case 'OBJECT':
       return Sequelize.JSONB;
-    case 'ENUM':
-      return Sequelize.ENUM;
     case 'BOOLEAN':
       return Sequelize.BOOLEAN;
     case 'DOUBLE':
       return Sequelize.DOUBLE;
     case 'DATE':
       return Sequelize.DATE;
+  }
+}
+
+function getRangeSequelizeSubtype(subtype: RangeType): any {
+  switch (subtype) {
+    case 'BIGINT': return Sequelize.RANGE(Sequelize.BIGINT);
+    case 'INTEGER': return Sequelize.RANGE(Sequelize.INTEGER);
+    case 'DATE': return Sequelize.RANGE(Sequelize.DATE);
+  }
+}
+
+function getArraySequelizeSubtype(subtype: ArraySubtype): any {
+  switch (subtype.type) {
+    case 'ARRAY':
+      return Sequelize.ARRAY(getArraySequelizeSubtype(subtype.subtype));
     case 'RANGE':
-      switch (attribute.subtype) {
-        case 'BIGINT': return Sequelize.RANGE(Sequelize.BIGINT);
-        case 'INTEGER': return Sequelize.RANGE(Sequelize.INTEGER);
-        case 'DATE': return Sequelize.RANGE(Sequelize.DATE);
-      }
+      return Sequelize.ARRAY(getRangeSequelizeSubtype(subtype.subtype));
+    default:
+      return getNormalSequelizeType(subtype.type);
+  }
+}
+
+function datatypeToSequelizeType(attribute: Attribute): any {
+  switch (attribute.type) {
+    case 'ENUM':
+      return Sequelize.ENUM;
+    case 'ARRAY':
+      return Sequelize.ARRAY(getArraySequelizeSubtype(attribute.subtype));
+    case 'RANGE':
+      return getRangeSequelizeSubtype(attribute.subtype);
+    default:
+      return getNormalSequelizeType(attribute.type);
   }
 }

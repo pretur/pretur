@@ -1,6 +1,25 @@
 import { chain } from 'lodash';
 import { Spec, SpecType, Scope } from './spec';
 
+export type NormalType = 'INTEGER' | 'BIGINT' | 'BOOLEAN' | 'DATE' | 'DOUBLE' | 'STRING' | 'OBJECT';
+export type RangeType = 'INTEGER' | 'BIGINT' | 'DATE';
+
+export interface ArraySubtypeNormal {
+  type: NormalType;
+}
+
+export interface ArraySubtypeRange {
+  type: 'RANGE';
+  subtype: RangeType;
+}
+
+export interface ArraySubtypeMultidimensional {
+  type: 'ARRAY';
+  subtype: ArraySubtype;
+}
+
+export type ArraySubtype = ArraySubtypeNormal | ArraySubtypeRange | ArraySubtypeMultidimensional;
+
 export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
   scope?: Scope;
@@ -11,9 +30,6 @@ export interface AttributeBase<T, K extends keyof T = keyof T> {
   mutable?: boolean;
   defaultValue?: T[K];
 }
-
-export type NormalType = 'INTEGER' | 'BIGINT' | 'BOOLEAN' | 'DATE' | 'DOUBLE' | 'STRING' | 'OBJECT';
-export type RangeType = 'INTEGER' | 'BIGINT' | 'DATE';
 
 export interface NormalAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
   type: NormalType;
@@ -30,10 +46,16 @@ export interface RangeAttribute<T, K extends keyof T = keyof T> extends Attribut
   subtype: RangeType;
 }
 
+export interface ArrayAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
+  type: 'ARRAY';
+  subtype: ArraySubtype;
+}
+
 export type Attribute<T = any, K extends keyof T = keyof T> =
   | NormalAttribute<T, K>
   | EnumAttribute<T, K>
-  | RangeAttribute<T, K>;
+  | RangeAttribute<T, K>
+  | ArrayAttribute<T, K>;
 
 const defaults: Partial<Attribute> = {
   autoIncrement: false,
