@@ -1,6 +1,6 @@
 {
   "name": "pretur.sequelize",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "description": "Sequelize bindings",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
@@ -29,9 +29,9 @@
     "@types/lodash": "^4.14.66",
     "@types/sequelize": "^4.0.61",
     "lodash": "^4.17.4",
-    "pretur.i18n": "^0.20.1",
-    "pretur.spec": "^0.20.1",
-    "pretur.sync": "^0.20.1",
+    "pretur.i18n": "^0.20.2",
+    "pretur.spec": "^0.20.2",
+    "pretur.sync": "^0.20.2",
     "sequelize": "^4.0.0-2",
     "tslib": "^1.7.1"
   },

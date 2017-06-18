@@ -1,6 +1,6 @@
 {
   "name": "pretur.redux",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "description": "Redux bindings",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
