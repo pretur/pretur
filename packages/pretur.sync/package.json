@@ -29,8 +29,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.sync",
   "dependencies": {
-    "@types/lodash": "^4.14.65",
-    "@types/node": "^7.0.29",
+    "@types/lodash": "^4.14.66",
+    "@types/node": "^7.0.31",
     "lodash": "^4.17.4",
     "pretur.fetch": "^0.20.1",
     "pretur.i18n": "^0.20.1",
