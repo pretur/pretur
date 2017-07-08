@@ -38,7 +38,7 @@ export interface Operators<F> {
 }
 
 export type Nested<F> = {
-  [P in keyof F]?: FilterValue<F[P]>;
+  [P in keyof F]?: FilterValue<F[P]> | (Nested<F[P]> & Operators<F[P]>);
 };
 
 export type FilterValue<F> = F | null | Nested<F> | Operators<F>;

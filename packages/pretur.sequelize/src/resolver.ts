@@ -200,7 +200,7 @@ function getAliasFilters<T extends SpecType>(
 
   for (const field of model.allowedAttributes) {
     if (filter[field] !== undefined) {
-      where[`${path.join('.')}.${field}$`] = filter[field];
+      where[`$${path.join('.')}.${field}$`] = filter[field];
     }
   }
   const aliases = Object.keys(model.aliasKeyMap);
