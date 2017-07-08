@@ -169,11 +169,11 @@ export function buildHelpersFactory(
 
     async function select(
       dispatch: Dispatch,
-      set: Set<T>,
-      querier: Querier<T>,
+      targetSet: Set<T>,
+      targetQuerier: Querier<T>,
       extra?: Partial<Query<T>>,
     ) {
-      return selectAndRefresh(pool, spec, requester, dispatch, set, querier, extra);
+      return selectAndRefresh(pool, spec, requester, dispatch, targetSet, targetQuerier, extra);
     }
 
     return { fields, record, set, mutations, querier, load, select };

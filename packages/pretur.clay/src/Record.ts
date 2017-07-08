@@ -92,20 +92,20 @@ export class Record<T extends SpecType> implements Clay {
         return this;
       }
 
-      const newFields = <Fields<T>>{
+      const fieldsWithNew = <Fields<T>>{
         ...(<any>this.fields),
         [action.payload.field]: action.payload.value,
       };
 
       if (
-        FieldsEqual(this.original.fields, newFields) &&
+        FieldsEqual(this.original.fields, fieldsWithNew) &&
         this.original.state === this.state &&
         isEqual(this.original.error, this.error)
       ) {
         return this.original;
       }
 
-      return <this>new Record(newFields, this.error, this.state, this.original, this.uniqueId);
+      return <this>new Record(fieldsWithNew, this.error, this.state, this.original, this.uniqueId);
     }
 
     if (CLAY_SET_ERROR.is(this.uniqueId, action)) {

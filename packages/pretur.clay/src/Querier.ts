@@ -1,7 +1,7 @@
 import { isEqual, omit, compact, flatten, zip, fill, get, setWith, cloneDeep } from 'lodash';
 import { SpecType } from 'pretur.spec';
 import { Reducible, Action, Dispatch } from 'pretur.redux';
-import { Query, SubQuery, QueryFilters, Ordering } from 'pretur.sync';
+import { Query, SubQuery, Filter, Ordering } from 'pretur.sync';
 import { nextId } from './clay';
 import {
   CLAY_REFRESH,
@@ -17,7 +17,7 @@ function isPath(path?: string[]): boolean {
   return Array.isArray(path) && path.length > 0;
 }
 
-export function getFilters(query: Query<any>, path?: string[]): QueryFilters<any> {
+export function getFilters(query: Query<any>, path?: string[]): Filter<any> {
   const target = isPath(path) ? getInclude(query, path) : query;
   if (!target || !target.filters) {
     return {};
@@ -194,7 +194,7 @@ export class Querier<T extends SpecType> implements Reducible {
 
   public resetFilters(
     dispatch: Dispatch,
-    filters?: QueryFilters<T['fields']>,
+    filters?: Filter<T>,
     path?: string[],
   ): void {
     dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
@@ -207,7 +207,7 @@ export class Querier<T extends SpecType> implements Reducible {
     path?: string[],
   ): void {
     const target = isPath(path) ? getInclude(this.query, path) : this.query;
-    const filters = target ? { ...target.filters } : {};
+    const filters: any = target ? { ...target.filters } : {};
 
     filters[field] = filter;
 

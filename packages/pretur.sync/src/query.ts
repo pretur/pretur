@@ -1,4 +1,5 @@
 import { SpecType } from 'pretur.spec';
+import { Filter, FilterFields } from './filter';
 
 export type Ordering = 'NONE' | 'ASC' | 'DESC';
 
@@ -7,10 +8,6 @@ export interface QueryOrder {
   ordering: Ordering;
   chain?: string[];
 }
-
-export type QueryFilters<F> = {
-  [P in keyof F]?: any;
-};
 
 export interface QueryPagination {
   skip: number;
@@ -24,7 +21,7 @@ export type QueryInclude<T extends SpecType> =
 export interface SubQuery<T extends SpecType> {
   extra?: any;
   include?: QueryInclude<T>;
-  filters?: QueryFilters<T['fields']>;
+  filters?: FilterFields<T>;
   attributes?: (keyof T['fields'])[];
   required?: boolean;
 }
@@ -35,7 +32,7 @@ export interface Query<T extends SpecType> {
   count?: boolean;
   extra?: any;
   include?: QueryInclude<T>;
-  filters?: QueryFilters<T['fields']>;
+  filters?: Filter<T>;
   attributes?: (keyof T['fields'])[];
   pagination?: QueryPagination;
   order?: QueryOrder;

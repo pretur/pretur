@@ -1,4 +1,3 @@
-import * as Sequelize from 'sequelize';
 import { intersection } from 'lodash';
 import { Spec, SpecType } from 'pretur.spec';
 import { Resolver, UnitializedResolver } from './resolver';
@@ -6,21 +5,12 @@ import { Synchronizer, UnitializedSynchronizer } from './synchronizer';
 import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
 import { Pool } from './pool';
 
-export type FieldWhereClause<F> = F |
-  Sequelize.WhereOptions | Sequelize.WhereOptions |
-  Sequelize.col | Sequelize.and | Sequelize.or |
-  Sequelize.WhereGeometryOptions | F[] | object;
-
 export type AliasModelMap<T extends SpecType> = {
   [P in keyof T['records'] | keyof T['sets']]: string;
 };
 
 export type AliasKeyMap<T extends SpecType> = {
   [P in keyof T['records'] | keyof T['sets']]: keyof T['fields'];
-};
-
-export type FieldWhereBuilders<T extends SpecType> = {
-  [P in keyof T['fields']]?: (value: T['fields'][P]) => FieldWhereClause<T['fields'][P]>;
 };
 
 export interface ModelDescriptor<T extends SpecType> {
@@ -35,7 +25,6 @@ export interface ModelDescriptor<T extends SpecType> {
   allowedAttributes: (keyof T['fields'])[];
   mutableAttributes: (keyof T['fields'])[];
   defaultOrder: [keyof T['fields'], 'ASC' | 'DESC'];
-  fieldWhereBuilders?: FieldWhereBuilders<T>;
   sanitizeAttributes(attributes?: (keyof T['fields'])[] | keyof T['fields']): (keyof T['fields'])[];
   initialize(pool: Pool): void;
 }
@@ -45,7 +34,6 @@ export interface BuildModelDescriptorOptions<T extends SpecType> {
   resolver?: UnitializedResolver<T>;
   synchronizer?: UnitializedSynchronizer<T>;
   defaultOrder?: [keyof T['fields'], 'ASC' | 'DESC'];
-  fieldWhereBuilders?: FieldWhereBuilders<T>;
   allowedAttributes?: (keyof T['fields'])[];
   allowedMutableAttributes?: (keyof T['fields'])[];
 }
@@ -117,7 +105,6 @@ export function buildModelDescriptor<T extends SpecType>(
     aliasModelMap,
     allowedAttributes,
     defaultOrder,
-    fieldWhereBuilders: (options && options.fieldWhereBuilders),
     initialize,
     mutableAttributes,
     name: spec.name,

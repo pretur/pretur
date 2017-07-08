@@ -1,4 +1,5 @@
 export * from './fetch';
+export * from './filter';
 export * from './query';
 export * from './request';
 export * from './response';

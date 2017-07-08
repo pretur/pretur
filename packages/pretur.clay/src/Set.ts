@@ -139,18 +139,18 @@ export class Set<T extends SpecType> implements Clay {
     if (CLAY_REMOVE.is(this.uniqueId, action)) {
       const index = findIndex(this.items, item => item.uniqueId === action.payload);
       if (index !== -1) {
-        const newItems = [...this.items];
-        newItems.splice(index, 1);
+        const without = [...this.items];
+        without.splice(index, 1);
 
         if (
-          itemsEqual(this.original.items, newItems) &&
+          itemsEqual(this.original.items, without) &&
           this.original.state === this.state &&
           isEqual(this.original.error, this.error)
         ) {
           return <this>this.original;
         }
 
-        return <this>new Set(newItems, this.error, this.state, this.original, this.uniqueId);
+        return <this>new Set(without, this.error, this.state, this.original, this.uniqueId);
       }
     }
 

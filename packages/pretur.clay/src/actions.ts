@@ -1,5 +1,5 @@
 import { createTargetedActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
-import { QueryFilters, QueryPagination, QueryOrder } from 'pretur.sync';
+import { Filter, QueryPagination, QueryOrder } from 'pretur.sync';
 import { ValidationError } from 'pretur.validation';
 import { State } from './clay';
 
@@ -14,7 +14,7 @@ export interface SetFieldPayload {
 }
 
 export interface SetFiltersPayload {
-  filters: QueryFilters<any>;
+  filters: Filter<any> | undefined;
   path?: string[];
 }
 
