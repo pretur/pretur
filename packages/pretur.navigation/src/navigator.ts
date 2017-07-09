@@ -125,8 +125,8 @@ function findClosePageTarget(
 
   if (!toRemove.parent) {
     const roots = orderedPages(instances).filter(page => !page.parent).map(page => page.mutex);
-    const toRemoveIndex = roots.indexOf(toRemoveMutex);
-    return toRemoveIndex === 0 ? roots[1] : roots[toRemoveIndex - 1];
+    const toRemoveRootIndex = roots.indexOf(toRemoveMutex);
+    return toRemoveRootIndex === 0 ? roots[1] : roots[toRemoveRootIndex - 1];
   }
 
   const parentChildren = orderedPages(instances)
@@ -370,10 +370,10 @@ export class Navigator implements Reducible {
 
       if (!action.payload) {
         this.persistActivePage(this._instances, undefined);
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = this._instances;
-        newNav._activeChildren = this._activeChildren;
-        return newNav;
+        const newNavWithoutActive = <this>new Navigator(this._pages, this._prefix);
+        newNavWithoutActive._instances = this._instances;
+        newNavWithoutActive._activeChildren = this._activeChildren;
+        return newNavWithoutActive;
       }
 
       if (!this._instances.pages[action.payload]) {
@@ -550,7 +550,7 @@ export class Navigator implements Reducible {
       return <this>new Navigator(this._pages, this._prefix);
     }
 
-    const newInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
+    const nextInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
     let modified = false;
 
     for (const instance of orderedPages(this._instances)) {
@@ -558,13 +558,13 @@ export class Navigator implements Reducible {
       if (newInstance !== instance) {
         modified = true;
       }
-      newInstances.pages[instance.mutex] = newInstance;
+      nextInstances.pages[instance.mutex] = newInstance;
     }
 
     if (modified) {
       const newNav = <this>new Navigator(this._pages, this._prefix);
       newNav._activePageMutex = this._activePageMutex;
-      newNav._instances = newInstances;
+      newNav._instances = nextInstances;
       newNav._activeChildren = this._activeChildren;
       return newNav;
     }

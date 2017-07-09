@@ -47,8 +47,7 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
             const { data, count } = await pool.resolve(request.query, context);
             responses.push({ count, data, requestId, type: 'select' });
           } catch (error) {
-            const errors = [errorToBundle(error)];
-            responses.push({ errors, requestId, type: 'select' });
+            responses.push({ errors: [errorToBundle(error)], requestId, type: 'select' });
           }
           break;
         case 'operate':
@@ -58,8 +57,12 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
             }
             responses.push(await operator(request, context));
           } catch (error) {
-            const errors = [errorToBundle(error)];
-            responses.push({ errors, name: request.name, requestId, type: 'operate' });
+            responses.push({
+              errors: [errorToBundle(error)],
+              name: request.name,
+              requestId,
+              type: 'operate',
+            });
           }
           break;
         case 'mutate':

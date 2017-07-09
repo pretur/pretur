@@ -137,7 +137,7 @@ export function appendRelation<T extends SpecType>(spec: Spec<T>, relation: Rela
       );
     }
 
-    const checkMod = function checkMod(mod: ModificationActions) {
+    const checkMod = (mod: ModificationActions) => {
       switch (mod) {
         case 'RESTRICT':
         case 'CASCADE':
