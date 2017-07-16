@@ -435,13 +435,7 @@ describe('relation', () => {
 
         createRelationBuilder(injected).injective({
           alias: 'master',
-          foreignKey: {
-            mutable: false,
-            name: 'someId',
-            required: true,
-            type: 'STRING',
-            unique: false,
-          },
+          foreignKey: { mutable: false, name: 'someId', type: 'STRING', unique: false },
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'some',
@@ -494,6 +488,27 @@ describe('relation', () => {
         expect(injected.attributes[0].mutable).to.be.false;
         expect(injected.attributes[0].required).to.be.false;
         expect(injected.attributes[0].unique).to.be.false;
+      });
+
+      it('should properly override the fk attribute for required case', () => {
+        const master = mockSpec('Master');
+        const injected = mockSpec('Injected');
+
+        createRelationBuilder(injected).injective({
+          alias: 'master',
+          foreignKey: { name: 'someId' },
+          onDelete: 'RESTRICT',
+          onUpdate: 'NO ACTION',
+          ownAliasOnTarget: 'some',
+          required: true,
+          scope: 'scope',
+          target: master,
+          targetScope: 'scope2',
+        });
+
+        expect(injected.attributes[0].mutable).to.be.true;
+        expect(injected.attributes[0].required).to.be.true;
+        expect(injected.attributes[0].unique).to.be.true;
       });
 
     });

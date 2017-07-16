@@ -237,7 +237,9 @@ function master<S extends SpecType, T extends SpecType>(
       : !options.foreignKey.primary,
     name: options.foreignKey.name,
     primary: options.foreignKey.primary || false,
-    required: options.foreignKey.required || false,
+    required: typeof options.foreignKey.required === 'boolean'
+      ? options.foreignKey.required
+      : (!options.foreignKey.primary && options.required) || false,
     scope: options.foreignKey.scope || options.scope || spec.scope,
     type: (options.foreignKey.type || 'INTEGER'),
     unique: options.foreignKey.unique || false,
@@ -276,7 +278,9 @@ function injective<S extends SpecType, T extends SpecType>(
       : !options.foreignKey.primary,
     name: options.foreignKey.name,
     primary: options.foreignKey.primary || false,
-    required: options.foreignKey.required || false,
+    required: typeof options.foreignKey.required === 'boolean'
+      ? options.foreignKey.required
+      : (!options.foreignKey.primary && options.required) || false,
     scope: options.foreignKey.scope || options.scope || spec.scope,
     type: options.foreignKey.type || 'INTEGER',
     unique: typeof options.foreignKey.unique === 'boolean'
