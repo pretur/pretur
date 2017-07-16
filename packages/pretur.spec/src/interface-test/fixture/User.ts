@@ -27,7 +27,7 @@ export default createSpec<UserType>(
 
     relation.master({
       alias: 'role',
-      foreignKey: 'roleId',
+      foreignKey: { name: 'roleId' },
       ownAliasOnTarget: 'users',
       target: Role,
     });

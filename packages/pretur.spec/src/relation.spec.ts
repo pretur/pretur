@@ -334,7 +334,7 @@ describe('relation', () => {
 
         createRelationBuilder(detail).master({
           alias: 'master',
-          foreignKey: 'masterId',
+          foreignKey: { name: 'masterId' },
           ownAliasOnTarget: 'details',
           target: master,
         });
@@ -348,6 +348,8 @@ describe('relation', () => {
         expect(detail.attributes[0].mutable).to.be.true;
         expect(detail.attributes[0].name).to.be.equals('masterId');
         expect(detail.attributes[0].type).to.be.equals('INTEGER');
+        expect(detail.attributes[0].unique).to.be.false;
+        expect(detail.attributes[0].primary).to.be.false;
       });
 
       it('should properly override the properties of relations and the fk attribute', () => {
@@ -356,8 +358,7 @@ describe('relation', () => {
 
         createRelationBuilder(detail).master({
           alias: 'master',
-          foreignKey: 'someId',
-          foreignKeyType: 'STRING',
+          foreignKey: { name: 'someId', type: 'STRING', primary: true },
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'details',
@@ -385,10 +386,12 @@ describe('relation', () => {
         expect(detail.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(detail.relations[0].onUpdate).to.be.equals('NO ACTION');
 
-        expect(detail.attributes[0].mutable).to.be.true;
+        expect(detail.attributes[0].mutable).to.be.false;
         expect(detail.attributes[0].name).to.be.equals('someId');
         expect(detail.attributes[0].type).to.be.equals('STRING');
-        expect(detail.attributes[0].required).to.be.equals(true);
+        expect(detail.attributes[0].required).to.be.false;
+        expect(detail.attributes[0].primary).to.be.true;
+        expect(detail.attributes[0].unique).to.be.false;
       });
 
     });
@@ -408,7 +411,7 @@ describe('relation', () => {
 
         createRelationBuilder(injected).injective({
           alias: 'master',
-          foreignKey: 'masterId',
+          foreignKey: { name: 'masterId' },
           ownAliasOnTarget: 'some',
           target: master,
         });
@@ -432,9 +435,13 @@ describe('relation', () => {
 
         createRelationBuilder(injected).injective({
           alias: 'master',
-          foreignKey: 'someId',
-          foreignKeyType: 'STRING',
-          mutable: false,
+          foreignKey: {
+            mutable: false,
+            name: 'someId',
+            required: true,
+            type: 'STRING',
+            unique: false,
+          },
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'some',
@@ -442,7 +449,6 @@ describe('relation', () => {
           scope: 'scope',
           target: master,
           targetScope: 'scope2',
-          unique: false,
         });
 
         expect(master.relations[0].scope).to.be.equals('scope2');
@@ -476,11 +482,10 @@ describe('relation', () => {
 
         createRelationBuilder(injected).injective({
           alias: 'master',
-          foreignKey: 'someId',
+          foreignKey: { name: 'someId', primary: true },
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'some',
-          primary: true,
           scope: 'scope',
           target: master,
           targetScope: 'scope2',

@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import { Spec } from './spec';
-import { createJoinSpec, joineeValidateAndSetDefault } from './joinSpec';
+import { createJoinSpec, validateJoinee } from './joinSpec';
 
 interface MockModel {
   name: string;
@@ -45,71 +45,29 @@ function mockSpec(name: string): Spec<MockModel> {
 
 describe('joinSpec', () => {
 
-  describe('joineeValidateAndSetDefault', () => {
+  describe('validateJoinee', () => {
 
     it('should fail if provided invalid input', () => {
       const spec = mockSpec('A');
 
-      expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
+      expect(() => validateJoinee<MockModel, MockModel, MockModel>({
         aliasOnJoin: 'a',
         aliasOnTarget: 'all_a',
-        key: 'aId',
+        key: { name: 'aId' },
         spec: undefined!,
       })).to.throw();
-      expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
+      expect(() => validateJoinee<MockModel, MockModel, MockModel>({
         aliasOnJoin: undefined!,
         aliasOnTarget: 'all_a',
-        key: 'aId',
+        key: { name: 'aId' },
         spec,
       })).to.throw();
-      expect(() => joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
+      expect(() => validateJoinee<MockModel, MockModel, MockModel>({
         aliasOnJoin: 'a',
         aliasOnTarget: undefined!,
-        key: 'aId',
+        key: { name: 'aId' },
         spec,
       })).to.throw();
-    });
-
-    it('should return a joinee with valid defaults', () => {
-      const spec = mockSpec('A');
-      const joinee = joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
-        aliasOnJoin: 'a',
-        aliasOnTarget: 'all_a',
-        key: 'aId',
-        spec,
-      });
-
-      expect(joinee.aliasOnJoin).to.be.equals('a');
-      expect(joinee.aliasOnTarget).to.be.equals('all_a');
-      expect(joinee.key).to.be.equals('aId');
-      expect(joinee.spec).to.be.equals(spec);
-      expect(joinee.onDelete).to.be.equals('CASCADE');
-      expect(joinee.onUpdate).to.be.equals('CASCADE');
-      expect(joinee.type).to.be.equals('INTEGER');
-      expect(joinee.primary).to.be.true;
-    });
-
-    it('should return a joinee with overriden defaults', () => {
-      const spec = mockSpec('A');
-      const joinee = joineeValidateAndSetDefault<MockModel, MockModel, MockModel>({
-        aliasOnJoin: 'a',
-        aliasOnTarget: 'all_a',
-        key: 'someId',
-        onDelete: 'SET NULL',
-        onUpdate: 'NO ACTION',
-        primary: false,
-        spec,
-        type: 'STRING',
-      });
-
-      expect(joinee.aliasOnJoin).to.be.equals('a');
-      expect(joinee.aliasOnTarget).to.be.equals('all_a');
-      expect(joinee.key).to.be.equals('someId');
-      expect(joinee.spec).to.be.equals(spec);
-      expect(joinee.onDelete).to.be.equals('SET NULL');
-      expect(joinee.onUpdate).to.be.equals('NO ACTION');
-      expect(joinee.type).to.be.equals('STRING');
-      expect(joinee.primary).to.be.false;
     });
 
   });
@@ -124,7 +82,7 @@ describe('joinSpec', () => {
         firstJoinee: {
           aliasOnJoin: 'a',
           aliasOnTarget: 'all_a',
-          key: 'aId',
+          key: { name: 'aId' },
           spec: specA,
         },
         name: 'a',
@@ -132,7 +90,7 @@ describe('joinSpec', () => {
         secondJoinee: {
           aliasOnJoin: 'b',
           aliasOnTarget: 'all_b',
-          key: 'bId',
+          key: { name: 'bId' },
           spec: specB,
         },
       });
@@ -151,8 +109,7 @@ describe('joinSpec', () => {
         firstJoinee: {
           aliasOnJoin: 'a',
           aliasOnTarget: 'all_a',
-          key: 'aId',
-          primary: true,
+          key: { name: 'aId', primary: true, scope: 'aaa' },
           spec: specA,
         },
         name: 'a',
@@ -160,8 +117,7 @@ describe('joinSpec', () => {
         secondJoinee: {
           aliasOnJoin: 'b',
           aliasOnTarget: 'all_b',
-          key: 'bId',
-          primary: false,
+          key: { name: 'bId', primary: false },
           spec: specB,
         },
       });
@@ -170,6 +126,7 @@ describe('joinSpec', () => {
       expect(joinSpec.attributes[0].type).to.be.equals('INTEGER');
       expect(joinSpec.attributes[0].primary).to.be.true;
       expect(joinSpec.attributes[0].mutable).to.be.false;
+      expect(joinSpec.attributes[0].scope).to.be.equals('aaa');
 
       expect(joinSpec.attributes[1].name).to.be.equals('bId');
       expect(joinSpec.attributes[1].type).to.be.equals('INTEGER');
@@ -203,7 +160,7 @@ describe('joinSpec', () => {
         firstJoinee: {
           aliasOnJoin: 'a',
           aliasOnTarget: 'all_a',
-          key: 'aId',
+          key: { name: 'aId' },
           spec: specA,
         },
         name: 'J',
@@ -211,7 +168,7 @@ describe('joinSpec', () => {
         secondJoinee: {
           aliasOnJoin: 'b',
           aliasOnTarget: 'all_b',
-          key: 'bId',
+          key: { name: 'bId' },
           spec: specB,
         },
       });
@@ -246,7 +203,7 @@ describe('joinSpec', () => {
           firstJoinee: {
             aliasOnJoin: 'a',
             aliasOnTarget: 'all_a',
-            key: 'aId',
+            key: { name: 'aId' },
             spec: specA,
           },
           name: 'a',
@@ -254,7 +211,7 @@ describe('joinSpec', () => {
           secondJoinee: {
             aliasOnJoin: 'b',
             aliasOnTarget: 'all_b',
-            key: 'bId',
+            key: { name: 'bId' },
             spec: specB,
           },
         },
@@ -281,7 +238,7 @@ describe('joinSpec', () => {
           firstJoinee: {
             aliasOnJoin: 'a',
             aliasOnTarget: 'all_a',
-            key: 'aId',
+            key: { name: 'aId' },
             spec: specA,
           },
           name: 'a',
@@ -289,7 +246,7 @@ describe('joinSpec', () => {
           secondJoinee: {
             aliasOnJoin: 'b',
             aliasOnTarget: 'all_b',
-            key: 'bId',
+            key: { name: 'bId' },
             spec: specB,
           },
         },

@@ -29,6 +29,16 @@ export interface Relation<T extends SpecType> {
   onUpdate: ModificationActions;
 }
 
+export interface ForeignKey<N extends string> {
+  name: N;
+  type?: NormalType;
+  required?: boolean;
+  unique?: boolean;
+  primary?: boolean;
+  mutable?: boolean;
+  scope?: Scope;
+}
+
 export interface Inheritor<S extends SpecType, T extends SpecType> {
   target: Spec<T>;
   alias: keyof S['records'];
@@ -38,7 +48,6 @@ export interface InheritorsOptions<S extends SpecType, T extends SpecType> {
   sharedExistingUniqueField: keyof (S['fields'] | T['fields']);
   aliasOnSubclasses: keyof T['records'];
   typeIdentifierFieldName: keyof S['fields'];
-  typeIdentifierEnumTypeName?: string;
   typeIdentifierRequired?: boolean;
   inheritors: Inheritor<S, T>[];
 }
@@ -47,31 +56,24 @@ export interface MasterOptions<S extends SpecType, T extends SpecType> {
   target: Spec<T>;
   alias: keyof S['records'];
   ownAliasOnTarget: keyof T['sets'];
-  foreignKey: keyof S['fields'];
-  foreignKeyType?: NormalType;
+  foreignKey: ForeignKey<keyof S['fields']>;
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   scope?: Scope;
   targetScope?: Scope;
-  keyScope?: Scope;
 }
 
 export interface InjectiveOptions<S extends SpecType, T extends SpecType> {
   target: Spec<T>;
   alias: keyof S['records'];
   ownAliasOnTarget: keyof T['records'];
-  foreignKey: keyof S['fields'];
-  foreignKeyType?: NormalType;
+  foreignKey: ForeignKey<keyof S['fields']>;
   required?: boolean;
-  unique?: boolean;
-  primary?: boolean;
-  mutable?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
   scope?: Scope;
   targetScope?: Scope;
-  keyScope?: Scope;
 }
 
 export interface RecursiveOptions<S extends SpecType> {
@@ -198,7 +200,7 @@ function inheritors<S extends SpecType, T extends SpecType>(
     required: options.typeIdentifierRequired || false,
     scope: spec.scope,
     type: 'ENUM',
-    typename: options.typeIdentifierEnumTypeName || spec.name + 'SubclassType',
+    typename: spec.name + 'SubclassType',
     values: typeEnumValues,
   });
 }
@@ -209,7 +211,7 @@ function master<S extends SpecType, T extends SpecType>(
 ) {
   appendRelation(spec, {
     alias: options.alias,
-    key: options.foreignKey,
+    key: options.foreignKey.name,
     model: options.target.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -220,7 +222,7 @@ function master<S extends SpecType, T extends SpecType>(
 
   appendRelation(options.target, {
     alias: options.ownAliasOnTarget,
-    key: options.foreignKey,
+    key: options.foreignKey.name,
     model: spec.name,
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -230,11 +232,15 @@ function master<S extends SpecType, T extends SpecType>(
   });
 
   appendAttribute(spec, {
-    mutable: true,
-    name: options.foreignKey,
-    required: options.required || false,
-    scope: options.keyScope || options.scope || spec.scope,
-    type: (options.foreignKeyType || 'INTEGER'),
+    mutable: typeof options.foreignKey.mutable === 'boolean'
+      ? options.foreignKey.mutable
+      : !options.foreignKey.primary,
+    name: options.foreignKey.name,
+    primary: options.foreignKey.primary || false,
+    required: options.foreignKey.required || false,
+    scope: options.foreignKey.scope || options.scope || spec.scope,
+    type: (options.foreignKey.type || 'INTEGER'),
+    unique: options.foreignKey.unique || false,
   });
 }
 
@@ -244,7 +250,7 @@ function injective<S extends SpecType, T extends SpecType>(
 ) {
   appendRelation(spec, {
     alias: options.alias,
-    key: options.foreignKey,
+    key: options.foreignKey.name,
     model: options.target.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -255,7 +261,7 @@ function injective<S extends SpecType, T extends SpecType>(
 
   appendRelation(options.target, {
     alias: options.ownAliasOnTarget,
-    key: options.foreignKey,
+    key: options.foreignKey.name,
     model: spec.name,
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
@@ -265,13 +271,17 @@ function injective<S extends SpecType, T extends SpecType>(
   });
 
   appendAttribute(spec, {
-    mutable: typeof options.mutable === 'boolean' ? options.mutable : !options.primary,
-    name: options.foreignKey,
-    primary: options.primary || false,
-    required: options.required || false,
-    scope: options.keyScope || options.scope || spec.scope,
-    type: options.foreignKeyType || 'INTEGER',
-    unique: typeof options.unique === 'boolean' ? options.unique : !options.primary,
+    mutable: typeof options.foreignKey.mutable === 'boolean'
+      ? options.foreignKey.mutable
+      : !options.foreignKey.primary,
+    name: options.foreignKey.name,
+    primary: options.foreignKey.primary || false,
+    required: options.foreignKey.required || false,
+    scope: options.foreignKey.scope || options.scope || spec.scope,
+    type: options.foreignKey.type || 'INTEGER',
+    unique: typeof options.foreignKey.unique === 'boolean'
+      ? options.foreignKey.unique
+      : !options.foreignKey.primary,
   });
 }
 

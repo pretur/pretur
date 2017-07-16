@@ -19,7 +19,7 @@ export default createJoinSpec<UserPermissionType, UserType, PermissionType>({
   firstJoinee: {
     aliasOnJoin: 'user',
     aliasOnTarget: 'users',
-    key: 'userId',
+    key: { name: 'userId' },
     spec: UserModel,
   },
   name: 'UserPermission',
@@ -27,7 +27,7 @@ export default createJoinSpec<UserPermissionType, UserType, PermissionType>({
   secondJoinee: {
     aliasOnJoin: 'permission',
     aliasOnTarget: 'permissions',
-    key: 'permissionId',
+    key: { name: 'permissionId' },
     spec: PermissionModel,
   },
 });
