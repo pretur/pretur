@@ -36,6 +36,7 @@ export interface ForeignKey<N extends string> {
   unique?: boolean;
   primary?: boolean;
   mutable?: boolean;
+  elide?: boolean;
   scope?: Scope;
 }
 
@@ -231,19 +232,21 @@ function master<S extends SpecType, T extends SpecType>(
     type: 'DETAIL',
   });
 
-  appendAttribute(spec, {
-    mutable: typeof options.foreignKey.mutable === 'boolean'
-      ? options.foreignKey.mutable
-      : !options.foreignKey.primary,
-    name: options.foreignKey.name,
-    primary: options.foreignKey.primary || false,
-    required: typeof options.foreignKey.required === 'boolean'
-      ? options.foreignKey.required
-      : (!options.foreignKey.primary && options.required) || false,
-    scope: options.foreignKey.scope || options.scope || spec.scope,
-    type: (options.foreignKey.type || 'INTEGER'),
-    unique: options.foreignKey.unique || false,
-  });
+  if (options.foreignKey.elide !== true) {
+    appendAttribute(spec, {
+      mutable: typeof options.foreignKey.mutable === 'boolean'
+        ? options.foreignKey.mutable
+        : !options.foreignKey.primary,
+      name: options.foreignKey.name,
+      primary: options.foreignKey.primary || false,
+      required: typeof options.foreignKey.required === 'boolean'
+        ? options.foreignKey.required
+        : (!options.foreignKey.primary && options.required) || false,
+      scope: options.foreignKey.scope || options.scope || spec.scope,
+      type: (options.foreignKey.type || 'INTEGER'),
+      unique: options.foreignKey.unique || false,
+    });
+  }
 }
 
 function injective<S extends SpecType, T extends SpecType>(
@@ -272,21 +275,23 @@ function injective<S extends SpecType, T extends SpecType>(
     type: 'INJECTIVE',
   });
 
-  appendAttribute(spec, {
-    mutable: typeof options.foreignKey.mutable === 'boolean'
-      ? options.foreignKey.mutable
-      : !options.foreignKey.primary,
-    name: options.foreignKey.name,
-    primary: options.foreignKey.primary || false,
-    required: typeof options.foreignKey.required === 'boolean'
-      ? options.foreignKey.required
-      : (!options.foreignKey.primary && options.required) || false,
-    scope: options.foreignKey.scope || options.scope || spec.scope,
-    type: options.foreignKey.type || 'INTEGER',
-    unique: typeof options.foreignKey.unique === 'boolean'
-      ? options.foreignKey.unique
-      : !options.foreignKey.primary,
-  });
+  if (options.foreignKey.elide !== true) {
+    appendAttribute(spec, {
+      mutable: typeof options.foreignKey.mutable === 'boolean'
+        ? options.foreignKey.mutable
+        : !options.foreignKey.primary,
+      name: options.foreignKey.name,
+      primary: options.foreignKey.primary || false,
+      required: typeof options.foreignKey.required === 'boolean'
+        ? options.foreignKey.required
+        : (!options.foreignKey.primary && options.required) || false,
+      scope: options.foreignKey.scope || options.scope || spec.scope,
+      type: options.foreignKey.type || 'INTEGER',
+      unique: typeof options.foreignKey.unique === 'boolean'
+        ? options.foreignKey.unique
+        : !options.foreignKey.primary,
+    });
+  }
 }
 
 function recursive<S extends SpecType>(spec: Spec<S>, options: RecursiveOptions<S>) {

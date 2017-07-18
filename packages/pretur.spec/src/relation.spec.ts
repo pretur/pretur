@@ -394,6 +394,20 @@ describe('relation', () => {
         expect(detail.attributes[0].unique).to.be.false;
       });
 
+      it('should properly elide the fk attribute', () => {
+        const master = mockSpec('Master');
+        const detail = mockSpec('Detail');
+
+        createRelationBuilder(detail).master({
+          alias: 'master',
+          foreignKey: { name: 'someId', elide: true },
+          ownAliasOnTarget: 'details',
+          target: master,
+        });
+
+        expect(detail.attributes.length).to.be.equals(0);
+      });
+
     });
 
     describe('injective builder', () => {
@@ -509,6 +523,20 @@ describe('relation', () => {
         expect(injected.attributes[0].mutable).to.be.true;
         expect(injected.attributes[0].required).to.be.true;
         expect(injected.attributes[0].unique).to.be.true;
+      });
+
+      it('should properly elide the fk attribute', () => {
+        const master = mockSpec('Master');
+        const injected = mockSpec('Injected');
+
+        createRelationBuilder(injected).injective({
+          alias: 'master',
+          foreignKey: { name: 'someId', elide: true },
+          ownAliasOnTarget: 'some',
+          target: master,
+        });
+
+        expect(injected.attributes.length).to.be.equals(0);
       });
 
     });
