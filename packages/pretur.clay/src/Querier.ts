@@ -11,6 +11,7 @@ import {
   CLAY_SET_QUERY_ORDER,
   CLAY_SET_QUERY_EXTRA,
   CLAY_SET_QUERIEIR_COUNT,
+  CLAY_RESET_QUERIEIR,
 } from './actions';
 
 function isPath(path?: string[]): boolean {
@@ -177,6 +178,16 @@ export class Querier<T extends SpecType> implements Reducible {
       return <this>new Querier(this.query, action.payload, this.uniqueId);
     }
 
+    if (CLAY_RESET_QUERIEIR.is(this.uniqueId, action)) {
+      if (!action.payload) {
+        return this;
+      }
+
+      const newQuery = { model: this.query.model, ...action.payload };
+
+      return <this>new Querier(newQuery, undefined, this.uniqueId);
+    }
+
     if (CLAY_REFRESH.is(this.uniqueId, action)) {
       if (!action.payload || this.count === action.payload.count) {
         return this;
@@ -264,5 +275,9 @@ export class Querier<T extends SpecType> implements Reducible {
 
   public setCount(dispatch: Dispatch, count?: number): void {
     dispatch(CLAY_SET_QUERIEIR_COUNT.create.unicast(this.uniqueId, count));
+  }
+
+  public reset(dispatch: Dispatch, query: Partial<Query<T>>): void {
+    dispatch(CLAY_RESET_QUERIEIR.create.unicast(this.uniqueId, query));
   }
 }

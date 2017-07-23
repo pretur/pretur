@@ -1,5 +1,5 @@
 import { createTargetedActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
-import { Filter, QueryPagination, QueryOrder } from 'pretur.sync';
+import { Query, Filter, QueryPagination, QueryOrder } from 'pretur.sync';
 import { ValidationError } from 'pretur.validation';
 import { State } from './clay';
 
@@ -72,3 +72,6 @@ export const CLAY_SET_QUERY_EXTRA: TargetedActionDescriptor<SetExtraPayload>
 
 export const CLAY_SET_QUERIEIR_COUNT: TargetedActionDescriptor<number>
   = createTargetedActionDescriptor<number>('CLAY_SET_QUERIEIR_COUNT');
+
+export const CLAY_RESET_QUERIEIR: TargetedActionDescriptor<Partial<Query<any>>>
+  = createTargetedActionDescriptor<Partial<Query<any>>>('CLAY_RESET_QUERIEIR');
