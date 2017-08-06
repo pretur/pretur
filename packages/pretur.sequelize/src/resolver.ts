@@ -225,7 +225,7 @@ function traverseTree<T extends SpecType>(
 
   if (filter.$and) {
     if (Array.isArray(filter.$and)) {
-      where.$and = filter.$and.map(and => transformFilter(and, pool, modelName));
+      where.$and = <any>filter.$and.map(and => transformFilter(and, pool, modelName));
     } else {
       where.$and = transformFilter(filter.$and, pool, modelName);
     }
@@ -233,7 +233,7 @@ function traverseTree<T extends SpecType>(
 
   if (filter.$or) {
     if (Array.isArray(filter.$or)) {
-      where.$or = filter.$or.map(or => transformFilter(or, pool, modelName));
+      where.$or = <any>filter.$or.map(or => transformFilter(or, pool, modelName));
     } else {
       where.$or = transformFilter(filter.$or, pool, modelName);
     }
@@ -241,7 +241,7 @@ function traverseTree<T extends SpecType>(
 
   if (filter.$not) {
     if (Array.isArray(filter.$not)) {
-      where.$not = filter.$not.map(not => transformFilter(not, pool, modelName));
+      where.$not = <any>filter.$not.map(not => transformFilter(not, pool, modelName));
     } else {
       where.$not = transformFilter(filter.$not, pool, modelName);
     }

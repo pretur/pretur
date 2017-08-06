@@ -4,22 +4,22 @@ import { Dispatch } from './action';
 import thunk from 'redux-thunk';
 import { createLogger } from 'redux-logger';
 
-export interface Store<TState> {
+export interface Store<T> {
   dispatch: Dispatch;
-  getState(): TState;
+  getState(): T;
   subscribe(listener: () => any): () => void;
-  replaceReducer(nextReducer: Reducer<TState>): void;
+  replaceReducer(nextReducer: Reducer<T>): void;
 }
 
-export function createStore<TState>(topLevelReducer: Reducer<TState>, log = false): Store<TState> {
+export function createStore<T>(reducer: Reducer<T>, log = false): Store<T | undefined> {
   if (log) {
     return reduxCreateStore(
-      topLevelReducer,
+      reducer,
       applyMiddleware(thunk, createLogger()),
     );
   }
   return reduxCreateStore(
-    topLevelReducer,
+    reducer,
     applyMiddleware(thunk),
   );
 }

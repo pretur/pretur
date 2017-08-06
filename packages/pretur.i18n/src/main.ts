@@ -106,7 +106,7 @@ export function internationalize<T>(
     keys[key] = key;
   }
 
-  function bundle(key: keyof T, data?: any) {
+  function bundle<K extends keyof T>(key: K, data?: T[K]) {
     return { key, data };
   }
 

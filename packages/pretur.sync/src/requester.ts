@@ -156,7 +156,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   function select<T extends SpecType>(query: Query<T>): Promise<SelectResult<T>> {
     return new Promise<SelectResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: RequestQueueItem = {
+      const request = <RequestQueueItem>{
         reject,
         request: <SelectRequest<T>>{
           query,
@@ -191,7 +191,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   function operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>> {
     return new Promise<OperateResult<TResult>>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: RequestQueueItem = {
+      const request = <RequestQueueItem>{
         reject,
         request: <OperateRequest<TData>>{
           data,
@@ -236,7 +236,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   ): Promise<InsertMutateResult<T>> {
     return new Promise<InsertMutateResult<T>>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: BatchableRequestQueueItem = {
+      const request = <BatchableRequestQueueItem>{
         reject,
         request: <InsertMutateRequest<T>>{
           action: 'insert',
@@ -290,7 +290,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   ): Promise<UpdateMutateResult> {
     return new Promise<UpdateMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: BatchableRequestQueueItem = {
+      const request = <BatchableRequestQueueItem>{
         reject,
         request: <UpdateMutateRequest<T>>{
           action: 'update',
@@ -342,7 +342,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   ): Promise<RemoveMutateResult> {
     return new Promise<RemoveMutateResult>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: BatchableRequestQueueItem = {
+      const request = <BatchableRequestQueueItem>{
         reject,
         request: <RemoveMutateRequest<T>>{
           action: 'remove',
@@ -385,7 +385,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   function validate<T>(name: string, data: T): Promise<ValidateResult> {
     return new Promise<ValidateResult>((resolve, reject) => {
       const requestId = uniqueId();
-      const request: RequestQueueItem = {
+      const request = <RequestQueueItem>{
         reject,
         request: <ValidateRequest<T>>{
           data,
@@ -433,7 +433,7 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     if (currentBatch) {
       const previousBatch = currentBatch;
       currentBatch = undefined;
-      queue.push({
+      queue.push(<RequestQueueItem>{
         request: <BatchMutateRequest>{
           queue: previousBatch.queue.map(item => item.request),
           requestId: previousBatch.requestId,
@@ -451,12 +451,12 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         },
         reject(error: any) {
           for (const item of previousBatch.queue) {
-             item.reject(error);
+            item.reject(error);
           }
         },
         cancel() {
           for (const item of previousBatch.queue) {
-             item.cancel();
+            item.cancel();
           }
         },
       });
