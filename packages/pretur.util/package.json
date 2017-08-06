@@ -27,12 +27,12 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.util",
   "dependencies": {
-    "@types/lodash": "^4.14.68",
+    "@types/lodash": "^4.14.71",
     "lodash": "^4.17.4",
     "tslib": "^1.7.1"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
-    "typescript": "2.4.0"
+    "typescript": "2.4.2"
   }
 }
