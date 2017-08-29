@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.fetch",
   "dependencies": {
-    "@types/node": "^8.0.19",
-    "node-fetch": "^1.7.1",
+    "@types/node": "^8.0.25",
+    "node-fetch": "^1.7.2",
     "tslib": "^1.7.1",
     "whatwg-fetch": "^2.0.3"
   },
