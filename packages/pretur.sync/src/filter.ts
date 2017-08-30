@@ -25,6 +25,10 @@ export interface Operators<F> {
   $notLike?: string | { $any: string[] };
   $iLike?: string | { $any: string[] };
   $notILike?: string | { $any: string[] };
+  $regexp?: string;
+  $notRegexp?: string;
+  $iRegexp?: string;
+  $notIRegexp?: string;
   $overlap?: Primitive[] | RangeType[];
   $contains?: Primitive[] | Primitive | RangeType;
   $contained?: Primitive[] | RangeType;
