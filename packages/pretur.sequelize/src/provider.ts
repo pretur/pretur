@@ -6,7 +6,7 @@ import {
   Synchronizer, UnitializedSynchronizer, SyncResult, buildUpdateAttributes,
 } from './synchronizer';
 import { ProviderPool, Transaction } from './pool';
-import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
+import { UninitializedDatabaseModel, DatabaseModel } from './database';
 import {
   TableCreationHook,
   TableDestructionHook,
@@ -24,7 +24,6 @@ export type AliasKeyMap<T extends SpecType> = {
 
 export interface ProviderMetadata<T extends SpecType> {
   primaryKeys: (keyof T['fields'])[];
-  model?: SequelizeModel<T>;
   creationHook?: TableCreationHook;
   destructionHook?: TableDestructionHook;
   afterDatabaseCreationHook?: DatabaseAfterCreationHook;
@@ -44,6 +43,7 @@ export interface Provider<T extends SpecType> {
   spec: Spec<T>;
   name: string;
   metadata: ProviderMetadata<T>;
+  database: DatabaseModel<T>;
   select(tr: Transaction, query?: Partial<Query<T>>, context?: any): Promise<ResolveResult<T>>;
   insert(tr: Transaction, data: Partial<Model<T>>, context?: any): Promise<SyncResult<T>>;
   update(tr: Transaction, data: Partial<T['fields']>, context?: any): Promise<SyncResult<T>>;
@@ -51,7 +51,7 @@ export interface Provider<T extends SpecType> {
 }
 
 export interface BuildProviderOptions<T extends SpecType> {
-  model?: UninitializedSequelizeModel<T>;
+  database?: UninitializedDatabaseModel<T>;
   resolver?: UnitializedResolver<T>;
   synchronizer?: UnitializedSynchronizer<T>;
   defaultOrder?: [keyof T['fields'], 'ASC' | 'DESC'];
@@ -67,11 +67,11 @@ export function buildProvider<T extends SpecType>(
 
   const resolver = options.resolver && options.resolver.resolver;
   const synchronizer = options.synchronizer && options.synchronizer.synchronizer;
-  const model = options.model && options.model.sequelizeModel;
-  const createHook = options.model && options.model.creationHook;
-  const destroyHook = options.model && options.model.destructionHook;
-  const adbCreate = options.model && options.model.afterDatabaseCreationHook;
-  const adbDestoy = options.model && options.model.afterDatabaseDestructionHook;
+  const database = options.database && options.database.database;
+  const createHook = options.database && options.database.creationHook;
+  const destroyHook = options.database && options.database.destructionHook;
+  const adbCreate = options.database && options.database.afterDatabaseCreationHook;
+  const adbDestoy = options.database && options.database.afterDatabaseDestructionHook;
 
   const aliasModelMap = spec.relations.reduce(
     (m, r) => {
@@ -110,8 +110,8 @@ export function buildProvider<T extends SpecType>(
   }
 
   function initialize(pool: ProviderPool) {
-    if (options.model) {
-      options.model.initialize(pool);
+    if (options.database) {
+      options.database.initialize(pool);
     }
     if (options.resolver) {
       options.resolver.initialize(pool);
@@ -204,6 +204,7 @@ export function buildProvider<T extends SpecType>(
   }
 
   return {
+    name: spec.name,
     metadata: {
       afterDatabaseCreationHook: adbCreate,
       afterDatabaseDestructionHook: adbDestoy,
@@ -218,10 +219,9 @@ export function buildProvider<T extends SpecType>(
       primaryKeys,
       resolver,
       sanitizeAttributes,
-      model,
       synchronizer,
     },
-    name: spec.name,
+    database: database!,
     spec,
     select,
     insert,

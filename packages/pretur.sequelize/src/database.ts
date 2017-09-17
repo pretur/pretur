@@ -11,11 +11,11 @@ import {
 export type SequelizeInstance<T extends SpecType>
   = Sequelize.Instance<Partial<Model<T>>> & Partial<Model<T>>;
 
-export type SequelizeModel<T extends SpecType>
+export type DatabaseModel<T extends SpecType>
   = Sequelize.Model<SequelizeInstance<T>, Partial<Model<T>>>;
 
-export interface UninitializedSequelizeModel<T extends SpecType> {
-  sequelizeModel: SequelizeModel<T>;
+export interface UninitializedDatabaseModel<T extends SpecType> {
+  database: DatabaseModel<T>;
   creationHook?: TableCreationHook;
   destructionHook?: TableDestructionHook;
   afterDatabaseCreationHook?: DatabaseAfterCreationHook;
@@ -23,7 +23,7 @@ export interface UninitializedSequelizeModel<T extends SpecType> {
   initialize(pool: ProviderPool): void;
 }
 
-export interface BuildSequelizeModelOptions<T extends SpecType> {
+export interface BuildDatabaseOptions<T extends SpecType> {
   attributeToFieldMap?: {[P in keyof T['fields']]?: string };
   tableName?: string;
   creationHook?: TableCreationHook;
@@ -32,11 +32,11 @@ export interface BuildSequelizeModelOptions<T extends SpecType> {
   afterDatabaseDestructionHook?: DatabaseAfterDestructionHook;
 }
 
-export function buildSequelizeModel<T extends SpecType>(
+export function buildDatabaseModel<T extends SpecType>(
   spec: Spec<T>,
   sequelize: Sequelize.Sequelize,
-  options: BuildSequelizeModelOptions<T> = {},
-): UninitializedSequelizeModel<T> {
+  options: BuildDatabaseOptions<T> = {},
+): UninitializedDatabaseModel<T> {
   const attributes: { [attrib: string]: Sequelize.DefineAttributeColumnOptions } = {};
 
   for (const attribute of spec.attributes) {
@@ -69,8 +69,8 @@ export function buildSequelizeModel<T extends SpecType>(
       const ownProvider = pool.providers[relation.model];
       const throughProvider = relation.through && pool.providers[relation.through];
 
-      const target = ownProvider && ownProvider.metadata.model;
-      const through = throughProvider && throughProvider.metadata.model;
+      const target = ownProvider && ownProvider.database;
+      const through = throughProvider && throughProvider.database;
 
       if (target) {
         const relationOptions = {
@@ -109,7 +109,7 @@ export function buildSequelizeModel<T extends SpecType>(
     creationHook: options.creationHook,
     destructionHook: options.destructionHook,
     initialize,
-    sequelizeModel: model,
+    database: model,
   };
 }
 

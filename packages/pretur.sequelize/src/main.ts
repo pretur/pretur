@@ -1,4 +1,4 @@
-export * from './sequelizeModel';
+export * from './database';
 export * from './resolver';
 export * from './synchronizer';
 export * from './provider';

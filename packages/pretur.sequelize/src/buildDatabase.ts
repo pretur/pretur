@@ -4,7 +4,7 @@ import { ProviderPool } from './pool';
 export interface TableCreationHook {
   (
     create: () => Promise<void>,
-    model: Sequelize.Model<any, any>,
+    database: Sequelize.Model<any, any>,
     pool: ProviderPool,
     context: any,
   ): Promise<void>;
@@ -13,49 +13,49 @@ export interface TableCreationHook {
 export interface TableDestructionHook {
   (
     destroy: () => Promise<void>,
-    model: Sequelize.Model<any, any>,
+    database: Sequelize.Model<any, any>,
     pool: ProviderPool,
     context: any,
   ): Promise<void>;
 }
 
 export interface DatabaseAfterCreationHook {
-  (model: Sequelize.Model<any, any>, pool: ProviderPool, context: any): Promise<void>;
+  (database: Sequelize.Model<any, any>, pool: ProviderPool, context: any): Promise<void>;
 }
 
 export interface DatabaseAfterDestructionHook {
-  (model: Sequelize.Model<any, any>, pool: ProviderPool, context: any): Promise<void>;
+  (database: Sequelize.Model<any, any>, pool: ProviderPool, context: any): Promise<void>;
 }
 
-export async function buildDatabase(
+export async function createDatabase(
   sequelize: Sequelize.Sequelize,
   pool: ProviderPool,
   context?: any,
 ) {
-  const topologicallySortedModels: Sequelize.Model<any, any>[] = [];
-  (<any>sequelize).modelManager.forEachModel((model: any) => topologicallySortedModels.push(model));
+  const topologicallySorted: Sequelize.Model<any, any>[] = [];
+  (<any>sequelize).modelManager.forEachModel((db: any) => topologicallySorted.push(db));
 
-  for (const model of topologicallySortedModels) {
-    const name: string = (<any>model)['name'];
+  for (const database of topologicallySorted) {
+    const name: string = (<any>database)['name'];
     const provider = pool.providers[name];
 
     const create = async () => {
-      await model.sync();
+      await database.sync();
     };
 
     if (provider && provider.metadata.creationHook) {
-      await provider.metadata.creationHook(create, model, pool, context);
+      await provider.metadata.creationHook(create, database, pool, context);
     } else {
       await create();
     }
   }
 
-  for (const table of topologicallySortedModels) {
-    const model: string = (<any>table)['name'];
-    const provider = pool.providers[model];
+  for (const database of topologicallySorted) {
+    const name: string = (<any>database)['name'];
+    const provider = pool.providers[name];
 
     if (provider && provider.metadata.afterDatabaseCreationHook) {
-      await provider.metadata.afterDatabaseCreationHook(table, pool, context);
+      await provider.metadata.afterDatabaseCreationHook(database, pool, context);
     }
   }
 }
@@ -65,30 +65,30 @@ export async function destroyDatabase(
   pool: ProviderPool,
   context?: any,
 ) {
-  const topologicallySortedModels: Sequelize.Model<any, any>[] = [];
-  (<any>sequelize).modelManager.forEachModel((model: any) => topologicallySortedModels.push(model));
+  const topologicallySorted: Sequelize.Model<any, any>[] = [];
+  (<any>sequelize).modelManager.forEachModel((db: any) => topologicallySorted.push(db));
 
-  for (const model of topologicallySortedModels) {
-    const name: string = (<any>model)['name'];
+  for (const database of topologicallySorted) {
+    const name: string = (<any>database)['name'];
     const provider = pool.providers[name];
 
     const destroy = async () => {
-      await model.drop({ cascade: true });
+      await database.drop({ cascade: true });
     };
 
     if (provider && provider.metadata.destructionHook) {
-      await provider.metadata.destructionHook(destroy, model, pool, context);
+      await provider.metadata.destructionHook(destroy, database, pool, context);
     } else {
       await destroy();
     }
   }
 
-  for (const model of topologicallySortedModels) {
-    const name: string = (<any>model)['name'];
+  for (const database of topologicallySorted) {
+    const name: string = (<any>database)['name'];
     const provider = pool.providers[name];
 
     if (provider && provider.metadata.afterDatabaseDestructionHook) {
-      await provider.metadata.afterDatabaseDestructionHook(model, pool, context);
+      await provider.metadata.afterDatabaseDestructionHook(database, pool, context);
     }
   }
 }

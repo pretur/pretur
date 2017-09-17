@@ -136,7 +136,7 @@ async function defaultInsertBehavior<T extends SpecType>(
 ): Promise<SyncResult<T>> {
   const data: Partial<Model<T>> = { ...(<any>item.data) };
 
-  if (!provider.metadata.model) {
+  if (!provider.database) {
     throw new Error(`model ${provider.name} must have a sequelize model`);
   }
 
@@ -182,7 +182,7 @@ async function defaultInsertBehavior<T extends SpecType>(
     }
   }
 
-  const instance = await provider.metadata.model.create(data, {
+  const instance = await provider.database.create(data, {
     fields: provider.metadata.allowedAttributes,
     transaction,
   });
@@ -272,16 +272,16 @@ async function defaultInsertBehavior<T extends SpecType>(
 
 function insert<T extends SpecType>(
   pool: ProviderPool,
-  modelName: string,
+  model: string,
   interceptor: InsertSyncInterceptor<T> | undefined,
   transaction: Transaction,
   item: InsertMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const provider = <Provider<T>>pool.providers[modelName];
+  const provider = <Provider<T>>pool.providers[model];
 
   if (!provider) {
-    throw new Error(`model ${modelName} does not exist`);
+    throw new Error(`model ${model} does not exist`);
   }
 
   const defaultInsert = (target: InsertMutateRequest<T>) => defaultInsertBehavior(
@@ -304,7 +304,7 @@ async function defaultUpdateBehavior<T extends SpecType>(
   transaction: Transaction,
   item: UpdateMutateRequest<T>,
 ): Promise<SyncResult<T>> {
-  if (!provider.metadata.model) {
+  if (!provider.database) {
     throw new Error(`model ${provider.name} must have a sequelize model`);
   }
 
@@ -318,7 +318,7 @@ async function defaultUpdateBehavior<T extends SpecType>(
     throw new Error(`a primaryKey field must be provided to narrow the update`);
   }
 
-  await provider.metadata.model.update(<any>item.data, {
+  await provider.database.update(<any>item.data, {
     fields: buildUpdateAttributes(provider.metadata.mutableAttributes, item.attributes),
     transaction,
     where: <any>filters,
@@ -329,16 +329,16 @@ async function defaultUpdateBehavior<T extends SpecType>(
 
 function update<T extends SpecType>(
   pool: ProviderPool,
-  modelName: string,
+  model: string,
   interceptor: UpdateSyncInterceptor<T> | undefined,
   transaction: Transaction,
   item: UpdateMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const provider = <Provider<T>>pool.providers[modelName];
+  const provider = <Provider<T>>pool.providers[model];
 
   if (!provider) {
-    throw new Error(`model ${modelName} does not exist`);
+    throw new Error(`model ${model} does not exist`);
   }
 
   const defaultUpdate = (target: UpdateMutateRequest<T>) => defaultUpdateBehavior(
@@ -359,7 +359,7 @@ async function defaultRemoveBehavior<T extends SpecType>(
   transaction: Transaction,
   item: RemoveMutateRequest<T>,
 ): Promise<SyncResult<T>> {
-  if (!provider.metadata.model) {
+  if (!provider.database) {
     throw new Error(`model ${provider.name} must have a sequelize model`);
   }
 
@@ -373,23 +373,23 @@ async function defaultRemoveBehavior<T extends SpecType>(
     throw new Error(`a primaryKey field must be provided to narrow the delete`);
   }
 
-  await provider.metadata.model.destroy({ transaction, where: <any>identifiers });
+  await provider.database.destroy({ transaction, where: <any>identifiers });
 
   return { errors: [] };
 }
 
 function remove<T extends SpecType>(
   pool: ProviderPool,
-  modelName: string,
+  model: string,
   interceptor: RemoveSyncInterceptor<T> | undefined,
   transaction: Transaction,
   item: RemoveMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const provider = <Provider<T>>pool.providers[modelName];
+  const provider = <Provider<T>>pool.providers[model];
 
   if (!provider) {
-    throw new Error(`model ${modelName} does not exist`);
+    throw new Error(`model ${model} does not exist`);
   }
 
   const defaultRemove = (target: RemoveMutateRequest<T>) => defaultRemoveBehavior(

@@ -4,7 +4,7 @@ import {
 } from 'pretur.sync';
 import { Spec, SpecType, Model } from 'pretur.spec';
 import { ProviderPool, Transaction } from './pool';
-import { SequelizeModel } from './sequelizeModel';
+import { DatabaseModel } from './database';
 
 export interface ResolveResult<T extends SpecType> {
   data: Partial<Model<T>>[];
@@ -83,10 +83,10 @@ export function buildResolver<T extends SpecType>(
       query = await options.queryTransformer(transaction, rawQuery);
     }
 
-    const model = <SequelizeModel<T>>provider.metadata.model;
+    const database = <DatabaseModel<T>>provider.database;
 
-    if (!model) {
-      throw new Error(`${model} is not a valid model`);
+    if (!database) {
+      throw new Error(`${database} is not a valid model`);
     }
 
     const findOptions: Sequelize.FindOptions<Model<T>> = {};
@@ -113,7 +113,7 @@ export function buildResolver<T extends SpecType>(
         byIdWhere[pk] = query.byId[pk];
       }
 
-      const instance = await model.findOne({
+      const instance = await database.findOne({
         ...findOptions,
         transaction,
         where: byIdWhere,
@@ -149,7 +149,7 @@ export function buildResolver<T extends SpecType>(
     }
 
     if (query && query.count) {
-      const { rows, count } = await model.findAndCountAll({ ...findOptions, transaction });
+      const { rows, count } = await database.findAndCountAll({ ...findOptions, transaction });
 
       const plain = rows.map(row => row.get({ plain: true }));
 
@@ -161,7 +161,7 @@ export function buildResolver<T extends SpecType>(
       return { data: plain, count };
     }
 
-    const raw = await model.findAll(findOptions);
+    const raw = await database.findAll(findOptions);
     const data = raw.map(row => row.get({ plain: true }));
     if (options && options.intercept) {
       const intercept = options.intercept;
@@ -192,7 +192,7 @@ function buildOrder<T extends SpecType>(
       let current = model;
       for (const alias of query.order.chain) {
         const next = pool.providers[current].metadata.aliasModelMap[alias];
-        parameters.push({ as: alias, model: pool.providers[next].metadata.model });
+        parameters.push({ as: alias, model: pool.providers[next].database });
         current = next;
       }
     }
@@ -215,10 +215,10 @@ function buildOrder<T extends SpecType>(
 function getAliasFilters<T extends SpecType>(
   filter: FilterFields<T> & FilterNested<T>,
   pool: ProviderPool,
-  modelName: T['name'],
+  model: T['name'],
   path: string[],
 ): Sequelize.WhereOptions<Model<T>> {
-  const provider = pool.providers[modelName];
+  const provider = pool.providers[model];
 
   const where: Sequelize.WhereOptions<Model<T>> = {};
 
@@ -243,31 +243,31 @@ function getAliasFilters<T extends SpecType>(
 function traverseTree<T extends SpecType>(
   filter: FilterCombinations<T>,
   pool: ProviderPool,
-  modelName: T['name'],
+  model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> {
   const where: Sequelize.WhereOptions<Model<T>> = {};
 
   if (filter.$and) {
     if (Array.isArray(filter.$and)) {
-      where.$and = <any>filter.$and.map(and => transformFilter(and, pool, modelName));
+      where.$and = <any>filter.$and.map(and => transformFilter(and, pool, model));
     } else {
-      where.$and = transformFilter(filter.$and, pool, modelName);
+      where.$and = transformFilter(filter.$and, pool, model);
     }
   }
 
   if (filter.$or) {
     if (Array.isArray(filter.$or)) {
-      where.$or = <any>filter.$or.map(or => transformFilter(or, pool, modelName));
+      where.$or = <any>filter.$or.map(or => transformFilter(or, pool, model));
     } else {
-      where.$or = transformFilter(filter.$or, pool, modelName);
+      where.$or = transformFilter(filter.$or, pool, model);
     }
   }
 
   if (filter.$not) {
     if (Array.isArray(filter.$not)) {
-      where.$not = <any>filter.$not.map(not => transformFilter(not, pool, modelName));
+      where.$not = <any>filter.$not.map(not => transformFilter(not, pool, model));
     } else {
-      where.$not = transformFilter(filter.$not, pool, modelName);
+      where.$not = transformFilter(filter.$not, pool, model);
     }
   }
 
@@ -277,9 +277,9 @@ function traverseTree<T extends SpecType>(
 function transformFilter<T extends SpecType>(
   filter: Filter<T>,
   pool: ProviderPool,
-  modelName: T['name'],
+  model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> {
-  const provider = pool.providers[modelName];
+  const provider = pool.providers[model];
 
   const where: Sequelize.WhereOptions<Model<T>> = {};
 
@@ -299,7 +299,7 @@ function transformFilter<T extends SpecType>(
     }
   }
 
-  const combinations = traverseTree(filter, pool, modelName);
+  const combinations = traverseTree(filter, pool, model);
   Object.assign(where, combinations);
 
   return where;
@@ -308,10 +308,10 @@ function transformFilter<T extends SpecType>(
 function buildWhere<T extends SpecType>(
   query: Query<T> | SubQuery<T> | undefined,
   pool: ProviderPool,
-  modelName: T['name'],
+  model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> | undefined {
   if (query && query.filters) {
-    return transformFilter(<any>query.filters, pool, modelName);
+    return transformFilter(<any>query.filters, pool, model);
   }
   return;
 }
@@ -346,14 +346,14 @@ function buildNestedInclude<T extends SpecType>(
         const subQuery = queryInclude && queryInclude[alias];
         const target = pool.providers[aliasModelMap[alias]];
 
-        if (!target.metadata.model) {
+        if (!target.database) {
           continue;
         }
 
         const includedModel: Sequelize.IncludeOptions = {
           as: alias,
           attributes: target.metadata.allowedAttributes,
-          model: target.metadata.model,
+          model: target.database,
           required: subQuery ? subQuery.required : false,
         };
 
