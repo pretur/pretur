@@ -51,12 +51,7 @@ export async function applyMutations(
   let applied = true;
 
   for (const result of results) {
-    if (
-      !result.ok ||
-      result.cancelled ||
-      result.transactionFailed ||
-      (result.errors && result.errors.length > 0)
-    ) {
+    if (result.errors.length > 0) {
       applied = false;
       break;
     }

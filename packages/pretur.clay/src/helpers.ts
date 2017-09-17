@@ -21,17 +21,17 @@ function buildGetMutations<T extends SpecType>(
 
 function buildQuerier<T extends SpecType>(
   spec: Spec<T>,
-  query?: Partial<Query<T>>,
+  query: Query<T> = {},
 ): Querier<T> {
-  return new Querier<T>({ ...query, model: spec.name });
+  return new Querier<T>(spec.name, query);
 }
 
 async function loadSimple<T extends SpecType>(
   spec: Spec<T>,
   requester: Requester,
-  query?: Partial<Query<T>>,
+  query: Query<T> = {},
 ) {
-  const { data = [], count = 0 } = await requester.select<T>({ ...query, model: spec.name });
+  const { data = [], count = 0 } = await requester.select<T>(spec.name, query);
   return { data, count };
 }
 
@@ -41,9 +41,9 @@ async function loadIntoSet<T extends SpecType>(
   requester: Requester,
   dispatch: Dispatch,
   set: Set<T>,
-  query?: Partial<Query<T>>,
+  query: Query<T> = {},
 ) {
-  const { data = [] } = await requester.select<T>({ ...query, model: spec.name });
+  const { data = [] } = await requester.select<T>(spec.name, query);
   set.replace(dispatch, buildSet(pool, spec, data));
 }
 
@@ -53,9 +53,9 @@ async function loadIntoRecord<T extends SpecType>(
   requester: Requester,
   dispatch: Dispatch,
   record: Record<T>,
-  query?: Partial<Query<T>>,
+  query: Query<T> = {},
 ) {
-  const { data } = await requester.select<T>({ ...query, model: spec.name });
+  const { data } = await requester.select<T>(spec.name, query);
   const row = data && data[0];
   if (row) {
     record.replace(dispatch, buildRecord(pool, spec, row));
@@ -71,12 +71,11 @@ export async function selectAndRefresh<T extends SpecType>(
   dispatch: Dispatch,
   set: Set<T>,
   querier: Querier<T>,
-  extra?: Partial<Query<T>>,
+  extra: Query<T> = {},
 ) {
-  const { data = [], count = 0 } = await requester.select<T>({
+  const { data = [], count = 0 } = await requester.select<T>(spec.name, {
     ...querier.query,
     ...extra,
-    model: spec.name,
   });
   refresh(dispatch, set, querier, { data: buildSet<T>(pool, spec, data), count });
   return { data, count };
@@ -92,7 +91,7 @@ export interface Helpers<T extends SpecType> {
 
   mutations(clay: Set<T> | Record<T>): MutateRequest<T>[];
 
-  querier(query?: Partial<Query<T>>): Querier<T>;
+  querier(query?: Query<T>): Querier<T>;
 
   load(query?: Partial<Query<T>>): Promise<{ data: Model<T>[], count: number }>;
   load(dispatch: Dispatch, set: Set<T>, query?: Partial<Query<T>>): Promise<void>;
