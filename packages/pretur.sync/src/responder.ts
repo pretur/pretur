@@ -27,23 +27,23 @@ export interface PoolLike<C> {
     transaction: any,
     model: string,
     query: Query<EmptySpec>,
-    context: C,
+    context?: C,
   ): Promise<ResolveResult>;
-  sync(transaction: any, item: MutateRequest, context: C): Promise<SyncResult>;
+  sync(transaction: any, item: MutateRequest, context?: C): Promise<SyncResult>;
 }
 
 export interface ResponderOptions<C> {
   errorToBundle: (error: Error) => Bundle;
   pool?: PoolLike<C>;
-  operator?: (request: OperateRequest, context: C) => PromiseLike<OperateResponse>;
-  validator?: (request: ValidateRequest, context: C) => PromiseLike<ValidateResponse>;
+  operator?: (request: OperateRequest, context?: C) => PromiseLike<OperateResponse>;
+  validator?: (request: ValidateRequest, context?: C) => PromiseLike<ValidateResponse>;
   transact?: () => PromiseLike<TransactionLike>;
 }
 
 export function buildResponder<C>(options: ResponderOptions<C>) {
   const { errorToBundle, pool, operator, validator, transact } = options;
 
-  return async function responder(requests: Request[], context: any): Promise<Response[]> {
+  return async function responder(requests: Request[], context?: any): Promise<Response[]> {
     if (!Array.isArray(requests) || requests.length === 0) {
       return [];
     }
