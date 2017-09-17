@@ -8,6 +8,12 @@ export interface ArraySubtypeNormal {
   type: NormalType;
 }
 
+export interface ArraySubtypeDecimal {
+  type: 'DECIMAL';
+  precision?: number;
+  scale?: number;
+}
+
 export interface ArraySubtypeRange {
   type: 'RANGE';
   subtype: RangeType;
@@ -18,7 +24,11 @@ export interface ArraySubtypeMultidimensional {
   subtype: ArraySubtype;
 }
 
-export type ArraySubtype = ArraySubtypeNormal | ArraySubtypeRange | ArraySubtypeMultidimensional;
+export type ArraySubtype =
+  | ArraySubtypeNormal
+  | ArraySubtypeDecimal
+  | ArraySubtypeRange
+  | ArraySubtypeMultidimensional;
 
 export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
@@ -33,6 +43,12 @@ export interface AttributeBase<T, K extends keyof T = keyof T> {
 
 export interface NormalAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
   type: NormalType;
+}
+
+export interface DecimalAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
+  type: 'DECIMAL';
+  precision?: number;
+  scale?: number;
 }
 
 export interface EnumAttribute<T, K extends keyof T = keyof T> extends AttributeBase<T, K> {
@@ -53,6 +69,7 @@ export interface ArrayAttribute<T, K extends keyof T = keyof T> extends Attribut
 
 export type Attribute<T = any, K extends keyof T = keyof T> =
   | NormalAttribute<T, K>
+  | DecimalAttribute<T, K>
   | EnumAttribute<T, K>
   | RangeAttribute<T, K>
   | ArrayAttribute<T, K>;
