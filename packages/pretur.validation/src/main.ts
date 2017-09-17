@@ -79,13 +79,9 @@ export function buildValidation<T>(
           const error = await validate.catchEarly(data);
           if (error) {
             return {
-              cancelled: false,
               name,
-              ok: false,
-              status: 0,
-              statusText: 'UNKNOWN_ERROR',
               type: 'validate',
-              validationError: error,
+              errors: Array.isArray(error) ? error : [error],
             };
           }
         }
@@ -99,27 +95,15 @@ export function buildValidation<T>(
     server: false,
     async validate(_requester: Requester, data: T) {
       if (!validate || typeof validate !== 'function') {
-        return {
-          cancelled: false,
-          name,
-          ok: false,
-          status: 0,
-          statusText: 'UNKNOWN_ERROR',
-          type: 'validate',
-          validationError: undefined,
-        };
+        return { name, type: 'validate', errors: [] };
       }
 
       const error = await validate(data);
 
       return {
-        cancelled: false,
         name,
-        ok: false,
-        status: 0,
-        statusText: 'UNKNOWN_ERROR',
         type: 'validate',
-        validationError: error,
+        errors: Array.isArray(error) ? error : error ? [error] : [],
       };
     },
   };
