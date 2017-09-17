@@ -2,83 +2,88 @@ import * as Sequelize from 'sequelize';
 import { SpecType } from 'pretur.spec';
 import { Query, MutateRequest } from 'pretur.sync';
 import { ResolveResult } from './resolver';
-import { ModelDescriptor } from './descriptor';
-import { ResultItemAppender } from './synchronizer';
+import { SyncResult } from './synchronizer';
+import { Provider } from './provider';
 
 export type Transaction = Sequelize.Transaction;
 
-export interface ModelDescriptorMap {
-  [model: string]: ModelDescriptor<any>;
+export interface ProviderMap {
+  [model: string]: Provider<any>;
 }
 
-export interface Pool {
-  models: ModelDescriptorMap;
-  resolve<T extends SpecType>(query: Query<T>, context: any): Promise<ResolveResult<T>>;
+export interface ProviderPool {
+  providers: ProviderMap;
+  resolve<T extends SpecType>(
+    transaction: Transaction,
+    model: T['name'],
+    query: Query<T>,
+    context?: any,
+  ): Promise<ResolveResult<T>>;
   sync<T extends SpecType>(
     transaction: Transaction,
     item: MutateRequest<T>,
-    rip: ResultItemAppender,
-    context: any,
-  ): Promise<Partial<T['fields']> | void>;
+    context?: any,
+  ): Promise<SyncResult<T>>;
 }
 
-export function createPool(...descriptors: ModelDescriptor<any>[]): Pool {
-  const pool: Pool = <any>{
-    models: descriptors.reduce(
+export function buildProviderPool(...descriptors: Provider<any>[]): ProviderPool {
+  const pool = <ProviderPool>{
+    providers: descriptors.reduce(
       (m, d) => {
         m[d.name] = d;
         return m;
       },
-      <ModelDescriptorMap>{},
+      <ProviderMap>{},
     ),
   };
 
   pool.resolve = async function resolve<T extends SpecType>(
+    transaction: Transaction,
+    model: T['name'],
     query: Query<T>,
     context: any,
   ): Promise<ResolveResult<T>> {
-    if (!query || !query.model) {
+    if (!model) {
       throw new Error('query or query.model was not specified.');
     }
 
-    const model = pool.models[query.model];
+    const provider = pool.providers[model];
 
-    if (!model) {
-      throw new Error(`${query.model} is not a valid model`);
+    if (!provider) {
+      throw new Error(`${model} is not a valid model`);
     }
 
-    if (!model.resolver) {
-      throw new Error(`${query.model} has no resolver`);
+    if (!provider.metadata.resolver) {
+      throw new Error(`${model} has no resolver`);
     }
 
-    return model.resolver(query, context);
+    return provider.metadata.resolver(transaction, query, context);
   };
 
   pool.sync = async function sync<T extends SpecType>(
     transaction: Transaction,
     item: MutateRequest<T>,
-    rip: ResultItemAppender,
     context: any,
-  ): Promise<Partial<T['fields']> | void> {
+  ): Promise<SyncResult<T>> {
     if (!item.model) {
       throw new Error('item.model was not specified.');
     }
 
-    const model = pool.models[item.model];
+    const provider = pool.providers[item.model];
 
-    if (!model) {
+    if (!provider) {
       throw new Error(`${item.model} is not a valid model`);
     }
 
-    if (!model.synchronizer) {
+    if (!provider.metadata.synchronizer) {
       throw new Error(`${item.model} has no synchronizer`);
     }
 
-    return model.synchronizer(transaction, item, rip, context);
+    return provider.metadata.synchronizer(transaction, item, context);
   };
 
   for (const descriptor of descriptors) {
-    descriptor.initialize(pool);
+    descriptor.metadata.initialize(pool);
   }
 
   return pool;

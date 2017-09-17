@@ -1,6 +1,6 @@
 import * as Sequelize from 'sequelize';
 import { Spec, SpecType, Model, Attribute, NormalType, RangeType, ArraySubtype } from 'pretur.spec';
-import { Pool } from './pool';
+import { ProviderPool } from './pool';
 import {
   TableCreationHook,
   TableDestructionHook,
@@ -20,7 +20,7 @@ export interface UninitializedSequelizeModel<T extends SpecType> {
   destructionHook?: TableDestructionHook;
   afterDatabaseCreationHook?: DatabaseAfterCreationHook;
   afterDatabaseDestructionHook?: DatabaseAfterDestructionHook;
-  initialize(pool: Pool): void;
+  initialize(pool: ProviderPool): void;
 }
 
 export interface BuildSequelizeModelOptions<T extends SpecType> {
@@ -64,10 +64,14 @@ export function buildSequelizeModel<T extends SpecType>(
 
   const model = sequelize.define(spec.name, attributes, defineOptions);
 
-  function initialize(pool: Pool) {
+  function initialize(pool: ProviderPool) {
     for (const relation of spec.relations) {
-      const target = pool.models[relation.model] && pool.models[relation.model].sequelizeModel;
-      const through = relation.through && pool.models[relation.through].sequelizeModel;
+      const ownProvider = pool.providers[relation.model];
+      const throughProvider = relation.through && pool.providers[relation.through];
+
+      const target = ownProvider && ownProvider.metadata.model;
+      const through = throughProvider && throughProvider.metadata.model;
+
       if (target) {
         const relationOptions = {
           as: relation.alias,
@@ -109,6 +113,13 @@ export function buildSequelizeModel<T extends SpecType>(
   };
 }
 
+function getDecimalSequelizeType(precision?: number, scale?: number): any {
+  if (!precision) {
+    return Sequelize.DECIMAL;
+  }
+  return Sequelize.DECIMAL(precision, scale);
+}
+
 function getNormalSequelizeType(type: NormalType): any {
   switch (type) {
     case 'BIGINT':
@@ -142,6 +153,8 @@ function getArraySequelizeSubtype(subtype: ArraySubtype): any {
       return Sequelize.ARRAY(getArraySequelizeSubtype(subtype.subtype));
     case 'RANGE':
       return Sequelize.ARRAY(getRangeSequelizeSubtype(subtype.subtype));
+    case 'DECIMAL':
+      return Sequelize.ARRAY(getDecimalSequelizeType(subtype.precision, subtype.scale));
     default:
       return getNormalSequelizeType(subtype.type);
   }
@@ -155,6 +168,8 @@ function datatypeToSequelizeType(attribute: Attribute): any {
       return Sequelize.ARRAY(getArraySequelizeSubtype(attribute.subtype));
     case 'RANGE':
       return getRangeSequelizeSubtype(attribute.subtype);
+    case 'DECIMAL':
+      return getDecimalSequelizeType(attribute.precision, attribute.scale);
     default:
       return getNormalSequelizeType(attribute.type);
   }
