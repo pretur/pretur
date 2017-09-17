@@ -1,7 +1,12 @@
 import * as Sequelize from 'sequelize';
 import { Spec, SpecType, Model, Attribute, NormalType, RangeType, ArraySubtype } from 'pretur.spec';
 import { Pool } from './pool';
-import { TableCreationHook, TableDestructionHook } from './buildDatabase';
+import {
+  TableCreationHook,
+  TableDestructionHook,
+  DatabaseAfterCreationHook,
+  DatabaseAfterDestructionHook,
+} from './buildDatabase';
 
 export type SequelizeInstance<T extends SpecType>
   = Sequelize.Instance<Partial<Model<T>>> & Partial<Model<T>>;
@@ -11,22 +16,26 @@ export type SequelizeModel<T extends SpecType>
 
 export interface UninitializedSequelizeModel<T extends SpecType> {
   sequelizeModel: SequelizeModel<T>;
-  tableCreationHook?: TableCreationHook<T>;
-  tableDestructionHook?: TableDestructionHook<T>;
+  creationHook?: TableCreationHook;
+  destructionHook?: TableDestructionHook;
+  afterDatabaseCreationHook?: DatabaseAfterCreationHook;
+  afterDatabaseDestructionHook?: DatabaseAfterDestructionHook;
   initialize(pool: Pool): void;
 }
 
 export interface BuildSequelizeModelOptions<T extends SpecType> {
   attributeToFieldMap?: {[P in keyof T['fields']]?: string };
   tableName?: string;
-  tableCreationHook?: TableCreationHook<T>;
-  tableDestructionHook?: TableDestructionHook<T>;
+  creationHook?: TableCreationHook;
+  destructionHook?: TableDestructionHook;
+  afterDatabaseCreationHook?: DatabaseAfterCreationHook;
+  afterDatabaseDestructionHook?: DatabaseAfterDestructionHook;
 }
 
 export function buildSequelizeModel<T extends SpecType>(
   spec: Spec<T>,
   sequelize: Sequelize.Sequelize,
-  options?: BuildSequelizeModelOptions<T>,
+  options: BuildSequelizeModelOptions<T> = {},
 ): UninitializedSequelizeModel<T> {
   const attributes: { [attrib: string]: Sequelize.DefineAttributeColumnOptions } = {};
 
@@ -36,9 +45,7 @@ export function buildSequelizeModel<T extends SpecType>(
       autoIncrement: attribute.primary && !!attribute.autoIncrement,
       defaultValue: attribute.defaultValue,
       field: (
-        options &&
-        options.attributeToFieldMap &&
-        options.attributeToFieldMap[attribute.name]
+        options.attributeToFieldMap && options.attributeToFieldMap[attribute.name]
       ) || undefined,
       primaryKey: !!attribute.primary,
       type: datatypeToSequelizeType(attribute),
@@ -48,7 +55,7 @@ export function buildSequelizeModel<T extends SpecType>(
   }
 
   const defineOptions: Sequelize.DefineOptions<SequelizeInstance<T>> = {
-    tableName: (options && options.tableName) || spec.name,
+    tableName: options.tableName || spec.name,
   };
 
   if (spec.indexes.unique) {
@@ -93,10 +100,12 @@ export function buildSequelizeModel<T extends SpecType>(
   }
 
   return {
+    afterDatabaseCreationHook: options.afterDatabaseCreationHook,
+    afterDatabaseDestructionHook: options.afterDatabaseDestructionHook,
+    creationHook: options.creationHook,
+    destructionHook: options.destructionHook,
     initialize,
     sequelizeModel: model,
-    tableCreationHook: options && options.tableCreationHook,
-    tableDestructionHook: options && options.tableDestructionHook,
   };
 }
 

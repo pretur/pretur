@@ -84,7 +84,7 @@ export interface UpdateSyncInterceptor<T extends SpecType> {
 
 export interface RemoveSyncInterceptor<T extends SpecType> {
   (
-    rtemove: (target: RemoveMutateRequest<T>) => Promise<void>,
+    remove: (target: RemoveMutateRequest<T>) => Promise<void>,
     transaction: Transaction,
     item: RemoveMutateRequest<T>,
     rip: ResultItemAppender,

@@ -4,7 +4,12 @@ import { Resolver, UnitializedResolver } from './resolver';
 import { Synchronizer, UnitializedSynchronizer } from './synchronizer';
 import { Pool } from './pool';
 import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
-import { TableCreationHook, TableDestructionHook } from './buildDatabase';
+import {
+  TableCreationHook,
+  TableDestructionHook,
+  DatabaseAfterCreationHook,
+  DatabaseAfterDestructionHook,
+} from './buildDatabase';
 
 export type AliasModelMap<T extends SpecType> = {
   [P in keyof T['records'] | keyof T['sets']]: string;
@@ -19,8 +24,10 @@ export interface ModelDescriptor<T extends SpecType> {
   name: string;
   primaryKeys: (keyof T['fields'])[];
   sequelizeModel?: SequelizeModel<T>;
-  tableCreationHook?: TableCreationHook<T>;
-  tableDestructionHook?: TableDestructionHook<T>;
+  creationHook?: TableCreationHook;
+  destructionHook?: TableDestructionHook;
+  afterDatabaseCreationHook?: DatabaseAfterCreationHook;
+  afterDatabaseDestructionHook?: DatabaseAfterDestructionHook;
   resolver?: Resolver<T>;
   synchronizer?: Synchronizer<T>;
   aliasModelMap: AliasModelMap<T>;
@@ -50,8 +57,10 @@ export function buildModelDescriptor<T extends SpecType>(
   const resolver = options.resolver && options.resolver.resolver;
   const synchronizer = options.synchronizer && options.synchronizer.synchronizer;
   const sequelizeModel = options.sequelizeModel && options.sequelizeModel.sequelizeModel;
-  const createHook = options.sequelizeModel && options.sequelizeModel.tableCreationHook;
-  const destroyHook = options.sequelizeModel && options.sequelizeModel.tableDestructionHook;
+  const createHook = options.sequelizeModel && options.sequelizeModel.creationHook;
+  const destroyHook = options.sequelizeModel && options.sequelizeModel.destructionHook;
+  const adbCreate = options.sequelizeModel && options.sequelizeModel.afterDatabaseCreationHook;
+  const adbDestoy = options.sequelizeModel && options.sequelizeModel.afterDatabaseDestructionHook;
 
   const aliasModelMap = spec.relations.reduce(
     (m, r) => {
@@ -102,10 +111,14 @@ export function buildModelDescriptor<T extends SpecType>(
   }
 
   return {
+    afterDatabaseCreationHook: adbCreate,
+    afterDatabaseDestructionHook: adbDestoy,
     aliasKeyMap,
     aliasModelMap,
     allowedAttributes,
+    creationHook: createHook,
     defaultOrder,
+    destructionHook: destroyHook,
     initialize,
     mutableAttributes,
     name: spec.name,
@@ -115,7 +128,5 @@ export function buildModelDescriptor<T extends SpecType>(
     sequelizeModel,
     spec,
     synchronizer,
-    tableCreationHook: createHook,
-    tableDestructionHook: destroyHook,
   };
 }
