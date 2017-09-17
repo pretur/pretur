@@ -81,7 +81,7 @@ export function buildResolver<T extends SpecType>(
     if (query && query.byId) {
       const byIdWhere = <Sequelize.WhereOptions<Model<T>>>{};
 
-      for (const pk of pool.models[spec.name].primaryKeys) {
+      for (const pk of (<(keyof T['fields'])[]>pool.models[spec.name].primaryKeys)) {
         if (query.byId[pk] === undefined) {
           throw new Error(`byId must contain every primary key. ${pk} is missing`);
         }
@@ -200,7 +200,7 @@ function getAliasFilters<T extends SpecType>(
 
   for (const field of model.allowedAttributes) {
     if (filter[field] !== undefined) {
-      where[`$${path.join('.')}.${field}$`] = filter[field];
+      (<any>where)[`$${path.join('.')}.${field}$`] = filter[field];
     }
   }
   const aliases = Object.keys(model.aliasKeyMap);
@@ -261,7 +261,7 @@ function transformFilter<T extends SpecType>(
 
   for (const field of model.allowedAttributes) {
     if (filter[field] !== undefined) {
-      where[field] = filter[field];
+      (<any>where)[field] = filter[field];
     }
   }
 

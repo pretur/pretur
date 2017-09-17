@@ -193,7 +193,7 @@ async function defaultInsertBehavior<T extends SpecType>(
           model: masterModel.name,
           requestId: item.requestId,
           type: 'mutate',
-          [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => data[<keyof T>master.key] = id,
+          [INJECTED_MASTER_RESOLUTION_KEY]: (id: any) => data[<keyof Model<T>>master.key] = id,
         },
         rip,
         context,
@@ -285,7 +285,7 @@ async function defaultInsertBehavior<T extends SpecType>(
   }
 
   if (model.primaryKeys.length > 0) {
-    return pick<Partial<T>, Partial<T>>(newData, model.primaryKeys);
+    return pick<Partial<Model<T>>, Partial<Model<T>>>(newData, model.primaryKeys);
   }
 
   return;

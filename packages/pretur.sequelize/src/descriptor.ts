@@ -2,8 +2,9 @@ import { intersection } from 'lodash';
 import { Spec, SpecType } from 'pretur.spec';
 import { Resolver, UnitializedResolver } from './resolver';
 import { Synchronizer, UnitializedSynchronizer } from './synchronizer';
-import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
 import { Pool } from './pool';
+import { UninitializedSequelizeModel, SequelizeModel } from './sequelizeModel';
+import { TableCreationHook, TableDestructionHook } from './buildDatabase';
 
 export type AliasModelMap<T extends SpecType> = {
   [P in keyof T['records'] | keyof T['sets']]: string;
@@ -18,6 +19,8 @@ export interface ModelDescriptor<T extends SpecType> {
   name: string;
   primaryKeys: (keyof T['fields'])[];
   sequelizeModel?: SequelizeModel<T>;
+  tableCreationHook?: TableCreationHook<T>;
+  tableDestructionHook?: TableDestructionHook<T>;
   resolver?: Resolver<T>;
   synchronizer?: Synchronizer<T>;
   aliasModelMap: AliasModelMap<T>;
@@ -40,16 +43,15 @@ export interface BuildModelDescriptorOptions<T extends SpecType> {
 
 export function buildModelDescriptor<T extends SpecType>(
   spec: Spec<T>,
-  options?: BuildModelDescriptorOptions<T>,
+  options: BuildModelDescriptorOptions<T> = {},
 ): ModelDescriptor<T> {
   const primaryKeys = spec.attributes.filter(a => a.primary).map(a => a.name);
 
-  const sequelizeModel
-    = (options && options.sequelizeModel && options.sequelizeModel.sequelizeModel) || undefined;
-  const resolver
-    = (options && options.resolver && options.resolver.resolver) || undefined;
-  const synchronizer
-    = (options && options.synchronizer && options.synchronizer.synchronizer) || undefined;
+  const resolver = options.resolver && options.resolver.resolver;
+  const synchronizer = options.synchronizer && options.synchronizer.synchronizer;
+  const sequelizeModel = options.sequelizeModel && options.sequelizeModel.sequelizeModel;
+  const createHook = options.sequelizeModel && options.sequelizeModel.tableCreationHook;
+  const destroyHook = options.sequelizeModel && options.sequelizeModel.tableDestructionHook;
 
   const aliasModelMap = spec.relations.reduce(
     (m, r) => {
@@ -67,15 +69,14 @@ export function buildModelDescriptor<T extends SpecType>(
     <AliasKeyMap<T>>{},
   );
 
-  const allowedAttributes
-    = (options && options.allowedAttributes) || spec.attributes.map(a => a.name);
+  const allowedAttributes = options.allowedAttributes || spec.attributes.map(a => a.name);
 
-  const mutableAttributes = (options && options.allowedMutableAttributes)
-    || spec.attributes.filter(a => a.mutable).map(a => a.name);
+  const mutableAttributes = options.allowedMutableAttributes ||
+    spec.attributes.filter(a => a.mutable).map(a => a.name);
 
-  const defaultOrder = (options && options.defaultOrder)
-    || (primaryKeys[0] && [primaryKeys[0], 'ASC'])
-    || undefined;
+  const defaultOrder = options.defaultOrder ||
+    (primaryKeys[0] && [primaryKeys[0], 'ASC']) ||
+    undefined;
 
   function sanitizeAttributes(
     attributes?: (keyof T['fields'])[] | keyof T['fields'],
@@ -89,13 +90,13 @@ export function buildModelDescriptor<T extends SpecType>(
   }
 
   function initialize(pool: Pool) {
-    if (options && options.sequelizeModel) {
+    if (options.sequelizeModel) {
       options.sequelizeModel.initialize(pool);
     }
-    if (options && options.resolver) {
+    if (options.resolver) {
       options.resolver.initialize(pool);
     }
-    if (options && options.synchronizer) {
+    if (options.synchronizer) {
       options.synchronizer.initialize(pool);
     }
   }
@@ -114,5 +115,7 @@ export function buildModelDescriptor<T extends SpecType>(
     sequelizeModel,
     spec,
     synchronizer,
+    tableCreationHook: createHook,
+    tableDestructionHook: destroyHook,
   };
 }
