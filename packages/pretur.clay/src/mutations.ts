@@ -114,10 +114,10 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
       return items;
     }
 
-    const data: Partial<Model<T>> = {};
+    const data: any = {};
     const spec = specPool[model];
 
-    const nonAutoIncrementedOwnedAttributes = spec.attributes
+    const nonAutoIncrementedOwnedAttributes = <(keyof T['fields'])[]>spec.attributes
       .filter(attrib => !attrib.autoIncrement && collide(attrib.scope || [], scope))
       .map(attrib => attrib.name);
 
@@ -155,7 +155,7 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
 
     const primaries = spec.attributes.filter(attrib => attrib.primary).map(attrib => attrib.name);
 
-    const data: Partial<T['fields']> = {};
+    const data: any = {};
     const attributes: (keyof T['fields'])[] = [];
 
     for (const primary of primaries) {
@@ -185,7 +185,7 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
 
     const primaries = spec.attributes.filter(attrib => attrib.primary).map(attrib => attrib.name);
 
-    const identifiers: Partial<T['fields']> = {};
+    const identifiers: any = {};
 
     for (const primary of primaries) {
       identifiers[primary] = toPlain(record.fields[primary]);

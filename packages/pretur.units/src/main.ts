@@ -61,11 +61,11 @@ export default class Units<U extends string> {
 
     // DFS visit
     while (stack.length > 0) {
-      const current = stack.pop()!;
+      const current = <U>stack.pop()!;
       if (!visited[current]) {
         visited[current] = true;
 
-        for (const next of Object.keys(this.matrix[current])) {
+        for (const next of <U[]>Object.keys(this.matrix[current])) {
           stack.push(next);
 
           // Populate the matrix if possible
@@ -90,7 +90,7 @@ export default class Units<U extends string> {
 
     // None of the visited units can reach destination
     // if source has no path to destination.
-    for (const key of Object.keys(visited)) {
+    for (const key of <U[]>Object.keys(visited)) {
       this.matrix[key][destination] = Infinity;
       this.matrix[destination][key] = Infinity;
     }

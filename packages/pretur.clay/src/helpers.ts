@@ -164,7 +164,7 @@ export function buildHelpersFactory(
         return loadIntoSet(pool, spec, requester, queryOrDispatch, clay, query);
       }
 
-      return loadSimple(spec, requester, queryOrDispatch);
+      return loadSimple(spec, requester, <Partial<Query<T>>>queryOrDispatch);
     }
 
     async function select(

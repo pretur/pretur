@@ -76,7 +76,9 @@ function format<T>(
   }
 
   if (bundleOrKey && typeof bundleOrKey === 'object') {
-    const targetKey = definition[bundleOrKey.key] || (fallback && fallback[bundleOrKey.key]);
+    const targetKey = (<any>definition)[bundleOrKey.key] ||
+      (fallback && (<any>fallback)[bundleOrKey.key]);
+
     if (process.env.NODE_ENV !== 'production' && !targetKey) {
       throw new TypeError('provided bundle key does not exist in definition or the fallback');
     }
@@ -84,7 +86,9 @@ function format<T>(
   }
 
   if (typeof bundleOrKey === 'string') {
-    const targetKey = definition[bundleOrKey] || (fallback && fallback[bundleOrKey]);
+    const targetKey = (<any>definition)[bundleOrKey] ||
+      (fallback && (<any>fallback)[bundleOrKey]);
+
     if (process.env.NODE_ENV !== 'production' && !targetKey) {
       throw new TypeError('provided key does not exist in definition or the fallback');
     }
@@ -103,7 +107,7 @@ export function internationalize<T>(
   const keys = <Keys<T>>{};
 
   for (const key of Object.keys(mainDefinition)) {
-    keys[key] = key;
+    (<any>keys)[key] = key;
   }
 
   function bundle<K extends keyof T>(key: K, data?: T[K]) {
