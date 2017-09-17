@@ -17,17 +17,17 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
-    "@types/mocha": "^2.2.42",
-    "@types/node": "^8.0.25",
+    "@types/mocha": "^2.2.43",
+    "@types/node": "^8.0.28",
     "@types/react-addons-test-utils": "^0.14.19",
-    "chai": "^4.1.1",
-    "lerna": "^2.1.1",
-    "mocha": "^3.5.0",
+    "chai": "^4.1.2",
+    "lerna": "^2.2.0",
+    "mocha": "^3.5.3",
     "react-addons-test-utils": "^15.6.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
     "tslint-eslint-rules": "^4.1.1",
     "tslint-microsoft-contrib": "^5.0.1",
-    "typescript": "^2.4.2"
+    "typescript": "^2.5.2"
   }
 }
