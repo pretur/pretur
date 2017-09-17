@@ -12,9 +12,24 @@ export interface TransactionLike {
   rollback(): Promise<void>;
 }
 
+export interface ResolveResult {
+  data: any[];
+  count: number;
+}
+
+export interface SyncResult {
+  errors: Bundle[];
+  generatedIds?: any;
+}
+
 export interface PoolLike<C> {
-  resolve(query: Query<EmptySpec>, context: C): Promise<{ data: any[], count?: number }>;
-  sync(transaction: any, item: MutateRequest, rip: any, context: C): Promise<any>;
+  resolve(
+    transaction: any,
+    model: string,
+    query: Query<EmptySpec>,
+    context: C,
+  ): Promise<ResolveResult>;
+  sync(transaction: any, item: MutateRequest, context: C): Promise<SyncResult>;
 }
 
 export interface ResponderOptions<C> {
@@ -41,13 +56,33 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
       switch (request.type) {
         case 'select':
           try {
-            if (!pool) {
-              throw new Error('select requests require pool to operate.');
+            if (!transact || !pool) {
+              throw new Error('select requests require transact and pool to operate.');
             }
-            const { data, count } = await pool.resolve(request.query, context);
-            responses.push({ count, data, requestId, type: 'select' });
+            const tr = await transact();
+            try {
+              const { data, count } = await pool.resolve(tr, request.model, request.query, context);
+              tr.commit();
+              responses.push({ errors: [], count, data, requestId, type: 'select' });
+            } catch (error) {
+
+              responses.push({
+                errors: [errorToBundle(error)],
+                count: 0,
+                data: [],
+                requestId,
+                type: 'select',
+              });
+              tr.rollback();
+            }
           } catch (error) {
-            responses.push({ errors: [errorToBundle(error)], requestId, type: 'select' });
+            responses.push({
+              count: 0,
+              data: [],
+              errors: [errorToBundle(error)],
+              requestId,
+              type: 'select',
+            });
           }
           break;
         case 'operate':
@@ -72,131 +107,93 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
               action: request.action,
               errors: [errorToBundle(error)],
               requestId,
-              transactionFailed: true,
               type: request.type,
             });
             break;
           }
 
-          let errors: Bundle[] | undefined;
-          let warnings: Bundle[] | undefined;
-          const rip = {
-            appendError(error: Bundle) {
-              if (!errors) {
-                errors = [];
-              }
-              errors.push(error);
-            },
-            appendWarning(warning: Bundle) {
-              if (!warnings) {
-                warnings = [];
-              }
-              warnings.push(warning);
-            },
-          };
-
           const transaction = await transact();
           try {
-            const generatedId = await pool.sync(transaction, request, rip, context);
-            if (errors && errors.length > 0) {
+            const { generatedIds, errors } = await pool.sync(transaction, request, context);
+            if (errors.length > 0) {
               await transaction.rollback();
               responses.push(<MutateResponse>{
                 action: request.action,
                 errors,
                 requestId,
-                transactionFailed: true,
                 type: request.type,
-                warnings,
               });
             } else {
               await transaction.commit();
               responses.push(<MutateResponse>{
                 action: request.action,
-                generatedId,
+                generatedIds,
                 requestId,
-                transactionFailed: false,
                 type: request.type,
-                warnings,
               });
             }
           } catch (error) {
             await transaction.rollback();
             responses.push(<MutateResponse>{
               action: request.action,
-              errors: errors ? [...errors, errorToBundle(error)] : [errorToBundle(error)],
+              errors: [errorToBundle(error)],
               requestId,
-              transactionFailed: true,
               type: request.type,
-              warnings,
             });
           }
           break;
         case 'batchMutate':
-          const batchResponse: BatchMutateResponse = { queue: [], requestId, type: request.type };
+          const batch: BatchMutateResponse = {
+            errors: [],
+            queue: [],
+            requestId,
+            type: request.type,
+          };
 
           if (!transact || !pool) {
             const e = [errorToBundle(new Error('mutate requests require both transact and pool.'))];
 
             for (const { action, requestId: id, type } of request.queue) {
-              batchResponse.queue.push(<MutateResponse>{ action, errors: e, requestId: id, type });
+              batch.queue.push(<MutateResponse>{ action, errors: e, requestId: id, type });
             }
 
-            responses.push({ ...batchResponse, errors: e });
+            responses.push({ ...batch, errors: e });
             break;
           }
 
           let failed = false;
+          let failReasons: Bundle[] = [];
           const batchTr = await transact();
           try {
-
             for (const reqItem of request.queue) {
+              const { action, type, requestId: itemId } = reqItem;
               if (!failed) {
-                const itemErrors: Bundle[] = [];
-                const itemWarnings: Bundle[] = [];
-                const itemRip = {
-                  appendError(error: Bundle) {
-                    itemErrors.push(error);
-                  },
-                  appendWarning(warning: Bundle) {
-                    itemWarnings.push(warning);
-                  },
-                };
                 try {
-                  const generatedId = await pool.sync(batchTr, reqItem, itemRip, context);
-                  if (itemErrors.length > 0) {
+                  const { generatedIds, errors } = await pool.sync(batchTr, reqItem, context);
+                  if (errors.length > 0) {
                     failed = true;
+                    failReasons = errors;
                     batchTr.rollback();
-                    batchResponse.queue.push(<MutateResponse>{
-                      action: reqItem.action,
-                      errors: itemErrors,
-                      requestId: reqItem.requestId,
-                      type: reqItem.type,
-                      warnings: itemWarnings,
-                    });
+                    batch.queue.push({ action, type, requestId: itemId, errors });
                   } else {
-                    batchResponse.queue.push(<MutateResponse>{
-                      action: reqItem.action,
-                      generatedId,
-                      requestId: reqItem.requestId,
-                      type: reqItem.type,
-                      warnings: itemWarnings,
+                    batch.queue.push({
+                      action,
+                      errors,
+                      generatedIds,
+                      requestId: itemId,
+                      type,
                     });
                   }
                 } catch (error) {
                   failed = true;
+                  failReasons = [errorToBundle(error)];
                   batchTr.rollback();
-                  batchResponse.queue.push(<MutateResponse>{
-                    action: reqItem.action,
-                    errors: [...itemErrors, errorToBundle(error)],
-                    requestId: reqItem.requestId,
-                    transactionFailed: true,
-                    type: reqItem.type,
-                    warnings: itemWarnings,
-                  });
+                  batch.queue.push({ action, errors: failReasons, requestId: itemId, type });
                 }
               } else {
-                batchResponse.queue.push(<MutateResponse>{
+                batch.queue.push({
                   action: reqItem.action,
+                  errors: failReasons,
                   requestId: reqItem.requestId,
                   type: reqItem.type,
                 });
@@ -205,7 +202,7 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
 
           } catch (error) {
             await batchTr.rollback();
-            for (const resItem of batchResponse.queue) {
+            for (const resItem of batch.queue) {
               resItem.errors = resItem.errors
                 ? [...resItem.errors, errorToBundle(error)]
                 : [errorToBundle(error)];
@@ -213,15 +210,11 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
             failed = true;
           }
 
-          if (failed) {
-            for (const resItem of batchResponse.queue) {
-              resItem.transactionFailed = true;
-            }
-          } else {
+          if (!failed) {
             await batchTr.commit();
           }
 
-          responses.push(batchResponse);
+          responses.push(batch);
           break;
         case 'validate':
           try {
@@ -235,7 +228,6 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
               name: request.name,
               requestId,
               type: 'validate',
-              validationError: undefined,
             });
           }
           break;

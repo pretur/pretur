@@ -27,7 +27,6 @@ export interface SubQuery<T extends SpecType> {
 }
 
 export interface Query<T extends SpecType> {
-  model: T['name'];
   byId?: Partial<T['fields']>;
   count?: boolean;
   extra?: any;

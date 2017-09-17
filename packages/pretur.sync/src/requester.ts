@@ -1,35 +1,24 @@
-import { SpecType, Model } from 'pretur.spec';
+import { SpecType, Model, AnySpec } from 'pretur.spec';
+import { Bundle } from 'pretur.i18n';
 import { debounce, find, compact } from 'lodash';
 import { Query } from './query';
-import { fetch, FetchResponse } from './fetch';
+import { fetch, FetchStatus } from './fetch';
 import {
   SelectRequest,
   OperateRequest,
-  InsertMutateRequest,
-  UpdateMutateRequest,
-  RemoveMutateRequest,
   MutateRequest,
   ValidateRequest,
   BatchMutateRequest,
   Request,
 } from './request';
+import { SelectResult, OperateResult, MutateResult, ValidateResult } from './result';
 import {
-  SelectResult,
-  OperateResult,
-  InsertMutateResult,
-  UpdateMutateResult,
-  RemoveMutateResult,
-  ValidateResult,
-} from './result';
-import {
+  Response,
   SelectResponse,
   OperateResponse,
-  InsertMutateResponse,
-  UpdateMutateResponse,
-  RemoveMutateResponse,
+  MutateResponse,
   ValidateResponse,
   BatchMutateResponse,
-  Response,
 } from './response';
 
 export type InsertOptions<T extends SpecType> = {
@@ -49,24 +38,24 @@ export type RemoveOptions<T extends SpecType> = {
 };
 
 export interface Requester {
-  select<T extends SpecType>(query: Query<T>): Promise<SelectResult<T>>;
+  select<T extends SpecType>(model: T['name'], query: Query<T>): Promise<SelectResult<T>>;
   operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>>;
-  insert<T extends SpecType>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
+  insert<T extends SpecType>(options: InsertOptions<T>): Promise<MutateResult<T>>;
   insert<T extends SpecType>(
     model: T['name'],
     data: Partial<Model<T>>,
-  ): Promise<InsertMutateResult<T>>;
-  update<T extends SpecType>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
+  ): Promise<MutateResult<T>>;
+  update<T extends SpecType>(options: UpdateOptions<T>): Promise<MutateResult>;
   update<T extends SpecType>(
     model: T['name'],
     attributes: (keyof T['fields'])[],
     data: Partial<T['fields']>,
-  ): Promise<UpdateMutateResult>;
-  remove<T extends SpecType>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
+  ): Promise<MutateResult>;
+  remove<T extends SpecType>(options: RemoveOptions<T>): Promise<MutateResult>;
   remove<T extends SpecType>(
     model: T['name'],
     identifiers: Partial<T['fields']>,
-  ): Promise<RemoveMutateResult>;
+  ): Promise<MutateResult>;
   validate<T>(name: string, data: T): Promise<ValidateResult>;
   batchMutateStart(): void;
   batchMutateEnd(): void;
@@ -74,42 +63,41 @@ export interface Requester {
   cancel(): void;
 }
 
-interface RequestQueueItem {
+interface RequestQueueItem<T extends Response> {
   request: Request;
-  orchestrator?: string;
-  resolve<T>(result: FetchResponse<T>): void;
-  reject(error: any): void;
+  resolve(result: T): void;
   cancel(): void;
 }
 
-interface BatchableRequestQueueItem {
-  request: MutateRequest<any>;
-  resolve<T>(result: FetchResponse<T>): void;
-  reject(error: any): void;
+interface BatchableRequestQueueItem<T extends SpecType> {
+  request: MutateRequest<T>;
+  resolve(result: MutateResponse<T>): void;
   cancel(): void;
 }
 
 interface BatchRequestMetadata {
-  queue: BatchableRequestQueueItem[];
+  queue: BatchableRequestQueueItem<AnySpec>[];
   requestId: number;
 }
 
-const unknownErrorBase = {
-  cancelled: true,
-  ok: false,
-  status: 0,
-  statusText: 'UNKNOWN_ERROR',
-};
+export interface BuildRequesterOptions {
+  wait?: number;
+  maxWait?: number;
+  cancelError: (request: Request) => Bundle[];
+  networkError: (status: FetchStatus, error?: any) => Bundle[];
+}
 
-export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Requester {
-  let _uniqueId = 0;
+export function buildRequester(endPoint: string, options: BuildRequesterOptions): Requester {
+  let uid = 0;
   function uniqueId() {
-    return ++_uniqueId;
+    return ++uid;
   }
 
-  let currentBatch: BatchRequestMetadata | undefined = undefined;
+  const { wait = 200, maxWait = 2000, cancelError, networkError } = options;
 
-  let queue: RequestQueueItem[] = [];
+  let currBatch: BatchRequestMetadata | undefined = undefined;
+
+  let queue: RequestQueueItem<Response>[] = [];
   let requestRunning = false;
   let congested = false;
 
@@ -133,16 +121,27 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
         url: endPoint,
       });
       for (const item of pendingQueue) {
-        item.resolve({
-          body: find(response.body, res => res.requestId === item.request.requestId),
-          ok: response.ok,
-          status: response.status,
-          statusText: response.statusText,
-        });
+        const target = find(response.body, res => res.requestId === item.request.requestId);
+        if (!target) {
+          item.resolve(<Response>{
+            errors: networkError(
+              { ok: false, code: 0, text: 'UNKNOWN' },
+              new Error(`Request's response was not found.`),
+            ),
+            requestId: item.request.requestId,
+            type: item.request.type,
+          });
+        } else {
+          item.resolve(target);
+        }
       }
     } catch (error) {
       for (const item of pendingQueue) {
-        item.reject(error);
+        item.resolve(<Response>{
+          errors: networkError({ ok: false, code: 0, text: 'UNKNOWN' }, error),
+          requestId: item.request.requestId,
+          type: item.request.type,
+        });
       }
     } finally {
       requestRunning = false;
@@ -153,276 +152,164 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     }
   }
 
-  function select<T extends SpecType>(query: Query<T>): Promise<SelectResult<T>> {
-    return new Promise<SelectResult<T>>((resolve, reject) => {
+  function select<T extends SpecType>(model: T['name'], query: Query<T>): Promise<SelectResult<T>> {
+    return new Promise<SelectResult<T>>(resolve => {
       const requestId = uniqueId();
-      const request = <RequestQueueItem>{
-        reject,
-        request: <SelectRequest<T>>{
-          query,
-          requestId,
-          type: 'select',
-        },
-        resolve(response: FetchResponse<SelectResponse<T>>) {
-          resolve({
-            cancelled: false,
-            count: response.body.count,
-            data: response.body.data,
-            errors: response.body.errors,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            type: 'select',
-            warnings: response.body.warnings,
-          });
-        },
-        cancel() {
-          resolve({
-            ...unknownErrorBase,
-            type: 'select',
-          });
-        },
+      const request: SelectRequest<T> = { model, query, requestId, type: 'select' };
+
+      const item: RequestQueueItem<SelectResponse<T>> = {
+        request,
+        resolve: ({ requestId: _, ...response }) => resolve(response),
+        cancel: () => resolve({ count: 0, data: [], errors: cancelError(request), type: 'select' }),
       };
-      queue.push(request);
+
+      queue.push(item);
       debouncedSend();
     });
   }
 
   function operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>> {
-    return new Promise<OperateResult<TResult>>((resolve, reject) => {
+    return new Promise<OperateResult<TResult>>(resolve => {
       const requestId = uniqueId();
-      const request = <RequestQueueItem>{
-        reject,
-        request: <OperateRequest<TData>>{
-          data,
-          name,
-          requestId,
-          type: 'operate',
-        },
-        resolve(response: FetchResponse<OperateResponse<TResult>>) {
-          resolve({
-            cancelled: false,
-            data: response.body.data,
-            errors: response.body.errors,
-            name: response.body.name,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            type: 'operate',
-            warnings: response.body.warnings,
-          });
-        },
+      const request: OperateRequest<TData> = { data, name, requestId, type: 'operate' };
+
+      const item: RequestQueueItem<OperateResponse<TResult>> = {
+        request,
+        resolve: ({ requestId: _, ...response }) => resolve(response),
         cancel() {
-          resolve({
-            ...unknownErrorBase,
-            name,
-            type: 'operate',
-          });
+          resolve({ name, errors: cancelError(request), type: 'operate' });
         },
       };
-      queue.push(request);
+
+      queue.push(item);
       debouncedSend();
     });
   }
 
-  function insert<T extends SpecType>(options: InsertOptions<T>): Promise<InsertMutateResult<T>>;
+  function insert<T extends SpecType>(options: InsertOptions<T>): Promise<MutateResult<T>>;
   function insert<T extends SpecType>(
     model: T['name'],
     data: Partial<Model<T>>,
-  ): Promise<InsertMutateResult<T>>;
+  ): Promise<MutateResult<T>>;
   function insert<T extends SpecType>(
     model: T['name'] | InsertOptions<T>,
     data?: Partial<Model<T>>,
-  ): Promise<InsertMutateResult<T>> {
-    return new Promise<InsertMutateResult<T>>((resolve, reject) => {
+  ): Promise<MutateResult<T>> {
+    return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
-      const request = <BatchableRequestQueueItem>{
-        reject,
-        request: <InsertMutateRequest<T>>{
-          action: 'insert',
-          data: typeof model === 'string' ? data : model.data,
-          model: typeof model === 'string' ? model : model.model,
-          requestId,
-          type: 'mutate',
-        },
-        resolve(response: FetchResponse<InsertMutateResponse<T>>) {
-          resolve({
-            action: 'insert',
-            cancelled: false,
-            errors: response.body.errors,
-            generatedId: response.body.generatedId,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            transactionFailed: response.body.transactionFailed,
-            type: 'mutate',
-            warnings: response.body.warnings,
-          });
-        },
-        cancel() {
-          resolve({
-            ...unknownErrorBase,
-            action: 'insert',
-            transactionFailed: false,
-            type: 'mutate',
-          });
-        },
+      const request: MutateRequest<T> = {
+        action: 'insert',
+        data: typeof model === 'string' ? data || {} : model.data,
+        model: typeof model === 'string' ? model : model.model,
+        requestId,
+        type: 'mutate',
       };
-      if (currentBatch) {
-        currentBatch.queue.push(request);
+
+      const item: BatchableRequestQueueItem<T> = {
+        request,
+        resolve: ({ requestId: _, ...response }) => resolve(response),
+        cancel: () => resolve({ action: 'insert', errors: cancelError(request), type: 'mutate' }),
+      };
+
+      if (currBatch) {
+        currBatch.queue.push(item);
       } else {
-        queue.push(request);
+        queue.push(item);
         debouncedSend();
       }
     });
   }
 
-  function update<T extends SpecType>(options: UpdateOptions<T>): Promise<UpdateMutateResult>;
+  function update<T extends SpecType>(options: UpdateOptions<T>): Promise<MutateResult<T>>;
   function update<T extends SpecType>(
     model: T['name'],
     attributes: (keyof T['fields'])[],
     data: Partial<T['fields']>,
-  ): Promise<UpdateMutateResult>;
+  ): Promise<MutateResult<T>>;
   function update<T extends SpecType>(
     model: T['name'] | UpdateOptions<T>,
     attributes?: (keyof T['fields'])[],
     data?: Partial<T['fields']>,
-  ): Promise<UpdateMutateResult> {
-    return new Promise<UpdateMutateResult>((resolve, reject) => {
+  ): Promise<MutateResult<T>> {
+    return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
-      const request = <BatchableRequestQueueItem>{
-        reject,
-        request: <UpdateMutateRequest<T>>{
-          action: 'update',
-          attributes: typeof model === 'string' ? attributes : model.attributes,
-          data: typeof model === 'string' ? data : model.data,
-          model: typeof model === 'string' ? model : model.model,
-          requestId,
-          type: 'mutate',
-        },
-        resolve(response: FetchResponse<UpdateMutateResponse>) {
-          resolve({
-            action: 'update',
-            cancelled: false,
-            errors: response.body.errors,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            transactionFailed: response.body.transactionFailed,
-            type: 'mutate',
-            warnings: response.body.warnings,
-          });
-        },
-        cancel() {
-          resolve({
-            ...unknownErrorBase,
-            action: 'update',
-            transactionFailed: false,
-            type: 'mutate',
-          });
-        },
+      const request: MutateRequest<T> = {
+        action: 'update',
+        attributes: typeof model === 'string' ? attributes || [] : model.attributes,
+        data: typeof model === 'string' ? data || {} : model.data,
+        model: typeof model === 'string' ? model : model.model,
+        requestId,
+        type: 'mutate',
       };
-      if (currentBatch) {
-        currentBatch.queue.push(request);
+
+      const item: BatchableRequestQueueItem<T> = {
+        request,
+        resolve: ({ requestId: _, ...response }) => resolve(response),
+        cancel: () => resolve({ action: 'update', errors: cancelError(request), type: 'mutate' }),
+      };
+
+      if (currBatch) {
+        currBatch.queue.push(item);
       } else {
-        queue.push(request);
+        queue.push(item);
         debouncedSend();
       }
     });
   }
 
-  function remove<T extends SpecType>(options: RemoveOptions<T>): Promise<RemoveMutateResult>;
+  function remove<T extends SpecType>(options: RemoveOptions<T>): Promise<MutateResult<T>>;
   function remove<T extends SpecType>(
     model: T['name'],
     identifiers: Partial<T['fields']>,
-  ): Promise<RemoveMutateResult>;
+  ): Promise<MutateResult<T>>;
   function remove<T extends SpecType>(
     model: T['name'] | RemoveOptions<T>,
     identifiers?: Partial<T['fields']>,
-  ): Promise<RemoveMutateResult> {
-    return new Promise<RemoveMutateResult>((resolve, reject) => {
+  ): Promise<MutateResult<T>> {
+    return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
-      const request = <BatchableRequestQueueItem>{
-        reject,
-        request: <RemoveMutateRequest<T>>{
-          action: 'remove',
-          identifiers: typeof model === 'string' ? identifiers : model.identifiers,
-          model: typeof model === 'string' ? model : model.model,
-          requestId,
-          type: 'mutate',
-        },
-        resolve(response: FetchResponse<RemoveMutateResponse>) {
-          resolve({
-            action: 'remove',
-            cancelled: false,
-            errors: response.body.errors,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            transactionFailed: response.body.transactionFailed,
-            type: 'mutate',
-            warnings: response.body.warnings,
-          });
-        },
-        cancel() {
-          resolve({
-            ...unknownErrorBase,
-            action: 'remove',
-            transactionFailed: false,
-            type: 'mutate',
-          });
-        },
+      const request: MutateRequest<T> = {
+        action: 'remove',
+        identifiers: typeof model === 'string' ? identifiers || {} : model.identifiers,
+        model: typeof model === 'string' ? model : model.model,
+        requestId,
+        type: 'mutate',
       };
-      if (currentBatch) {
-        currentBatch.queue.push(request);
+
+      const item: BatchableRequestQueueItem<T> = {
+        request,
+        resolve: ({ requestId: _, ...response }) => resolve(response),
+        cancel: () => resolve({ action: 'remove', errors: cancelError(request), type: 'mutate' }),
+      };
+
+      if (currBatch) {
+        currBatch.queue.push(item);
       } else {
-        queue.push(request);
+        queue.push(item);
         debouncedSend();
       }
     });
   }
 
   function validate<T>(name: string, data: T): Promise<ValidateResult> {
-    return new Promise<ValidateResult>((resolve, reject) => {
+    return new Promise<ValidateResult>(resolve => {
       const requestId = uniqueId();
-      const request = <RequestQueueItem>{
-        reject,
-        request: <ValidateRequest<T>>{
-          data,
-          name,
-          requestId,
-          type: 'validate',
-        },
-        resolve(response: FetchResponse<ValidateResponse>) {
-          resolve({
-            cancelled: false,
-            errors: response.body.errors,
-            name: response.body.name,
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            type: 'validate',
-            validationError: response.body.validationError,
-            warnings: response.body.warnings,
-          });
-        },
-        cancel() {
-          resolve({
-            ...unknownErrorBase,
-            name,
-            type: 'validate',
-            validationError: undefined,
-          });
-        },
+      const request: ValidateRequest<T> = { data, name, requestId, type: 'validate' };
+
+      const item: RequestQueueItem<ValidateResponse> = {
+        request,
+        resolve: ({ requestId: _, ...response }) => resolve(response),
+        cancel: () => resolve({ name, errors: cancelError(request), type: 'validate' }),
       };
-      queue.push(request);
+
+      queue.push(item);
       debouncedSend();
     });
   }
 
   function batchMutateStart() {
-    if (!currentBatch) {
-      currentBatch = {
+    if (!currBatch) {
+      currBatch = {
         queue: [],
         requestId: uniqueId(),
       };
@@ -430,36 +317,46 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
   }
 
   function batchMutateEnd() {
-    if (currentBatch) {
-      const previousBatch = currentBatch;
-      currentBatch = undefined;
-      queue.push(<RequestQueueItem>{
-        request: <BatchMutateRequest>{
-          queue: previousBatch.queue.map(item => item.request),
-          requestId: previousBatch.requestId,
-          type: 'batchMutate',
-        },
-        resolve(response: FetchResponse<BatchMutateResponse>) {
-          for (const item of previousBatch.queue) {
-            item.resolve({
-              body: find(response.body.queue, res => res.requestId === item.request.requestId),
-              ok: response.ok,
-              status: response.status,
-              statusText: response.statusText,
-            });
-          }
-        },
-        reject(error: any) {
-          for (const item of previousBatch.queue) {
-            item.reject(error);
+    if (currBatch) {
+      const prevBatch = currBatch;
+      currBatch = undefined;
+
+      const request: BatchMutateRequest = {
+        queue: prevBatch.queue.map(i => i.request),
+        requestId: prevBatch.requestId,
+        type: 'batchMutate',
+      };
+
+      const item: RequestQueueItem<BatchMutateResponse> = {
+        request,
+        resolve({ queue: batchQueue, errors }) {
+          for (const { request: { action, requestId, type }, resolve } of prevBatch.queue) {
+            const target = find(batchQueue, res => res.requestId === request.requestId);
+            if (errors.length > 0) {
+              resolve({ action, errors, requestId, type });
+            } else if (!target) {
+              resolve({
+                action,
+                errors: networkError(
+                  { ok: false, code: 0, text: 'UNKNOWN' },
+                  new Error(`Request's response was not found.`),
+                ),
+                requestId,
+                type,
+              });
+            } else {
+              resolve(target);
+            }
           }
         },
         cancel() {
-          for (const item of previousBatch.queue) {
-            item.cancel();
+          for (const batchItem of prevBatch.queue) {
+            batchItem.cancel();
           }
         },
-      });
+      };
+
+      queue.push(item);
       debouncedSend();
     }
   }
@@ -469,14 +366,14 @@ export function buildRequester(endPoint: string, wait = 200, maxWait = 2000): Re
     debouncedSend.cancel();
     queue.forEach(item => item.cancel());
     queue = [];
-    if (currentBatch) {
-      currentBatch.queue.forEach(item => item.cancel());
-      currentBatch = undefined;
+    if (currBatch) {
+      currBatch.queue.forEach(item => item.cancel());
+      currBatch = undefined;
     }
   }
 
   function flush() {
-    if (currentBatch) {
+    if (currBatch) {
       batchMutateEnd();
     }
     if (!requestRunning) {

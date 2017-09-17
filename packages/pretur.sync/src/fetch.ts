@@ -7,11 +7,15 @@ export interface FetchOptions {
   json?: boolean;
 }
 
+export interface FetchStatus {
+  ok: boolean;
+  code: number;
+  text: string;
+}
+
 export interface FetchResponse<TBody> {
   body: TBody;
-  ok: boolean;
-  status: number;
-  statusText: string;
+  status: FetchStatus;
 }
 
 export async function fetch<TBody>(options: FetchOptions): Promise<FetchResponse<TBody>> {
@@ -30,8 +34,10 @@ export async function fetch<TBody>(options: FetchOptions): Promise<FetchResponse
 
   return <FetchResponse<TBody>>{
     body: data,
-    ok: response.ok,
-    status: response.status,
-    statusText: response.statusText,
+    status: {
+      code: response.status,
+      ok: response.ok,
+      text: response.statusText,
+    },
   };
 }

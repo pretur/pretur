@@ -5,13 +5,9 @@ export interface RequestBase {
   requestId: number;
 }
 
-export interface MutateRequestBase<T extends SpecType = EmptySpec> extends RequestBase {
-  type: 'mutate';
-  model: T['name'];
-}
-
 export interface SelectRequest<T extends SpecType = EmptySpec> extends RequestBase {
   type: 'select';
+  model: T['name'];
   query: Query<T>;
 }
 
@@ -27,19 +23,25 @@ export interface OperateRequest<T = any> extends RequestBase {
   data?: T;
 }
 
-export interface InsertMutateRequest<T extends SpecType = EmptySpec> extends MutateRequestBase<T> {
+export interface InsertMutateRequest<T extends SpecType = EmptySpec> extends RequestBase {
+  type: 'mutate';
   action: 'insert';
+  model: T['name'];
   data: Partial<Model<T>>;
 }
 
-export interface UpdateMutateRequest<T extends SpecType = EmptySpec> extends MutateRequestBase<T> {
+export interface UpdateMutateRequest<T extends SpecType = EmptySpec> extends RequestBase {
+  type: 'mutate';
   action: 'update';
+  model: T['name'];
   attributes: (keyof T['fields'])[];
   data: Partial<T['fields']>;
 }
 
-export interface RemoveMutateRequest<T extends SpecType = EmptySpec> extends MutateRequestBase<T> {
+export interface RemoveMutateRequest<T extends SpecType = EmptySpec> extends RequestBase {
+  type: 'mutate';
   action: 'remove';
+  model: T['name'];
   identifiers: Partial<T['fields']>;
 }
 
