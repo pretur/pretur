@@ -28,7 +28,6 @@ export type InsertOptions<T extends SpecType> = {
 
 export type UpdateOptions<T extends SpecType> = {
   data: Partial<T['fields']>;
-  attributes: (keyof T['fields'])[];
   model: T['name'];
 };
 
@@ -48,7 +47,6 @@ export interface Requester {
   update<T extends SpecType>(options: UpdateOptions<T>): Promise<MutateResult>;
   update<T extends SpecType>(
     model: T['name'],
-    attributes: (keyof T['fields'])[],
     data: Partial<T['fields']>,
   ): Promise<MutateResult>;
   remove<T extends SpecType>(options: RemoveOptions<T>): Promise<MutateResult>;
@@ -223,19 +221,16 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
   function update<T extends SpecType>(options: UpdateOptions<T>): Promise<MutateResult<T>>;
   function update<T extends SpecType>(
     model: T['name'],
-    attributes: (keyof T['fields'])[],
     data: Partial<T['fields']>,
   ): Promise<MutateResult<T>>;
   function update<T extends SpecType>(
     model: T['name'] | UpdateOptions<T>,
-    attributes?: (keyof T['fields'])[],
     data?: Partial<T['fields']>,
   ): Promise<MutateResult<T>> {
     return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
       const request: MutateRequest<T> = {
         action: 'update',
-        attributes: typeof model === 'string' ? attributes || [] : model.attributes,
         data: typeof model === 'string' ? data || {} : model.data,
         model: typeof model === 'string' ? model : model.model,
         requestId,

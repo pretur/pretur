@@ -38,30 +38,27 @@ export interface UnitializedSynchronizer<T extends SpecType> {
 
 export interface InsertSyncInterceptor<T extends SpecType> {
   (
-    insert: (target: InsertMutateRequest<T>) => Promise<SyncResult<T>>,
+    insert: (data: Partial<Model<T>>) => Promise<SyncResult<T>>,
     transaction: Transaction,
-    item: InsertMutateRequest<T>,
-    pool: ProviderPool,
+    data: Partial<Model<T>>,
     context: any,
   ): Promise<SyncResult<T>>;
 }
 
 export interface UpdateSyncInterceptor<T extends SpecType> {
   (
-    update: (target: UpdateMutateRequest<T>) => Promise<SyncResult<T>>,
+    update: (data: Partial<T['fields']>) => Promise<SyncResult<T>>,
     transaction: Transaction,
-    item: UpdateMutateRequest<T>,
-    pool: ProviderPool,
+    data: Partial<T['fields']>,
     context: any,
   ): Promise<SyncResult<T>>;
 }
 
 export interface RemoveSyncInterceptor<T extends SpecType> {
   (
-    remove: (target: RemoveMutateRequest<T>) => Promise<SyncResult<T>>,
+    remove: (identifiers: Partial<T['fields']>) => Promise<SyncResult<T>>,
     transaction: Transaction,
-    item: RemoveMutateRequest<T>,
-    pool: ProviderPool,
+    identifiers: Partial<T['fields']>,
     context: any,
   ): Promise<SyncResult<T>>;
 }
@@ -293,7 +290,7 @@ function insert<T extends SpecType>(
   );
 
   if (typeof interceptor === 'function') {
-    return interceptor(defaultInsert, transaction, item, pool, context);
+    return interceptor(defaultInsert, transaction, item, context);
   }
 
   return defaultInsert(item);
@@ -318,8 +315,11 @@ async function defaultUpdateBehavior<T extends SpecType>(
     throw new Error(`a primaryKey field must be provided to narrow the update`);
   }
 
+  const fields = buildUpdateAttributes(provider.metadata.mutableAttributes, Object.keys(item.data))
+    .filter(key => !provider.metadata.primaryKeys.includes(<any>key));
+
   await provider.database.update(<any>item.data, {
-    fields: buildUpdateAttributes(provider.metadata.mutableAttributes, item.attributes),
+    fields,
     transaction,
     where: <any>filters,
   });
@@ -348,7 +348,7 @@ function update<T extends SpecType>(
   );
 
   if (typeof interceptor === 'function') {
-    return interceptor(defaultUpdate, transaction, item, pool, context);
+    return interceptor(defaultUpdate, transaction, item, context);
   }
 
   return defaultUpdate(item);
@@ -404,10 +404,7 @@ function remove<T extends SpecType>(
   return defaultRemove(item);
 }
 
-export function buildUpdateAttributes(
-  allowedAttributes: string[],
-  updateAttributes: string[],
-): string[] {
+function buildUpdateAttributes(allowedAttributes: string[], updateAttributes: string[]): string[] {
   if (Array.isArray(allowedAttributes)) {
     return intersection(allowedAttributes, updateAttributes);
   }

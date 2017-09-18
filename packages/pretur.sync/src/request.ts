@@ -34,7 +34,6 @@ export interface UpdateMutateRequest<T extends SpecType = EmptySpec> extends Req
   type: 'mutate';
   action: 'update';
   model: T['name'];
-  attributes: (keyof T['fields'])[];
   data: Partial<T['fields']>;
 }
 

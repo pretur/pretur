@@ -2,9 +2,7 @@ import { intersection } from 'lodash';
 import { Spec, SpecType, Model } from 'pretur.spec';
 import { Query } from 'pretur.sync';
 import { Resolver, UnitializedResolver, ResolveResult } from './resolver';
-import {
-  Synchronizer, UnitializedSynchronizer, SyncResult, buildUpdateAttributes,
-} from './synchronizer';
+import { Synchronizer, UnitializedSynchronizer, SyncResult } from './synchronizer';
 import { ProviderPool, Transaction } from './pool';
 import { UninitializedDatabaseModel, DatabaseModel } from './database';
 import {
@@ -164,9 +162,6 @@ export function buildProvider<T extends SpecType>(
       throw new Error('No synchronizer available');
     }
 
-    const attributes = buildUpdateAttributes(allowedAttributes, Object.keys(data))
-      .filter(key => !primaryKeys.includes(<any>key));
-
     return synchronizer(
       transaction,
       {
@@ -174,7 +169,6 @@ export function buildProvider<T extends SpecType>(
         action: 'update',
         model: spec.name,
         requestId: 1,
-        attributes: <any>attributes,
         data,
       },
       context,

@@ -73,7 +73,7 @@ export interface MutationsExtractor {
   extractUpdateData<T extends SpecType>(
     record: Record<T>,
     model: T['name'],
-  ): { attributes: (keyof T['fields'])[], data: Partial<T['fields']> };
+  ): Partial<T['fields']>;
 
   extractRemoveIdentifiers<T extends SpecType>(
     record: Record<T>,
@@ -145,13 +145,12 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
   function extractUpdateData<T extends SpecType>(
     record: Record<T>,
     model: T['name'],
-  ): { attributes: (keyof T['fields'])[], data: Partial<T['fields']> } {
+  ): Partial<T['fields']> {
     const spec = specPool[model];
 
     const primaries = spec.attributes.filter(attrib => attrib.primary).map(attrib => attrib.name);
 
     const data: any = {};
-    const attributes: (keyof T['fields'])[] = [];
 
     for (const primary of primaries) {
       data[primary] = toPlain(record.fields[primary]);
@@ -164,12 +163,11 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
     for (const mutable of mutables) {
       const attribute = record.fields[mutable];
       if (attribute && attribute.modified) {
-        attributes.push(<keyof T['fields']>mutable);
         data[mutable] = toPlain(attribute);
       }
     }
 
-    return { attributes, data };
+    return data;
   }
 
   function extractRemoveIdentifiers<T extends SpecType>(
@@ -216,11 +214,11 @@ export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): Mutat
           type: 'mutate',
         });
       } else {
-        const updateData = extractUpdateData(clay, model);
-        if (updateData.attributes.length > 0) {
+        const updates = extractUpdateData(clay, model);
+        if (Object.keys(updates).length > 1) {
           requests.push(<MutateRequest<T>>{
             model,
-            ...updateData,
+            data: updates,
             action: 'update',
             type: 'mutate',
           });
