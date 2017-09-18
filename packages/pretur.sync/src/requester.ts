@@ -1,6 +1,6 @@
 import { SpecType, Model, AnySpec } from 'pretur.spec';
 import { Bundle } from 'pretur.i18n';
-import { debounce, find, compact } from 'lodash';
+import { debounce, compact } from 'lodash';
 import { Query } from './query';
 import { fetch, FetchStatus } from './fetch';
 import {
@@ -119,7 +119,7 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
         url: endPoint,
       });
       for (const item of pendingQueue) {
-        const target = find(response.body, res => res.requestId === item.request.requestId);
+        const target = response.body.find(res => res.requestId === item.request.requestId);
         if (!target) {
           item.resolve(<Response>{
             errors: networkError(
@@ -326,7 +326,7 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
         request,
         resolve({ queue: batchQueue, errors }) {
           for (const { request: { action, requestId, type }, resolve } of prevBatch.queue) {
-            const target = find(batchQueue, res => res.requestId === request.requestId);
+            const target = batchQueue.find(res => res.requestId === requestId);
             if (errors.length > 0) {
               resolve({ action, errors, requestId, type });
             } else if (!target) {
