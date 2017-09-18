@@ -109,7 +109,7 @@ export function buildResolver<T extends SpecType>(
         return { data: [], count: 0 };
       }
 
-      const single = [instance.get({ plain: true })];
+      const single = [<Model<T>>instance.get({ plain: true })];
 
       if (options && options.intercept) {
         const intercept = options.intercept;
@@ -137,7 +137,7 @@ export function buildResolver<T extends SpecType>(
     if (query && query.count) {
       const { rows, count } = await database.findAndCountAll({ ...findOptions, transaction });
 
-      const plain = rows.map(row => row.get({ plain: true }));
+      const plain = rows.map(row => <Model<T>>row.get({ plain: true }));
 
       if (options && options.intercept) {
         const intercept = options.intercept;
@@ -148,7 +148,7 @@ export function buildResolver<T extends SpecType>(
     }
 
     const raw = await database.findAll(findOptions);
-    const data = raw.map(row => row.get({ plain: true }));
+    const data = raw.map(row => <Model<T>>row.get({ plain: true }));
     if (options && options.intercept) {
       const intercept = options.intercept;
       return intercept(transaction, query, { data, count: 0 }, context);
