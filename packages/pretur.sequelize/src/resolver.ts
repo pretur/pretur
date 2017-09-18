@@ -147,7 +147,7 @@ export function buildResolver<T extends SpecType>(
       return { data: plain, count };
     }
 
-    const raw = await database.findAll(findOptions);
+    const raw = await database.findAll({ ...findOptions, transaction });
     const data = raw.map(row => <Model<T>>row.get({ plain: true }));
     if (options && options.intercept) {
       const intercept = options.intercept;
