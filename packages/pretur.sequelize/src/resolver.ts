@@ -8,7 +8,7 @@ import { ProviderPool, Transaction } from './pool';
 import { DatabaseModel } from './database';
 
 export interface ResolveResult<T extends SpecType> {
-  data: Partial<Model<T>>[];
+  data: Model<T>[];
   count: number;
 }
 

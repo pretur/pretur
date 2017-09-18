@@ -93,15 +93,15 @@ export interface Helpers<T extends SpecType> {
 
   querier(query?: Query<T>): Querier<T>;
 
-  load(query?: Partial<Query<T>>): Promise<{ data: Model<T>[], count: number }>;
-  load(dispatch: Dispatch, set: Set<T>, query?: Partial<Query<T>>): Promise<void>;
-  load(dispatch: Dispatch, record: Record<T>, query?: Partial<Query<T>>): Promise<boolean>;
+  load(query?: Query<T>): Promise<{ data: Model<T>[], count: number }>;
+  load(dispatch: Dispatch, set: Set<T>, query?: Query<T>): Promise<void>;
+  load(dispatch: Dispatch, record: Record<T>, query?: Query<T>): Promise<boolean>;
 
   select(
     dispatch: Dispatch,
     set: Set<T>,
     querier: Querier<T>,
-    extra?: Partial<Query<T>>,
+    extra?: Query<T>,
   ): Promise<{ data: Model<T>[], count: number }>;
 }
 
@@ -139,21 +139,17 @@ export function buildHelpersFactory(
       return buildGetMutations(spec, mutationGetter, clay);
     }
 
-    function querier(query?: Partial<Query<T>>): Querier<T> {
+    function querier(query: Query<T> = {}): Querier<T> {
       return buildQuerier(spec, query);
     }
 
-    async function load(query?: Partial<Query<T>>): Promise<{ data: Model<T>[], count: number }>;
-    async function load(dispatch: Dispatch, set: Set<T>, query?: Partial<Query<T>>): Promise<void>;
+    async function load(query?: Query<T>): Promise<{ data: Model<T>[], count: number }>;
+    async function load(dispatch: Dispatch, set: Set<T>, query?: Query<T>): Promise<void>;
+    async function load(dispatch: Dispatch, record: Record<T>, query?: Query<T>): Promise<boolean>;
     async function load(
-      dispatch: Dispatch,
-      record: Record<T>,
-      query?: Partial<Query<T>>,
-    ): Promise<boolean>;
-    async function load(
-      queryOrDispatch?: Partial<Query<T>> | Dispatch,
+      queryOrDispatch?: Query<T> | Dispatch,
       clay?: Set<T> | Record<T>,
-      query?: Partial<Query<T>>,
+      query?: Query<T>,
     ) {
       if (typeof queryOrDispatch === 'function' && clay) {
         if (clay instanceof Record) {
@@ -163,14 +159,14 @@ export function buildHelpersFactory(
         return loadIntoSet(pool, spec, requester, queryOrDispatch, clay, query);
       }
 
-      return loadSimple(spec, requester, <Partial<Query<T>>>queryOrDispatch);
+      return loadSimple(spec, requester, <Query<T>>queryOrDispatch);
     }
 
     async function select(
       dispatch: Dispatch,
       targetSet: Set<T>,
       targetQuerier: Querier<T>,
-      extra?: Partial<Query<T>>,
+      extra?: Query<T>,
     ) {
       return selectAndRefresh(pool, spec, requester, dispatch, targetSet, targetQuerier, extra);
     }

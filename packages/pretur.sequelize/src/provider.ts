@@ -42,7 +42,7 @@ export interface Provider<T extends SpecType> {
   name: string;
   metadata: ProviderMetadata<T>;
   database: DatabaseModel<T>;
-  select(tr: Transaction, query?: Partial<Query<T>>, context?: any): Promise<ResolveResult<T>>;
+  select(tr: Transaction, query?: Query<T>, context?: any): Promise<ResolveResult<T>>;
   insert(tr: Transaction, data: Partial<Model<T>>, context?: any): Promise<SyncResult<T>>;
   update(tr: Transaction, data: Partial<T['fields']>, context?: any): Promise<SyncResult<T>>;
   remove(tr: Transaction, data: Partial<T['fields']>, context?: any): Promise<SyncResult<T>>;
@@ -121,7 +121,7 @@ export function buildProvider<T extends SpecType>(
 
   async function select(
     transaction: Transaction,
-    query?: Partial<Query<T>>,
+    query?: Query<T>,
     context?: any,
   ): Promise<ResolveResult<T>> {
     if (!resolver) {

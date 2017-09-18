@@ -179,7 +179,7 @@ async function defaultInsertBehavior<T extends SpecType>(
     }
   }
 
-  const instance = await provider.database.create(data, {
+  const instance = await provider.database.create(<Model<T>>data, {
     fields: provider.metadata.allowedAttributes,
     transaction,
   });

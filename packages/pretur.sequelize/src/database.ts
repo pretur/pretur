@@ -8,11 +8,8 @@ import {
   DatabaseAfterDestructionHook,
 } from './buildDatabase';
 
-export type SequelizeInstance<T extends SpecType>
-  = Sequelize.Instance<Partial<Model<T>>> & Partial<Model<T>>;
-
-export type DatabaseModel<T extends SpecType>
-  = Sequelize.Model<SequelizeInstance<T>, Partial<Model<T>>>;
+export type DatabaseInstance<T extends SpecType> = Sequelize.Instance<Model<T>> & Model<T>;
+export type DatabaseModel<T extends SpecType> = Sequelize.Model<DatabaseInstance<T>, Model<T>>;
 
 export interface UninitializedDatabaseModel<T extends SpecType> {
   database: DatabaseModel<T>;
@@ -54,7 +51,7 @@ export function buildDatabaseModel<T extends SpecType>(
     };
   }
 
-  const defineOptions: Sequelize.DefineOptions<SequelizeInstance<T>> = {
+  const defineOptions: Sequelize.DefineOptions<DatabaseInstance<T>> = {
     tableName: options.tableName || spec.name,
   };
 

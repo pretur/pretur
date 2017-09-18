@@ -73,5 +73,5 @@ export const CLAY_SET_QUERY_EXTRA: TargetedActionDescriptor<SetExtraPayload>
 export const CLAY_SET_QUERIEIR_COUNT: TargetedActionDescriptor<number>
   = createTargetedActionDescriptor<number>('CLAY_SET_QUERIEIR_COUNT');
 
-export const CLAY_RESET_QUERIEIR: TargetedActionDescriptor<Partial<Query<any>>>
-  = createTargetedActionDescriptor<Partial<Query<any>>>('CLAY_RESET_QUERIEIR');
+export const CLAY_RESET_QUERIEIR: TargetedActionDescriptor<Query<any>>
+  = createTargetedActionDescriptor<Query<any>>('CLAY_RESET_QUERIEIR');
