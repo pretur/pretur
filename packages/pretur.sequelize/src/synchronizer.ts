@@ -281,19 +281,19 @@ function insert<T extends SpecType>(
     throw new Error(`model ${model} does not exist`);
   }
 
-  const defaultInsert = (target: InsertMutateRequest<T>) => defaultInsertBehavior(
-    pool,
-    provider,
-    transaction,
-    target,
-    context,
-  );
-
   if (typeof interceptor === 'function') {
-    return interceptor(defaultInsert, transaction, item, context);
+    const defaultInsert = (data: Partial<Model<T>>) => defaultInsertBehavior(
+      pool,
+      provider,
+      transaction,
+      { ...item, data },
+      context,
+    );
+
+    return interceptor(defaultInsert, transaction, item.data, context);
   }
 
-  return defaultInsert(item);
+  return defaultInsertBehavior(pool, provider, transaction, item, context);
 }
 
 async function defaultUpdateBehavior<T extends SpecType>(
@@ -341,17 +341,17 @@ function update<T extends SpecType>(
     throw new Error(`model ${model} does not exist`);
   }
 
-  const defaultUpdate = (target: UpdateMutateRequest<T>) => defaultUpdateBehavior(
-    provider,
-    transaction,
-    target,
-  );
-
   if (typeof interceptor === 'function') {
-    return interceptor(defaultUpdate, transaction, item, context);
+    const defaultUpdate = (data: Partial<T['fields']>) => defaultUpdateBehavior(
+      provider,
+      transaction,
+      { ...item, data },
+    );
+
+    return interceptor(defaultUpdate, transaction, item.data, context);
   }
 
-  return defaultUpdate(item);
+  return defaultUpdateBehavior(provider, transaction, item);
 }
 
 async function defaultRemoveBehavior<T extends SpecType>(
@@ -392,16 +392,16 @@ function remove<T extends SpecType>(
     throw new Error(`model ${model} does not exist`);
   }
 
-  const defaultRemove = (target: RemoveMutateRequest<T>) => defaultRemoveBehavior(
-    provider,
-    transaction,
-    target,
-  );
-
   if (typeof interceptor === 'function') {
-    return interceptor(defaultRemove, transaction, item, pool, context);
+    const defaultRemove = (identifiers: Partial<T['fields']>) => defaultRemoveBehavior(
+      provider,
+      transaction,
+      { ...item, identifiers },
+    );
+
+    return interceptor(defaultRemove, transaction, item.identifiers, context);
   }
-  return defaultRemove(item);
+  return defaultRemoveBehavior(provider, transaction, item);
 }
 
 function buildUpdateAttributes(allowedAttributes: string[], updateAttributes: string[]): string[] {
