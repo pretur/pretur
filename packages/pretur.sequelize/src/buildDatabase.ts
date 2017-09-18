@@ -2,29 +2,19 @@ import * as Sequelize from 'sequelize';
 import { ProviderPool } from './pool';
 
 export interface TableCreationHook {
-  (
-    create: () => Promise<void>,
-    database: Sequelize.Model<any, any>,
-    pool: ProviderPool,
-    context: any,
-  ): Promise<void>;
+  (create: () => Promise<void>, database: Sequelize.Model<any, any>, context: any): Promise<void>;
 }
 
 export interface TableDestructionHook {
-  (
-    destroy: () => Promise<void>,
-    database: Sequelize.Model<any, any>,
-    pool: ProviderPool,
-    context: any,
-  ): Promise<void>;
+  (destroy: () => Promise<void>, database: Sequelize.Model<any, any>, context: any): Promise<void>;
 }
 
 export interface DatabaseAfterCreationHook {
-  (database: Sequelize.Model<any, any>, pool: ProviderPool, context: any): Promise<void>;
+  (database: Sequelize.Model<any, any>, context: any): Promise<void>;
 }
 
 export interface DatabaseAfterDestructionHook {
-  (database: Sequelize.Model<any, any>, pool: ProviderPool, context: any): Promise<void>;
+  (database: Sequelize.Model<any, any>, context: any): Promise<void>;
 }
 
 export async function createDatabase(
@@ -44,7 +34,7 @@ export async function createDatabase(
     };
 
     if (provider && provider.metadata.creationHook) {
-      await provider.metadata.creationHook(create, database, pool, context);
+      await provider.metadata.creationHook(create, database, context);
     } else {
       await create();
     }
@@ -55,7 +45,7 @@ export async function createDatabase(
     const provider = pool.providers[name];
 
     if (provider && provider.metadata.afterDatabaseCreationHook) {
-      await provider.metadata.afterDatabaseCreationHook(database, pool, context);
+      await provider.metadata.afterDatabaseCreationHook(database, context);
     }
   }
 }
@@ -77,7 +67,7 @@ export async function destroyDatabase(
     };
 
     if (provider && provider.metadata.destructionHook) {
-      await provider.metadata.destructionHook(destroy, database, pool, context);
+      await provider.metadata.destructionHook(destroy, database, context);
     } else {
       await destroy();
     }
@@ -88,7 +78,7 @@ export async function destroyDatabase(
     const provider = pool.providers[name];
 
     if (provider && provider.metadata.afterDatabaseDestructionHook) {
-      await provider.metadata.afterDatabaseDestructionHook(database, pool, context);
+      await provider.metadata.afterDatabaseDestructionHook(database, context);
     }
   }
 }

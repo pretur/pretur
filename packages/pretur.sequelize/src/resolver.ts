@@ -1,4 +1,5 @@
 import * as Sequelize from 'sequelize';
+import { noop } from 'lodash';
 import {
   Query, SubQuery, QueryInclude, Filter, FilterFields, FilterNested, FilterCombinations,
 } from 'pretur.sync';
@@ -16,12 +17,7 @@ export interface Resolver<T extends SpecType> {
 }
 
 export interface CustomResolver<T extends SpecType> {
-  (
-    transaction: Transaction,
-    query: Query<T>,
-    pool: ProviderPool,
-    context?: any,
-  ): Promise<ResolveResult<T>>;
+  (transaction: Transaction, query: Query<T>, context: any): Promise<ResolveResult<T>>;
 }
 
 export interface UnitializedResolver<T extends SpecType> {
@@ -38,30 +34,20 @@ export interface ResolveInterceptor<T extends SpecType> {
   ): Promise<ResolveResult<T>>;
 }
 
+export interface QueryTransformer<T extends SpecType> {
+  (transaction: Transaction, query: Query<T>): Promise<Query<T>>;
+}
+
 export interface BuildResolverOptions<T extends SpecType> {
   intercept?: ResolveInterceptor<T>;
-  queryTransformer?(transaction: Transaction, query: Query<T>): Promise<Query<T>>;
+  queryTransformer?: QueryTransformer<T>;
 }
 
 export function buildCustomResolver<T extends SpecType>(
   _: Spec<T>,
   resolver: CustomResolver<T>,
 ): UnitializedResolver<T> {
-  let pool: ProviderPool = <any>undefined;
-
-  function wrappedResolver(
-    transaction: Transaction,
-    query: Query<T>,
-    context: any,
-  ): Promise<ResolveResult<T>> {
-    return resolver(transaction, query, pool, context);
-  }
-
-  function initialize(p: ProviderPool) {
-    pool = p;
-  }
-
-  return { resolver: wrappedResolver, initialize };
+  return { resolver, initialize: noop };
 }
 
 export function buildResolver<T extends SpecType>(
