@@ -1,11 +1,10 @@
 import * as Sequelize from 'sequelize';
-import { noop } from 'lodash';
 import {
   Query, SubQuery, QueryInclude, Filter, FilterFields, FilterNested, FilterCombinations,
 } from 'pretur.sync';
 import { Spec, SpecType, Model } from 'pretur.spec';
 import { ProviderPool, Transaction } from './pool';
-import { DatabaseModel } from './database';
+import { DatabaseModel, DatabaseInstance } from './database';
 
 export interface ResolveResult<T extends SpecType> {
   data: Model<T>[];
@@ -13,10 +12,6 @@ export interface ResolveResult<T extends SpecType> {
 }
 
 export interface Resolver<T extends SpecType> {
-  (transaction: Transaction, query: Query<T>, context?: any): Promise<ResolveResult<T>>;
-}
-
-export interface CustomResolver<T extends SpecType> {
   (transaction: Transaction, query: Query<T>, context: any): Promise<ResolveResult<T>>;
 }
 
@@ -27,134 +22,33 @@ export interface UnitializedResolver<T extends SpecType> {
 
 export interface ResolveInterceptor<T extends SpecType> {
   (
+    resolve: (query: Query<T>) => Promise<ResolveResult<T>>,
     transaction: Transaction,
     query: Query<T>,
-    result: ResolveResult<T>,
     context: any,
   ): Promise<ResolveResult<T>>;
 }
 
-export interface QueryTransformer<T extends SpecType> {
-  (transaction: Transaction, query: Query<T>): Promise<Query<T>>;
-}
-
 export interface BuildResolverOptions<T extends SpecType> {
-  intercept?: ResolveInterceptor<T>;
-  queryTransformer?: QueryTransformer<T>;
-}
-
-export function buildCustomResolver<T extends SpecType>(
-  _: Spec<T>,
-  resolver: CustomResolver<T>,
-): UnitializedResolver<T> {
-  return { resolver, initialize: noop };
+  interceptor?: ResolveInterceptor<T>;
 }
 
 export function buildResolver<T extends SpecType>(
   spec: Spec<T>,
-  options?: BuildResolverOptions<T>,
+  options: BuildResolverOptions<T> = {},
 ): UnitializedResolver<T> {
   let pool: ProviderPool = <any>undefined;
 
-  async function resolver(
-    transaction: Transaction,
-    rawQuery: Query<T>,
-    context?: any,
-  ): Promise<ResolveResult<T>> {
-    const provider = pool.providers[spec.name];
+  function resolver(transaction: Transaction, query: Query<T>, context: any) {
 
-    let query = rawQuery;
+    if (options.interceptor) {
+      const resolve = (newQuery: Query<T>) =>
+        defaultResolveBehavior(pool, spec, transaction, newQuery);
 
-    if (options && typeof options.queryTransformer === 'function') {
-      query = await options.queryTransformer(transaction, rawQuery);
+      return options.interceptor(resolve, transaction, query, context);
     }
 
-    const database = <DatabaseModel<T>>provider.database;
-
-    if (!database) {
-      throw new Error(`${database} is not a valid model`);
-    }
-
-    const findOptions: Sequelize.FindOptions<Model<T>> = {};
-
-    findOptions.attributes = provider.metadata.sanitizeAttributes(query && query.attributes);
-
-    const include = buildInclude(query, pool, spec.name);
-    if (include && include.length > 0) {
-      findOptions.include = include;
-    }
-
-    const where = buildWhere(query, pool, spec.name);
-    if (where) {
-      findOptions.where = where;
-    }
-
-    if (query && query.byId) {
-      const byIdWhere = <Sequelize.WhereOptions<Model<T>>>{};
-
-      for (const pk of (<(keyof T['fields'])[]>provider.metadata.primaryKeys)) {
-        if (query.byId[pk] === undefined) {
-          throw new Error(`byId must contain every primary key. ${pk} is missing`);
-        }
-        byIdWhere[pk] = query.byId[pk];
-      }
-
-      const instance = await database.findOne({
-        ...findOptions,
-        transaction,
-        where: byIdWhere,
-      });
-
-      if (!instance) {
-        return { data: [], count: 0 };
-      }
-
-      const single = [<Model<T>>instance.get({ plain: true })];
-
-      if (options && options.intercept) {
-        const intercept = options.intercept;
-        return intercept(transaction, query, { data: single, count: 1 }, context);
-      }
-
-      return { data: single, count: 1 };
-    }
-
-    const order = buildOrder(query, pool, spec.name);
-    if (order) {
-      findOptions.order = order;
-    }
-
-    const offset = query && query.pagination && query.pagination.skip;
-    if (offset) {
-      findOptions.offset = offset;
-    }
-
-    const limit = query && query.pagination && query.pagination.take;
-    if (limit) {
-      findOptions.limit = limit;
-    }
-
-    if (query && query.count) {
-      const { rows, count } = await database.findAndCountAll({ ...findOptions, transaction });
-
-      const plain = rows.map(row => <Model<T>>row.get({ plain: true }));
-
-      if (options && options.intercept) {
-        const intercept = options.intercept;
-        return intercept(transaction, query, { data: plain, count }, context);
-      }
-
-      return { data: plain, count };
-    }
-
-    const raw = await database.findAll({ ...findOptions, transaction });
-    const data = raw.map(row => <Model<T>>row.get({ plain: true }));
-    if (options && options.intercept) {
-      const intercept = options.intercept;
-      return intercept(transaction, query, { data, count: 0 }, context);
-    }
-
-    return { data, count: 0 };
+    return defaultResolveBehavior(pool, spec, transaction, query);
   }
 
   function initialize(p: ProviderPool) {
@@ -164,15 +58,70 @@ export function buildResolver<T extends SpecType>(
   return { resolver, initialize };
 }
 
+async function defaultResolveBehavior<T extends SpecType>(
+  pool: ProviderPool,
+  spec: Spec<T>,
+  transaction: Transaction,
+  query: Query<T>,
+): Promise<ResolveResult<T>> {
+  const provider = pool.providers[spec.name];
+  const database = <DatabaseModel<T>>provider.database;
+
+  if (!database) {
+    throw new Error(`${database} is not a valid model`);
+  }
+
+  const findOptions: Sequelize.FindOptions<Model<T>> = {};
+
+  findOptions.attributes = provider.metadata.sanitizeAttributes(query.attributes);
+  findOptions.include = buildInclude(query, pool, spec.name);
+  findOptions.where = buildWhere(query, pool, spec.name) || {};
+
+  if (query.byId) {
+    for (const pk of (<(keyof T['fields'])[]>provider.metadata.primaryKeys)) {
+      if (query.byId[pk] === undefined) {
+        throw new Error(`byId must contain every primary key. ${pk} is missing`);
+      }
+      findOptions.where[pk] = query.byId[pk];
+    }
+
+    const instance = await database.findOne({ ...findOptions, transaction });
+
+    if (!instance) {
+      return { data: [], count: 0 };
+    }
+    return { data: [<Model<T>>instance.get({ plain: true })], count: 1 };
+  }
+
+  findOptions.order = buildOrder(query, pool, spec.name);
+
+  if (query.pagination) {
+    findOptions.offset = query.pagination.skip;
+    findOptions.limit = query.pagination.take;
+  }
+
+  if (query.count) {
+    const { rows, count } = await database.findAndCountAll({ ...findOptions, transaction });
+    return { data: plain(rows), count };
+  }
+
+  const instances = await database.findAll({ ...findOptions, transaction });
+  return { data: plain(instances), count: 0 };
+}
+
+function plain<T extends SpecType>(rows: DatabaseInstance<T>[]) {
+  return rows.map(row => <Model<T>>row.get({ plain: true }));
+}
+
 function buildOrder<T extends SpecType>(
-  query: Query<T> | undefined,
+  query: Query<T>,
   pool: ProviderPool,
   model: T['name'],
 ): any[] | undefined {
   const defaultOrder = pool.providers[model].metadata.defaultOrder;
   const parameters: any[] = [];
 
-  if (query && query.order && query.order.field && query.order.ordering !== 'NONE') {
+  if (query.order && query.order.field && query.order.ordering !== 'NONE') {
 
     if (Array.isArray(query.order.chain)) {
       let current = model;
@@ -292,25 +241,24 @@ function transformFilter<T extends SpecType>(
 }
 
 function buildWhere<T extends SpecType>(
-  query: Query<T> | SubQuery<T> | undefined,
+  query: Query<T> | SubQuery<T>,
   pool: ProviderPool,
   model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> | undefined {
-  if (query && query.filters) {
+  if (query.filters) {
     return transformFilter(<any>query.filters, pool, model);
   }
   return;
 }
 
 function buildInclude<T extends SpecType>(
-  query: Query<T> | undefined,
+  query: Query<T>,
   pool: ProviderPool,
   model: T['name'],
 ): Sequelize.IncludeOptions[] | undefined {
-  const queryInclude = query && query.include;
-  const orderChain = query && query.order && query.order.chain;
+  const orderChain = query.order && query.order.chain;
 
-  return buildNestedInclude<T>(pool, queryInclude, orderChain, model);
+  return buildNestedInclude<T>(pool, query.include, orderChain, model);
 }
 
 function buildNestedInclude<T extends SpecType>(
