@@ -9,7 +9,8 @@ interface PageInstanceParams<TProps, TState, TReducerBuilderData> {
   title: Bundle;
 }
 
-export class PageInstance<TProps, TState, TReducerBuilderData> implements Reducible {
+export class PageInstance<TProps, TState, TReducerBuilderData>
+  implements Reducible<PageInstance<TProps, TState, TReducerBuilderData>> {
   private params: PageInstanceParams<TProps, TState, TReducerBuilderData>;
   private currentState: TState;
 

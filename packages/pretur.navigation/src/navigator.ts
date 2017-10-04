@@ -235,7 +235,7 @@ function getTransitionTarget(
   return desiredTarget;
 }
 
-export class Navigator implements Reducible {
+export class Navigator implements Reducible<Navigator> {
   private _pages: Pages;
   private _prefix: string;
 

@@ -9,7 +9,7 @@
     "build-all": "npm run for-all npm -- run build",
     "bump": "lerna publish --skip-git",
     "lint": "tslint -e \"packages/*/node_modules/**\" -e \"packages/*/lib/**\" \"packages/**/*.ts\" \"packages/**/*.tsx\"",
-    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register \"packages/**/*.spec.ts\""
+    "test": "mocha --require ts-node/register \"packages/**/*.spec.ts\""
   },
   "repository": {
     "type": "git",
@@ -18,16 +18,16 @@
   "devDependencies": {
     "@types/chai": "^4.0.4",
     "@types/mocha": "^2.2.43",
-    "@types/node": "^8.0.28",
-    "@types/react-addons-test-utils": "^0.14.19",
+    "@types/node": "^8.0.32",
+    "@types/react-addons-test-utils": "^0.14.20",
     "chai": "^4.1.2",
-    "lerna": "^2.2.0",
-    "mocha": "^3.5.3",
-    "react-addons-test-utils": "^15.6.0",
+    "lerna": "^2.3.1",
+    "mocha": "^4.0.0",
+    "react-addons-test-utils": "^15.6.2",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
     "tslint-eslint-rules": "^4.1.1",
     "tslint-microsoft-contrib": "^5.0.1",
-    "typescript": "^2.5.2"
+    "typescript": "^2.6.0-dev.20171004"
   }
 }

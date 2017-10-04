@@ -36,7 +36,7 @@ function FieldsEqual<T extends SpecType>(fields1: Fields<T>, fields2: Fields<T>)
   return true;
 }
 
-export class Record<T extends SpecType> implements Clay {
+export class Record<T extends SpecType> implements Clay<Record<T>> {
   public readonly uniqueId: number;
   public readonly original: this;
   public readonly state: State;

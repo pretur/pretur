@@ -16,16 +16,16 @@ export function nextId() {
 
 export type State = 'normal' | 'new' | 'removed';
 
-export interface Clay extends Reducible {
+export type Clay<T extends Reducible<any>> = Reducible<T> & {
   readonly uniqueId: number;
-  readonly original: this;
+  readonly original: Clay<T>;
   readonly state: State;
   readonly error: ValidationError;
   readonly modified: boolean;
   readonly valid: boolean;
   setError(dispatch: Dispatch, error: ValidationError): void;
   setState(dispatch: Dispatch, state: State): void;
-}
+};
 
 export function refresh<T extends SpecType>(
   dispatch: Dispatch,
@@ -39,7 +39,7 @@ export function refresh<T extends SpecType>(
 export function from<T extends SpecType>(list: Model<T>[] | Set<T>): Set<T>;
 export function from<T extends SpecType>(model: Model<T> | Record<T>): Record<T>;
 export function from<T>(value: T | Value<T>): Value<T>;
-export function from(value: any): Clay {
+export function from(value: any): Clay<any> {
   if (value instanceof Value || value instanceof Record || value instanceof Set) {
     return value;
   }
@@ -62,7 +62,7 @@ export function from(value: any): Clay {
 export function toPlain<T extends SpecType>(set: Set<T>): Model<T>[];
 export function toPlain<T extends SpecType>(record: Record<T>): Model<T>;
 export function toPlain<T>(value: Value<T>): T;
-export function toPlain(clay: Clay): any {
+export function toPlain(clay: Clay<any>): any {
   if (clay instanceof Value) {
     return clay.value;
   }

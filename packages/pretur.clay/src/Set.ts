@@ -32,7 +32,7 @@ function itemsEqual<T extends SpecType>(items1: Record<T>[], items2: Record<T>[]
   return true;
 }
 
-export class Set<T extends SpecType> implements Clay {
+export class Set<T extends SpecType> implements Clay<Set<T>> {
   public readonly uniqueId: number;
   public readonly original: this;
   public readonly state: State;

@@ -10,7 +10,7 @@ import {
   CLAY_SET_STATE,
 } from './actions';
 
-export class Value<T> implements Clay {
+export class Value<T> implements Clay<Value<T>> {
   public readonly uniqueId: number;
   public readonly original: this;
   public readonly state: State;

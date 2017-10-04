@@ -55,7 +55,7 @@ export function setInclude<T extends SpecType, S extends SpecType = SpecType>(
   }
 }
 
-export class Querier<T extends SpecType> implements Reducible {
+export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
   public readonly uniqueId: number;
   public readonly count?: number;
   public readonly model: T['name'];

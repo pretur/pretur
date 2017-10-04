@@ -4,9 +4,9 @@ export interface Reducer<T> {
   (state: T | undefined, action: Action<any, any>): T;
 }
 
-export interface Reducible<T extends object = {}> {
-  reduce(action: Action<any, any>): T & Reducible<T & this>;
-}
+export type Reducible<T extends Reducible<any>> = T & {
+  reduce(action: Action<any, any>): Reducible<T>;
+};
 
 export type Reducibles<T extends object = any> = {
   [P in keyof T]: Reducible<T[P]>;
@@ -20,9 +20,9 @@ export interface ParametricReducibleFactory<D, T extends Reducibles> {
 }
 
 export interface ReducibleFactory<T extends Reducibles> {
-  type: T & Reducible<T>;
+  type: Reducible<T>;
   buildReducer: () => Reducer<T>;
-  (): T & Reducible<T>;
+  (): Reducible<T>;
 }
 
 export function buildReducibleFactory<T extends Reducibles = object>(

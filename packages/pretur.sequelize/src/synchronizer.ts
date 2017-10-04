@@ -189,7 +189,7 @@ async function defaultInsertBehavior<T extends SpecType>(
   const aliasModelMap = provider.metadata.aliasModelMap;
   const aliasKeyMap = provider.metadata.aliasKeyMap;
 
-  for (const alias of Object.keys(aliasModelMap)) {
+  for (const alias of <(keyof Model<T>)[]>Object.keys(aliasModelMap)) {
     const nested = (<any>data)[alias];
     const targetProvider = pool.providers[aliasModelMap[alias]];
 
