@@ -4,7 +4,7 @@ import {
   PathTree,
   FolderContents,
   PageTreeRoot,
-  PageFolder,
+  PageTreeFolder,
   Page,
 } from './pages';
 
@@ -59,8 +59,8 @@ function buildPageFolderTree(
     const newChain = chain.concat(path);
     const absolutePath = newChain.join('/');
 
-    if ((<PageFolder>root[path]).contents) {
-      const folder = <PageFolder>root[path];
+    if ((<PageTreeFolder>root[path]).contents) {
+      const folder = <PageTreeFolder>root[path];
       folder.path = absolutePath;
       const folderHidden = hidden ? true : Boolean(folder.hidden);
 

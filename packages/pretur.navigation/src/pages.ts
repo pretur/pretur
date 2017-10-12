@@ -4,21 +4,30 @@ import { PageInstance } from './pageInstance';
 import { buildDescriptorsFromTree } from './buildDescriptorsFromTree';
 
 export interface PageTreeRoot {
-  [node: string]: PageFolder | Page<any, any, any>;
+  [node: string]: PageTreeFolder | PageTreeLeaf;
 }
 
-export interface PageFolder {
+export interface PageTreeFolder {
   titleKey: string;
   path?: string;
   hidden?: boolean;
   contents: PageTreeRoot;
 }
 
-export interface Page<TProps, TState, TReducerBuilderData> {
+export interface PageTreeLeaf {
   titleKey: string;
   path?: string;
   hidden?: boolean;
   persistent?: boolean;
+  component: ComponentClass<any> | StatelessComponent<any>;
+  reducerBuilder: PageReducerBuilder<any, any>;
+}
+
+export interface Page<TProps, TState, TReducerBuilderData> {
+  titleKey: string;
+  path: string;
+  hidden: boolean;
+  persistent: boolean;
   component: ComponentClass<TProps> | StatelessComponent<TProps>;
   reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>;
 }
@@ -50,7 +59,7 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
 ): Page<TProps, TState, TReducerBuilderData> {
   if (typeof dynamicOrHidden === 'boolean') {
     if (typeof persistent === 'boolean') {
-      return {
+      return <Page<TProps, TState, TReducerBuilderData>>{
         component,
         hidden: dynamicOrHidden,
         persistent,
@@ -59,7 +68,7 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
       };
     }
 
-    return {
+    return <Page<TProps, TState, TReducerBuilderData>>{
       component,
       hidden: dynamicOrHidden,
       persistent: !dynamicOrHidden,
@@ -68,7 +77,7 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
     };
 
   }
-  return {
+  return <Page<TProps, TState, TReducerBuilderData>>{
     component,
     hidden: false,
     persistent: true,

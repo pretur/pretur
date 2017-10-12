@@ -2,13 +2,13 @@
 
 import { expect } from 'chai';
 import { StatelessComponent } from 'react';
-import { Pages, PageTreeRoot, PageReducerBuilder, buildPage } from '../src/pages';
+import { Pages, PageReducerBuilder, buildPage } from '../src/pages';
 
 // tslint:disable-next-line:no-null-keyword
 const component: StatelessComponent<void> = () => null!;
 const reducerBuilder: PageReducerBuilder<void, string> = () => () => 'state!';
 
-const tree: PageTreeRoot = {
+const tree = {
   'a': {
     contents: {
       'b': {

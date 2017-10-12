@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Bundle } from 'pretur.i18n';
-
 import { Navigator } from './navigator';
 
 export interface NavPagePassedProps<TState> {
