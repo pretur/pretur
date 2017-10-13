@@ -30,7 +30,7 @@
   "dependencies": {
     "pretur.i18n": "^0.25.1",
     "pretur.sync": "^0.25.1",
-    "tslib": "^1.7.1"
+    "tslib": "^1.8.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.2",

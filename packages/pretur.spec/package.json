@@ -29,10 +29,10 @@
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.spec",
   "dependencies": {
     "@types/lodash": "^4.14.77",
-    "@types/node": "^8.0.32",
+    "@types/node": "^8.0.34",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.25.1",
-    "tslib": "^1.7.1"
+    "tslib": "^1.8.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.2",

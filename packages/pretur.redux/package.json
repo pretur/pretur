@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.redux",
   "dependencies": {
-    "tslib": "^1.7.1"
+    "tslib": "^1.8.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.2",

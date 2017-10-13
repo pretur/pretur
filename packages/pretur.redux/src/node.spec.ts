@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import { Action } from './action';
-import { buildNode } from './reducer';
+import { buildNode } from './node';
 
 class ReduceMe {
   public changing: boolean;
