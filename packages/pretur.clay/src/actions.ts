@@ -1,4 +1,4 @@
-import { createTargetedActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
+import { createActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
 import { Query, Filter, QueryPagination, QueryOrder } from 'pretur.sync';
 import { ValidationError } from 'pretur.validation';
 import { State } from './clay';
@@ -29,49 +29,49 @@ export interface RefreshPayload {
 }
 
 export const CLAY_CLEAR: TargetedActionDescriptor
-  = createTargetedActionDescriptor('CLAY_CLEAR');
+  = createActionDescriptor('CLAY_CLEAR');
 
 export const CLAY_REPLACE: TargetedActionDescriptor<any>
-  = createTargetedActionDescriptor<any>('CLAY_REPLACE');
+  = createActionDescriptor<any>('CLAY_REPLACE');
 
 export const CLAY_SET_VALUE: TargetedActionDescriptor<SetValuePayload>
-  = createTargetedActionDescriptor<SetValuePayload>('CLAY_SET_VALUE');
+  = createActionDescriptor<SetValuePayload>('CLAY_SET_VALUE');
 
 export const CLAY_SET_ERROR: TargetedActionDescriptor<ValidationError>
-  = createTargetedActionDescriptor<ValidationError>('CLAY_SET_ERROR');
+  = createActionDescriptor<ValidationError>('CLAY_SET_ERROR');
 
 export const CLAY_SET_STATE: TargetedActionDescriptor<State>
-  = createTargetedActionDescriptor<State>('CLAY_SET_STATE');
+  = createActionDescriptor<State>('CLAY_SET_STATE');
 
 export const CLAY_SET_FIELD: TargetedActionDescriptor<SetFieldPayload>
-  = createTargetedActionDescriptor<SetFieldPayload>('CLAY_SET_FIELD');
+  = createActionDescriptor<SetFieldPayload>('CLAY_SET_FIELD');
 
 export const CLAY_ADD: TargetedActionDescriptor<any>
-  = createTargetedActionDescriptor<any>('CLAY_ADD');
+  = createActionDescriptor<any>('CLAY_ADD');
 
 export const CLAY_REMOVE: TargetedActionDescriptor<number>
-  = createTargetedActionDescriptor<number>('CLAY_REMOVE');
+  = createActionDescriptor<number>('CLAY_REMOVE');
 
 export const CLAY_REFRESH: TargetedActionDescriptor<RefreshPayload>
-  = createTargetedActionDescriptor<RefreshPayload>('CLAY_REFRESH');
+  = createActionDescriptor<RefreshPayload>('CLAY_REFRESH');
 
 export const CLAY_SET_QUERY_ATTRIBUTES: TargetedActionDescriptor<string[]>
-  = createTargetedActionDescriptor<string[]>('CLAY_SET_QUERY_ATTRIBUTES');
+  = createActionDescriptor<string[]>('CLAY_SET_QUERY_ATTRIBUTES');
 
 export const CLAY_SET_QUERY_FILTERS: TargetedActionDescriptor<SetFiltersPayload>
-  = createTargetedActionDescriptor<SetFiltersPayload>('CLAY_SET_QUERY_FILTERS');
+  = createActionDescriptor<SetFiltersPayload>('CLAY_SET_QUERY_FILTERS');
 
 export const CLAY_SET_QUERY_PAGINATION: TargetedActionDescriptor<QueryPagination>
-  = createTargetedActionDescriptor<QueryPagination>('CLAY_SET_QUERY_PAGINATION');
+  = createActionDescriptor<QueryPagination>('CLAY_SET_QUERY_PAGINATION');
 
 export const CLAY_SET_QUERY_ORDER: TargetedActionDescriptor<QueryOrder>
-  = createTargetedActionDescriptor<QueryOrder>('CLAY_SET_QUERY_ORDER');
+  = createActionDescriptor<QueryOrder>('CLAY_SET_QUERY_ORDER');
 
 export const CLAY_SET_QUERY_EXTRA: TargetedActionDescriptor<SetExtraPayload>
-  = createTargetedActionDescriptor<SetExtraPayload>('CLAY_SET_QUERY_EXTRA');
+  = createActionDescriptor<SetExtraPayload>('CLAY_SET_QUERY_EXTRA');
 
 export const CLAY_SET_QUERIEIR_COUNT: TargetedActionDescriptor<number>
-  = createTargetedActionDescriptor<number>('CLAY_SET_QUERIEIR_COUNT');
+  = createActionDescriptor<number>('CLAY_SET_QUERIEIR_COUNT');
 
 export const CLAY_RESET_QUERIEIR: TargetedActionDescriptor<Query<any>>
-  = createTargetedActionDescriptor<Query<any>>('CLAY_RESET_QUERIEIR');
+  = createActionDescriptor<Query<any>>('CLAY_RESET_QUERIEIR');
