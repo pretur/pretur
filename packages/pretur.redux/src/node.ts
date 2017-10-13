@@ -1,6 +1,6 @@
 import { Action } from './action';
 
-export type Reducer<S> = (state: S, action: Action<any>) => S;
+export type Reducer<S> = (state: S | undefined, action: Action<any>) => S;
 
 export type Reducible<T extends Reducible<any>> = T & {
   reduce(action: Action<any>): Reducible<T>;
@@ -10,13 +10,13 @@ export type ReducibleMap<T extends object = any> = {
   [P in keyof T]: Reducible<T[P]>;
 };
 
-export interface Node<T extends ReducibleMap> {
+export interface ReducibleNode<T extends ReducibleMap> {
   type: Reducible<T>;
   (): Reducible<T>;
 }
 
-export function buildNode<T extends ReducibleMap>(builder: () => T): Node<T> {
-  return <Node<T>>function node() {
+export function buildNode<T extends ReducibleMap>(builder: () => T): ReducibleNode<T> {
+  return <ReducibleNode<T>>function node() {
     let previousState = <T & Reducible<T>>builder();
 
     const properties = <(keyof T)[]>Object.keys(previousState);
@@ -47,7 +47,7 @@ export function buildNode<T extends ReducibleMap>(builder: () => T): Node<T> {
   };
 }
 
-export function toReducer<T extends ReducibleMap>(node: Node<T>): Reducer<T> {
+export function toReducer<T extends ReducibleMap>(node: ReducibleNode<T>): Reducer<T> {
   const reducible = node();
 
   return (state, action) => (state || reducible).reduce(action);

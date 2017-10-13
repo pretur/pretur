@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 import { Action } from './action';
-import { buildNode } from './node';
+import { buildNode, toReducer } from './node';
 
 class ReduceMe {
   public changing: boolean;
@@ -34,7 +34,7 @@ class ReduceMe {
 
 describe('node', () => {
 
-  it('should build node that properly initializes state', () => {
+  it('should build node that properly initializes and reduces state', () => {
     const node = buildNode(() => ({
       bar: new ReduceMe(false, false, 'hello'),
       foo: new ReduceMe(false),
@@ -54,6 +54,34 @@ describe('node', () => {
 
     expect(reduced.bar.payload).to.be.equals('world');
     expect(reduced.foo.payload).to.be.equals('world');
+  });
+
+});
+
+describe('toReducer', () => {
+
+  it('should build reducer that properly initializes and reduces state', () => {
+    const node = buildNode(() => ({
+      bar: new ReduceMe(false, false, 'hello'),
+      foo: new ReduceMe(false),
+    }));
+
+    const reducer = toReducer(node);
+
+    const state1 = reducer(undefined, { type: '' });
+
+    expect(state1.bar.payload).to.be.equals('hello');
+    expect(state1.foo.payload).to.be.equals(undefined);
+
+    const state2 = reducer(state1, { type: 'INIT' });
+
+    expect(state2.bar.initialized).to.be.true;
+    expect(state2.foo.initialized).to.be.true;
+
+    const state3 = reducer(state2, { payload: 'world', type: ' ' });
+
+    expect(state3.bar.payload).to.be.equals('world');
+    expect(state3.foo.payload).to.be.equals('world');
   });
 
 });

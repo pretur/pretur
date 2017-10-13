@@ -1,18 +1,16 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import {
-  createHomingAction,
-} from './action';
+import { createHomingAction } from './action';
 
 describe('createHomingAction', () => {
 
-  it('should create a targetedActionDescriptor with correct type', () => {
+  it('should create a homingActionDefinition with correct type', () => {
     const ACTION = createHomingAction('ACTION');
     expect(ACTION.type).to.be.equals('ACTION');
   });
 
-  it('should create a targetedActionDescriptor with functional create unicast function', () => {
+  it('should create a homingActionDefinition with functional create unicast function', () => {
     const ACTION = createHomingAction<{ a: string }>('ACTION');
     const act = ACTION.create.unicast(1, { a: 'hello' });
     expect(act.payload!.a).to.be.equals('hello');
@@ -20,7 +18,7 @@ describe('createHomingAction', () => {
     expect(act.target).to.be.equals(1);
   });
 
-  it('should create a targetedActionDescriptor with functional create multicast function', () => {
+  it('should create a homingActionDefinition with functional create multicast function', () => {
     const ACTION = createHomingAction<{ a: string }>('ACTION');
     const act = ACTION.create.multicast([1, '2'], { a: 'hello' });
     expect(act.payload!.a).to.be.equals('hello');
@@ -28,7 +26,7 @@ describe('createHomingAction', () => {
     expect(act.target).to.be.deep.equal([1, '2']);
   });
 
-  it('should create a targetedActionDescriptor with functional create broadcast function', () => {
+  it('should create a homingActionDefinition with functional create broadcast function', () => {
     const ACTION = createHomingAction<{ a: string }>('ACTION');
     const act = ACTION.create.broadcast({ a: 'hello' });
     expect(act.payload!.a).to.be.equals('hello');

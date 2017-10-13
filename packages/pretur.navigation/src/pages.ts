@@ -75,8 +75,8 @@ export function buildPage<TProps, TState, TReducerBuilderData>(
       reducerBuilder,
       titleKey,
     };
-
   }
+
   return <Page<TProps, TState, TReducerBuilderData>>{
     component,
     hidden: false,
