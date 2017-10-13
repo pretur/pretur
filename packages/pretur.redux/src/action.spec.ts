@@ -2,18 +2,18 @@
 
 import { expect } from 'chai';
 import {
-  createActionDescriptor,
+  createHomingAction,
 } from './action';
 
-describe('createActionDescriptor', () => {
+describe('createHomingAction', () => {
 
   it('should create a targetedActionDescriptor with correct type', () => {
-    const ACTION = createActionDescriptor('ACTION');
+    const ACTION = createHomingAction('ACTION');
     expect(ACTION.type).to.be.equals('ACTION');
   });
 
   it('should create a targetedActionDescriptor with functional create unicast function', () => {
-    const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+    const ACTION = createHomingAction<{ a: string }>('ACTION');
     const act = ACTION.create.unicast(1, { a: 'hello' });
     expect(act.payload!.a).to.be.equals('hello');
     expect(act.broadcast).to.be.false;
@@ -21,7 +21,7 @@ describe('createActionDescriptor', () => {
   });
 
   it('should create a targetedActionDescriptor with functional create multicast function', () => {
-    const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+    const ACTION = createHomingAction<{ a: string }>('ACTION');
     const act = ACTION.create.multicast([1, '2'], { a: 'hello' });
     expect(act.payload!.a).to.be.equals('hello');
     expect(act.broadcast).to.be.false;
@@ -29,7 +29,7 @@ describe('createActionDescriptor', () => {
   });
 
   it('should create a targetedActionDescriptor with functional create broadcast function', () => {
-    const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+    const ACTION = createHomingAction<{ a: string }>('ACTION');
     const act = ACTION.create.broadcast({ a: 'hello' });
     expect(act.payload!.a).to.be.equals('hello');
     expect(act.broadcast).to.be.true;
@@ -39,37 +39,37 @@ describe('createActionDescriptor', () => {
   describe('is', () => {
 
     it('should pass for unicast when target is id', () => {
-      const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+      const ACTION = createHomingAction<{ a: string }>('ACTION');
       const act = ACTION.create.unicast(2, { a: 'hello' });
       expect(ACTION.is(2, act)).to.be.true;
     });
 
     it('should fail for unicast when target is not id', () => {
-      const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+      const ACTION = createHomingAction<{ a: string }>('ACTION');
       const act = ACTION.create.unicast(2, { a: 'hello' });
       expect(ACTION.is(1, act)).to.be.false;
     });
 
     it('should pass for multicast when id is in targets', () => {
-      const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+      const ACTION = createHomingAction<{ a: string }>('ACTION');
       const act = ACTION.create.multicast([1, 2], { a: 'hello' });
       expect(ACTION.is(2, act)).to.be.true;
     });
 
     it('should fail for multicast when id is not in targets', () => {
-      const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+      const ACTION = createHomingAction<{ a: string }>('ACTION');
       const act = ACTION.create.multicast([1, 2], { a: 'hello' });
       expect(ACTION.is(3, act)).to.be.false;
     });
 
     it('should pass for broadcast whatever the id is', () => {
-      const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+      const ACTION = createHomingAction<{ a: string }>('ACTION');
       const act = ACTION.create.broadcast({ a: 'hello' });
       expect(ACTION.is(2, act)).to.be.true;
     });
 
     it('should fail for type mismatch', () => {
-      const ACTION = createActionDescriptor<{ a: string }>('ACTION');
+      const ACTION = createHomingAction<{ a: string }>('ACTION');
 
       const act1 = ACTION.create.unicast(2, { a: 'hello' });
       act1.type = 'STUFF1';

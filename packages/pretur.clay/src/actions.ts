@@ -1,4 +1,4 @@
-import { createActionDescriptor, TargetedActionDescriptor } from 'pretur.redux';
+import { createHomingAction, TargetedActionDescriptor } from 'pretur.redux';
 import { Query, Filter, QueryPagination, QueryOrder } from 'pretur.sync';
 import { ValidationError } from 'pretur.validation';
 import { State } from './clay';
@@ -29,49 +29,49 @@ export interface RefreshPayload {
 }
 
 export const CLAY_CLEAR: TargetedActionDescriptor
-  = createActionDescriptor('CLAY_CLEAR');
+  = createHomingAction('CLAY_CLEAR');
 
 export const CLAY_REPLACE: TargetedActionDescriptor<any>
-  = createActionDescriptor<any>('CLAY_REPLACE');
+  = createHomingAction<any>('CLAY_REPLACE');
 
 export const CLAY_SET_VALUE: TargetedActionDescriptor<SetValuePayload>
-  = createActionDescriptor<SetValuePayload>('CLAY_SET_VALUE');
+  = createHomingAction<SetValuePayload>('CLAY_SET_VALUE');
 
 export const CLAY_SET_ERROR: TargetedActionDescriptor<ValidationError>
-  = createActionDescriptor<ValidationError>('CLAY_SET_ERROR');
+  = createHomingAction<ValidationError>('CLAY_SET_ERROR');
 
 export const CLAY_SET_STATE: TargetedActionDescriptor<State>
-  = createActionDescriptor<State>('CLAY_SET_STATE');
+  = createHomingAction<State>('CLAY_SET_STATE');
 
 export const CLAY_SET_FIELD: TargetedActionDescriptor<SetFieldPayload>
-  = createActionDescriptor<SetFieldPayload>('CLAY_SET_FIELD');
+  = createHomingAction<SetFieldPayload>('CLAY_SET_FIELD');
 
 export const CLAY_ADD: TargetedActionDescriptor<any>
-  = createActionDescriptor<any>('CLAY_ADD');
+  = createHomingAction<any>('CLAY_ADD');
 
 export const CLAY_REMOVE: TargetedActionDescriptor<number>
-  = createActionDescriptor<number>('CLAY_REMOVE');
+  = createHomingAction<number>('CLAY_REMOVE');
 
 export const CLAY_REFRESH: TargetedActionDescriptor<RefreshPayload>
-  = createActionDescriptor<RefreshPayload>('CLAY_REFRESH');
+  = createHomingAction<RefreshPayload>('CLAY_REFRESH');
 
 export const CLAY_SET_QUERY_ATTRIBUTES: TargetedActionDescriptor<string[]>
-  = createActionDescriptor<string[]>('CLAY_SET_QUERY_ATTRIBUTES');
+  = createHomingAction<string[]>('CLAY_SET_QUERY_ATTRIBUTES');
 
 export const CLAY_SET_QUERY_FILTERS: TargetedActionDescriptor<SetFiltersPayload>
-  = createActionDescriptor<SetFiltersPayload>('CLAY_SET_QUERY_FILTERS');
+  = createHomingAction<SetFiltersPayload>('CLAY_SET_QUERY_FILTERS');
 
 export const CLAY_SET_QUERY_PAGINATION: TargetedActionDescriptor<QueryPagination>
-  = createActionDescriptor<QueryPagination>('CLAY_SET_QUERY_PAGINATION');
+  = createHomingAction<QueryPagination>('CLAY_SET_QUERY_PAGINATION');
 
 export const CLAY_SET_QUERY_ORDER: TargetedActionDescriptor<QueryOrder>
-  = createActionDescriptor<QueryOrder>('CLAY_SET_QUERY_ORDER');
+  = createHomingAction<QueryOrder>('CLAY_SET_QUERY_ORDER');
 
 export const CLAY_SET_QUERY_EXTRA: TargetedActionDescriptor<SetExtraPayload>
-  = createActionDescriptor<SetExtraPayload>('CLAY_SET_QUERY_EXTRA');
+  = createHomingAction<SetExtraPayload>('CLAY_SET_QUERY_EXTRA');
 
 export const CLAY_SET_QUERIEIR_COUNT: TargetedActionDescriptor<number>
-  = createActionDescriptor<number>('CLAY_SET_QUERIEIR_COUNT');
+  = createHomingAction<number>('CLAY_SET_QUERIEIR_COUNT');
 
 export const CLAY_RESET_QUERIEIR: TargetedActionDescriptor<Query<any>>
-  = createActionDescriptor<Query<any>>('CLAY_RESET_QUERIEIR');
+  = createHomingAction<Query<any>>('CLAY_RESET_QUERIEIR');

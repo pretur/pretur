@@ -9,52 +9,38 @@ export interface Action<TPayload = {}> {
   payload?: TPayload;
 }
 
-export interface TargetedAction<TPayload = {}> extends Action<TPayload> {
+export interface HomingAction<TPayload = {}> extends Action<TPayload> {
   target?: Target | Target[];
-  broadcast: boolean;
+  broadcast?: boolean;
 }
 
-export interface ActionDescriptorCreator<TPayload = {}> {
-  unicast(target: Target, payload?: TPayload): TargetedAction<TPayload>;
-  multicast(targets: Target[], payload?: TPayload): TargetedAction<TPayload>;
-  broadcast(payload?: TPayload): TargetedAction<TPayload>;
-}
-
-export interface ActionDescriptor<TPayload = {}> {
+export interface HomingActionDefinition<TPayload = {}> {
   type: string;
-  create: ActionDescriptorCreator<TPayload>;
-  is(id: Target, action: Action<any>): action is TargetedAction<TPayload>;
+  create: {
+    unicast(target: Target, payload?: TPayload): HomingAction<TPayload>;
+    multicast(targets: Target[], payload?: TPayload): HomingAction<TPayload>;
+    broadcast(payload?: TPayload): HomingAction<TPayload>;
+  };
+  is(id: Target, action: Action<any>): action is HomingAction<TPayload>;
 }
 
-export function createActionDescriptor<TPayload = {}>(
-  type: string,
-): ActionDescriptor<TPayload> {
+export function createHomingAction<TPayload = {}>(type: string): HomingActionDefinition<TPayload> {
   return {
     create: {
       unicast(target: Target, payload?: TPayload) {
-        return {
-          broadcast: false,
-          payload,
-          target,
-          type,
-        };
+        return { payload, target, type };
       },
       multicast(targets: Target[], payload?: TPayload) {
-        return {
-          broadcast: false,
-          payload,
-          target: targets,
-          type,
-        };
+        return { payload, target: targets, type };
       },
       broadcast: (payload?: TPayload) => ({ broadcast: true, payload, type }),
     },
-    is(id: Target, action: Action<any>): action is TargetedAction<TPayload> {
+    is(id: Target, action: Action<any>): action is HomingAction<TPayload> {
       if (action.type !== type) {
         return false;
       }
 
-      const targeted = <TargetedAction<TPayload>>action;
+      const targeted = <HomingAction<TPayload>>action;
       if (targeted.broadcast) {
         return true;
       }
