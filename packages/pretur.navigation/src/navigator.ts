@@ -1,4 +1,4 @@
-import { Reducible, Action, Dispatch } from 'pretur.redux';
+import { Reducible, Action, Dispatch } from 'reducible-node';
 import { keyBy } from 'lodash';
 import { PageInstance } from './pageInstance';
 import { Pages, PageInstantiationData } from './pages';
@@ -362,7 +362,7 @@ export class Navigator implements Reducible<Navigator> {
     }
   }
 
-  public reduce(action: Action<any, any>): this {
+  public reduce(action: Action<any>): this {
     if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
       if (action.payload === this._activePageMutex) {
         return this;

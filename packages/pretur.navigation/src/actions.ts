@@ -1,4 +1,4 @@
-import { createHomingAction, HomingActionDefinition } from 'pretur.redux';
+import { createHomingAction, HomingActionDefinition } from 'reducible-node';
 import { PageReplaceOptions, PageOpenOptions, PageCloseOptions } from './navigator';
 
 export const NAVIGATION_TRANSIT_TO_PAGE: HomingActionDefinition<string>

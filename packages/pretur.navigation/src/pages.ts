@@ -1,5 +1,5 @@
 import { ComponentClass, StatelessComponent } from 'react';
-import { Reducer } from 'pretur.redux';
+import { Reducer } from 'reducible-node';
 import { PageInstance } from './pageInstance';
 import { buildDescriptorsFromTree } from './buildDescriptorsFromTree';
 

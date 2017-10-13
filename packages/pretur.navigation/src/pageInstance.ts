@@ -1,5 +1,5 @@
 import { Bundle } from 'pretur.i18n';
-import { Reducer, Reducible, Action } from 'pretur.redux';
+import { Reducer, Reducible, Action } from 'reducible-node';
 import { PageInstantiationData, PageDescriptor } from './pages';
 
 interface PageInstanceParams<TProps, TState, TReducerBuilderData> {
