@@ -1,8 +1,7 @@
 import { isEqual, omit, compact, flatten, zip, fill, get, setWith, cloneDeep } from 'lodash';
-import { SpecType } from 'pretur.spec';
-import { Reducible, Action, Dispatch } from 'pretur.redux';
+import { SpecType, AnySpec } from 'pretur.spec';
+import { Reducible, Action, Dispatch } from 'reducible-node';
 import { Query, SubQuery, Filter, Ordering } from 'pretur.sync';
-import { nextId } from './clay';
 import {
   CLAY_REFRESH,
   CLAY_SET_QUERY_ATTRIBUTES,
@@ -56,25 +55,25 @@ export function setInclude<T extends SpecType, S extends SpecType = SpecType>(
 }
 
 export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
-  public readonly uniqueId: number;
+  public readonly uniqueId: symbol;
   public readonly count?: number;
   public readonly model: T['name'];
   public readonly query: Query<T>;
 
-  constructor(model: T['name'], query: Query<T>, count?: number, uniqueId?: number) {
-    this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
+  constructor(model: T['name'], query: Query<T>, count?: number, uniqueId?: symbol) {
+    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
     this.count = count;
     this.model = model;
     this.query = query;
   }
 
-  public reduce(action: Action<any, any>): this {
+  public reduce(action: Action<any>): this {
     if (CLAY_SET_QUERY_ATTRIBUTES.is(this.uniqueId, action)) {
       if (isEqual(this.query.attributes, action.payload)) {
         return this;
       }
 
-      const newQuery = omit<Query<T>, Query<T>>(this.query, 'attributes');
+      const newQuery = omit(this.query, 'attributes');
 
       if (Array.isArray(action.payload)) {
         const attributes = <(keyof T['fields'])[]>compact(action.payload);
@@ -106,14 +105,14 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
       let newQuery: Query<T>;
 
       if (isPath(path)) {
-        const include = omit<SubQuery<any>, any>(getInclude(this.query, path), 'filters');
+        const include = omit(getInclude(this.query, path), 'filters');
         if (filters) {
           include.filters = filters;
         }
         newQuery = cloneDeep(this.query);
-        setInclude(newQuery, include, path);
+        setInclude<AnySpec>(newQuery, <any>include, path);
       } else {
-        newQuery = omit<Query<T>, Query<T>>(this.query, 'filters');
+        newQuery = omit(this.query, 'filters');
         if (filters) {
           newQuery.filters = filters;
         }
@@ -131,7 +130,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         return this;
       }
 
-      const newQuery = omit<Query<T>, Query<T>>(this.query, 'pagination');
+      const newQuery = omit(this.query, 'pagination');
 
       if (action.payload) {
         newQuery.pagination = action.payload;
@@ -145,7 +144,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         return this;
       }
 
-      const newQuery = omit<Query<T>, Query<T>>(this.query, 'order');
+      const newQuery = omit(this.query, 'order');
 
       if (action.payload) {
         newQuery.order = action.payload;

@@ -1,8 +1,8 @@
 import { isEqual, findIndex } from 'lodash';
-import { SpecType, Model } from 'pretur.spec';
-import { Action, Dispatch } from 'pretur.redux';
+import { SpecType } from 'pretur.spec';
+import { Action, Dispatch } from 'reducible-node';
 import { ValidationError } from 'pretur.validation';
-import { nextId, from, Clay, State } from './clay';
+import { Clay, State } from './clay';
 import { Record } from './Record';
 import {
   CLAY_CLEAR,
@@ -33,26 +33,26 @@ function itemsEqual<T extends SpecType>(items1: Record<T>[], items2: Record<T>[]
 }
 
 export class Set<T extends SpecType> implements Clay<Set<T>> {
-  public readonly uniqueId: number;
+  public readonly uniqueId: symbol;
   public readonly original: this;
   public readonly state: State;
   public readonly items: Record<T>[];
   public readonly error: ValidationError;
 
   constructor(
-    items?: Record<T>[] | Model<T>[],
+    items: Record<T>[],
     error?: ValidationError,
     state: State = 'normal',
     original?: Set<T>,
-    uniqueId?: number,
+    uniqueId?: symbol,
   ) {
     if (items instanceof Set) {
       return items;
     }
-    this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
+    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
     this.original = original ? <this>original : this;
     this.state = state;
-    this.items = Array.isArray(items) ? (<any>items).map(from) : [];
+    this.items = items;
     this.error = error;
   }
 
@@ -69,7 +69,7 @@ export class Set<T extends SpecType> implements Clay<Set<T>> {
     return !this.error;
   }
 
-  public reduce(action: Action<any, any>): this {
+  public reduce(action: Action<any>): this {
     if (CLAY_CLEAR.is(this.uniqueId, action)) {
       return this.original;
     }
@@ -127,8 +127,12 @@ export class Set<T extends SpecType> implements Clay<Set<T>> {
     }
 
     if (CLAY_ADD.is(this.uniqueId, action)) {
+      if (!action.payload) {
+        return this;
+      }
+
       return <this>new Set(
-        [...this.items, <any>from(action.payload)],
+        [...this.items, action.payload],
         this.error,
         this.state,
         this.original,
@@ -203,7 +207,7 @@ export class Set<T extends SpecType> implements Clay<Set<T>> {
     dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, state));
   }
 
-  public add(dispatch: Dispatch, item: Model<T> | Record<T>): void {
-    dispatch(CLAY_ADD.create.unicast(this.uniqueId, from(item)));
+  public add(dispatch: Dispatch, item: Record<T>): void {
+    dispatch(CLAY_ADD.create.unicast(this.uniqueId, item));
   }
 }

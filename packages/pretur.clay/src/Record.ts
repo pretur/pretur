@@ -1,8 +1,8 @@
-import { xor, isEqual, mapValues } from 'lodash';
-import { SpecType, Model } from 'pretur.spec';
+import { xor, isEqual } from 'lodash';
+import { SpecType } from 'pretur.spec';
 import { ValidationError } from 'pretur.validation';
-import { Action, Dispatch } from 'pretur.redux';
-import { nextId, from, Clay, State } from './clay';
+import { Action, Dispatch } from 'reducible-node';
+import { Clay, State } from './clay';
 import { Fields } from './fields';
 import {
   CLAY_CLEAR,
@@ -11,6 +11,7 @@ import {
   CLAY_SET_ERROR,
   CLAY_SET_STATE,
   CLAY_REMOVE,
+  CLAY_SET_REMOVED_AND_RESET,
 } from './actions';
 
 function FieldsEqual<T extends SpecType>(fields1: Fields<T>, fields2: Fields<T>): boolean {
@@ -37,26 +38,26 @@ function FieldsEqual<T extends SpecType>(fields1: Fields<T>, fields2: Fields<T>)
 }
 
 export class Record<T extends SpecType> implements Clay<Record<T>> {
-  public readonly uniqueId: number;
+  public readonly uniqueId: symbol;
   public readonly original: this;
   public readonly state: State;
   public readonly fields: Fields<T>;
   public readonly error: ValidationError;
 
   constructor(
-    fields?: Fields<T> | Model<T>,
+    fields: Fields<T>,
     error?: ValidationError,
     state: State = 'normal',
     original?: Record<T>,
-    uniqueId?: number,
+    uniqueId?: symbol,
   ) {
     if (fields instanceof Record) {
       return fields;
     }
-    this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
+    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
     this.original = original ? <this>original : this;
     this.state = state;
-    this.fields = fields ? <any>mapValues(fields, from) : <Fields<T>>{};
+    this.fields = fields;
     this.error = error;
   }
 
@@ -74,7 +75,7 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
     return !this.error;
   }
 
-  public reduce(action: Action<any, any>): this {
+  public reduce(action: Action<any>): this {
     if (CLAY_CLEAR.is(this.uniqueId, action)) {
       return this.original;
     }
@@ -143,24 +144,20 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
         return this.original;
       }
 
-      if (
-        typeof action.meta === 'boolean' &&
-        action.meta === true &&
-        action.payload === 'removed'
-      ) {
-        return <this>new Record(
-          this.original.fields,
-          this.original.error,
-          action.payload,
-          this.original,
-          this.uniqueId,
-        );
-      }
-
       return <this>new Record(
         this.fields,
         this.error,
         action.payload,
+        this.original,
+        this.uniqueId,
+      );
+    }
+
+    if (CLAY_SET_REMOVED_AND_RESET.is(this.uniqueId, action)) {
+      return <this>new Record(
+        this.original.fields,
+        this.original.error,
+        'removed',
         this.original,
         this.uniqueId,
       );
@@ -213,7 +210,7 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
   }
 
   public setField<K extends keyof Fields<T>>(dispatch: Dispatch, field: K, value: Fields<T>[K]) {
-    dispatch(CLAY_SET_FIELD.create.unicast(this.uniqueId, { field, value: from(value) }));
+    dispatch(CLAY_SET_FIELD.create.unicast(this.uniqueId, { field, value }));
   }
 
   public setError(dispatch: Dispatch, error: ValidationError): void {
@@ -224,9 +221,9 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
     dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, state));
   }
 
-  public remove(dispatch: Dispatch, reset = true): void {
+  public remove(dispatch: Dispatch): void {
     if (this.state === 'normal') {
-      dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, 'removed', <any>reset));
+      dispatch(CLAY_SET_REMOVED_AND_RESET.create.unicast(this.uniqueId));
     }
 
     if (this.state === 'new') {

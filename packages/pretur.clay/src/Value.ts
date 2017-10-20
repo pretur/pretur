@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 import { ValidationError } from 'pretur.validation';
-import { Action, Dispatch } from 'pretur.redux';
-import { nextId, Clay, State } from './clay';
+import { Action, Dispatch } from 'reducible-node';
+import { Clay, State } from './clay';
 import {
   CLAY_CLEAR,
   CLAY_REPLACE,
@@ -11,7 +11,7 @@ import {
 } from './actions';
 
 export class Value<T> implements Clay<Value<T>> {
-  public readonly uniqueId: number;
+  public readonly uniqueId: symbol;
   public readonly original: this;
   public readonly state: State;
   public readonly value: T;
@@ -22,12 +22,12 @@ export class Value<T> implements Clay<Value<T>> {
     error?: ValidationError,
     state: State = 'normal',
     original?: Value<T>,
-    uniqueId?: number,
+    uniqueId?: symbol,
   ) {
     if (value instanceof Value) {
       return value;
     }
-    this.uniqueId = typeof uniqueId === 'number' ? uniqueId : nextId();
+    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
     this.original = original ? <this>original : this;
     this.state = state;
     this.value = value;
@@ -42,7 +42,7 @@ export class Value<T> implements Clay<Value<T>> {
     return !this.error;
   }
 
-  public reduce(action: Action<any, any>): this {
+  public reduce(action: Action<any>): this {
     if (CLAY_CLEAR.is(this.uniqueId, action)) {
       return <this>this.original;
     }

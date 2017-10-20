@@ -29,14 +29,14 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.clay",
   "dependencies": {
-    "@types/lodash": "^4.14.77",
+    "@types/lodash": "^4.14.78",
     "lodash": "^4.17.4",
     "pretur.fetch": "^0.25.1",
     "pretur.i18n": "^0.25.1",
-    "pretur.redux": "^0.25.1",
     "pretur.spec": "^0.25.1",
     "pretur.sync": "^0.25.1",
     "pretur.validation": "^0.25.1",
+    "reducible-node": "^0.1.0",
     "tslib": "^1.8.0"
   },
   "devDependencies": {

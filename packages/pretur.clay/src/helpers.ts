@@ -1,5 +1,5 @@
 import { Spec, SpecType, Model, SpecPool } from 'pretur.spec';
-import { Dispatch } from 'pretur.redux';
+import { Dispatch } from 'reducible-node';
 import { Query, MutateRequest, Requester } from 'pretur.sync';
 import { State, refresh } from './clay';
 import { Querier } from './Querier';
