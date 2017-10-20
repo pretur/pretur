@@ -74,7 +74,7 @@ export type Attribute<T = any, K extends keyof T = keyof T> =
   | RangeAttribute<T, K>
   | ArrayAttribute<T, K>;
 
-const defaults: Partial<Attribute> = {
+const defaults = {
   autoIncrement: false,
   mutable: true,
   primary: false,
@@ -82,7 +82,7 @@ const defaults: Partial<Attribute> = {
   unique: false,
 };
 
-const primaryDefaults: Partial<Attribute> = {
+const primaryDefaults = {
   ...defaults,
   autoIncrement: true,
   mutable: false,

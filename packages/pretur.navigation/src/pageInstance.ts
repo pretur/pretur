@@ -69,7 +69,7 @@ export class PageInstance<TProps, TState, TReducerBuilderData>
     return this.params.instantiationData;
   }
 
-  public reduce(action: Action<any, any>): this {
+  public reduce(action: Action<any>): this {
     const newState = this.params.reducer(this.state, action);
     if (newState === this.state) {
       return this;
