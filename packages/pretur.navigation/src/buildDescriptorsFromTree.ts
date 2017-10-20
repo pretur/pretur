@@ -71,7 +71,7 @@ function buildPageFolderTree(
       const folderDescriptor: PageFolderDescriptor = {
         hidden: folderHidden,
         path: absolutePath,
-        titleKey: folder.titleKey,
+        title: folder.title,
       };
 
       folders.push(folderDescriptor);
@@ -110,8 +110,8 @@ function buildPageFolderTree(
         hidden: pageHidden,
         path: absolutePath,
         persistent: page.persistent,
-        reducerBuilder: page.reducerBuilder,
-        titleKey: page.titleKey,
+        reducerBuilder: page.node,
+        title: page.title,
       });
 
     }

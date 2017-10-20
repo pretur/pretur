@@ -1,5 +1,5 @@
 import { ComponentClass, StatelessComponent } from 'react';
-import { Reducer } from 'reducible-node';
+import { ReducibleNode } from 'reducible-node';
 import { PageInstance } from './pageInstance';
 import { buildDescriptorsFromTree } from './buildDescriptorsFromTree';
 
@@ -8,110 +8,68 @@ export interface PageTreeRoot {
 }
 
 export interface PageTreeFolder {
-  titleKey: string;
+  title: string;
   path?: string;
   hidden?: boolean;
   contents: PageTreeRoot;
 }
 
 export interface PageTreeLeaf {
-  titleKey: string;
+  title?: string;
   path?: string;
   hidden?: boolean;
   persistent?: boolean;
   component: ComponentClass<any> | StatelessComponent<any>;
-  reducerBuilder: PageReducerBuilder<any, any>;
+  node: ReducibleNode<any>;
 }
 
-export interface Page<TProps, TState, TReducerBuilderData> {
-  titleKey: string;
+export interface Page<TProps, TState> {
+  title?: string;
   path: string;
   hidden: boolean;
   persistent: boolean;
   component: ComponentClass<TProps> | StatelessComponent<TProps>;
-  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>;
+  node: ReducibleNode<TState>;
 }
 
 export function buildPage<TProps, TState, TReducerBuilderData>(
   component: ComponentClass<TProps> | StatelessComponent<TProps>,
-  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
-  titleKey: string,
-): Page<TProps, TState, TReducerBuilderData>;
-export function buildPage<TProps, TState, TReducerBuilderData>(
-  component: ComponentClass<TProps> | StatelessComponent<TProps>,
-  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
-  titleKey: string,
-  dynamic: boolean,
-): Page<TProps, TState, TReducerBuilderData>;
-export function buildPage<TProps, TState, TReducerBuilderData>(
-  component: ComponentClass<TProps> | StatelessComponent<TProps>,
-  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
-  titleKey: string,
-  hidden: boolean,
-  persistent: boolean,
-): Page<TProps, TState, TReducerBuilderData>;
-export function buildPage<TProps, TState, TReducerBuilderData>(
-  component: ComponentClass<TProps> | StatelessComponent<TProps>,
-  reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>,
+  node: node<TReducerBuilderData, TState>,
   titleKey: string,
   dynamicOrHidden?: boolean,
   persistent?: boolean,
 ): Page<TProps, TState, TReducerBuilderData> {
-  if (typeof dynamicOrHidden === 'boolean') {
-    if (typeof persistent === 'boolean') {
-      return <Page<TProps, TState, TReducerBuilderData>>{
-        component,
-        hidden: dynamicOrHidden,
-        persistent,
-        reducerBuilder,
-        titleKey,
-      };
-    }
-
-    return <Page<TProps, TState, TReducerBuilderData>>{
-      component,
-      hidden: dynamicOrHidden,
-      persistent: !dynamicOrHidden,
-      reducerBuilder,
-      titleKey,
-    };
-  }
-
   return <Page<TProps, TState, TReducerBuilderData>>{
     component,
-    hidden: false,
-    persistent: true,
-    reducerBuilder,
-    titleKey,
+    hidden: dynamicOrHidden,
+    persistent,
+    node,
+    title,
   };
-}
-
-export interface PageReducerBuilder<T, S> {
-  (data?: T): Reducer<S>;
 }
 
 export interface PageFolderDescriptor {
   path: string;
-  titleKey: string;
+  title: string;
   hidden?: boolean;
 }
 
 export interface PageDescriptor<TProps, TState, TReducerBuilderData> {
   path: string;
-  titleKey: string;
+  title: string;
   hidden?: boolean;
   persistent?: boolean;
   component: ComponentClass<TProps> | StatelessComponent<TProps>;
   reducerBuilder: PageReducerBuilder<TReducerBuilderData, TState>;
 }
 
-export interface PageInstantiationData<TReducerBuilderData = undefined> {
+export interface PageInstantiationData<Parameters = {}> {
   path: string;
   mutex: string;
+  title: string;
+  parameters: Parameters;
   parent?: string;
   openedFrom?: string;
-  reducerBuilderData?: TReducerBuilderData;
-  titleData?: any;
 }
 
 export type PathTreeNode = string | PathTree;

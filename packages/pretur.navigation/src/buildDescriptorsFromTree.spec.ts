@@ -14,7 +14,7 @@ const descriptors = buildDescriptorsFromTree({
         contents: {
           'c': {
             component,
-            reducerBuilder,
+            node,
             titleKey: 'C',
           },
         },
@@ -24,7 +24,7 @@ const descriptors = buildDescriptorsFromTree({
         contents: {
           'e': {
             component,
-            reducerBuilder,
+            node,
             titleKey: 'E',
           },
         },
@@ -36,7 +36,7 @@ const descriptors = buildDescriptorsFromTree({
   },
   'f': {
     component,
-    reducerBuilder,
+    node,
     titleKey: 'F',
   },
   'g': {
@@ -44,7 +44,7 @@ const descriptors = buildDescriptorsFromTree({
       'h': {
         component,
         hidden: true,
-        reducerBuilder,
+        node,
         titleKey: 'H',
       },
     },

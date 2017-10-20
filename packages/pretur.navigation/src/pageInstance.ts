@@ -22,7 +22,7 @@ export class PageInstance<TProps, TState, TReducerBuilderData>
       return;
     }
 
-    const reducer = descriptor.reducerBuilder(instantiationData.reducerBuilderData);
+    const reducer = descriptor.reducerBuilder(instantiationData.parameters);
     this.currentState = reducer(undefined, { type: '@@INIT_PAGE' });
 
     if (this.currentState === undefined) {
@@ -33,7 +33,7 @@ export class PageInstance<TProps, TState, TReducerBuilderData>
       descriptor,
       instantiationData,
       reducer,
-      title: { data: instantiationData.titleData, key: descriptor.titleKey },
+      title: { data: instantiationData.titleData, key: descriptor.title },
     };
   }
 

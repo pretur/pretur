@@ -48,8 +48,8 @@ describe('buildPage', () => {
   it('should properly build a page', () => {
     const page = buildPage(component, reducerBuilder, 'A');
     expect(page.component).to.be.equals(component);
-    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
-    expect(page.titleKey).to.be.equals('A');
+    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(false);
     expect(page.persistent).to.be.equals(true);
   });
@@ -57,8 +57,8 @@ describe('buildPage', () => {
   it('should properly build a page with dynamic=false', () => {
     const page = buildPage(component, reducerBuilder, 'A', false);
     expect(page.component).to.be.equals(component);
-    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
-    expect(page.titleKey).to.be.equals('A');
+    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(false);
     expect(page.persistent).to.be.equals(true);
   });
@@ -66,8 +66,8 @@ describe('buildPage', () => {
   it('should properly build a page with dynamic=true', () => {
     const page = buildPage(component, reducerBuilder, 'A', true);
     expect(page.component).to.be.equals(component);
-    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
-    expect(page.titleKey).to.be.equals('A');
+    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(true);
     expect(page.persistent).to.be.equals(false);
   });
@@ -75,8 +75,8 @@ describe('buildPage', () => {
   it('should properly build a page with hidden=true, persistent=true', () => {
     const page = buildPage(component, reducerBuilder, 'A', true, true);
     expect(page.component).to.be.equals(component);
-    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
-    expect(page.titleKey).to.be.equals('A');
+    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(true);
     expect(page.persistent).to.be.equals(true);
   });
@@ -84,8 +84,8 @@ describe('buildPage', () => {
   it('should properly build a page with hidden=false, persistent=false', () => {
     const page = buildPage(component, reducerBuilder, 'A', false, false);
     expect(page.component).to.be.equals(component);
-    expect(page.reducerBuilder).to.be.equals(reducerBuilder);
-    expect(page.titleKey).to.be.equals('A');
+    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(false);
     expect(page.persistent).to.be.equals(false);
   });
@@ -113,12 +113,12 @@ describe('Pages', () => {
 
   it('should return a folder of specified path', () => {
     const pages = new Pages(tree);
-    expect(pages.getFolder('a/d').titleKey).to.be.equals('D');
+    expect(pages.getFolder('a/d').title).to.be.equals('D');
   });
 
   it('should return a page of specified path', () => {
     const pages = new Pages(tree);
-    expect(pages.getPage('a/b/c').titleKey).to.be.equals('C');
+    expect(pages.getPage('a/b/c').title).to.be.equals('C');
   });
 
   it('should build valid page instances with unique ids', () => {
