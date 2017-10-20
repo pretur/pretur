@@ -11,7 +11,7 @@ import { CLAY_REFRESH } from './actions';
 export type State = 'normal' | 'new' | 'removed';
 
 export type Clay<T extends Reducible<any>> = Reducible<T> & {
-  readonly uniqueId: symbol;
+  readonly identifier: symbol;
   readonly original: Clay<T>;
   readonly state: State;
   readonly error: ValidationError;
@@ -27,7 +27,7 @@ export function refresh<T extends SpecType>(
   querier: Querier<T>,
   payload: { data: Set<T>; count: number },
 ): void {
-  dispatch(CLAY_REFRESH.create.multicast([set.uniqueId, querier.uniqueId], payload));
+  dispatch(CLAY_REFRESH.create.multicast([set.identifier, querier.identifier], payload));
 }
 
 export function toPlain<T extends SpecType>(set: Set<T>): Model<T>[];

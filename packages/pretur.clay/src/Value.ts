@@ -11,7 +11,7 @@ import {
 } from './actions';
 
 export class Value<T> implements Clay<Value<T>> {
-  public readonly uniqueId: symbol;
+  public readonly identifier: symbol;
   public readonly original: this;
   public readonly state: State;
   public readonly value: T;
@@ -22,12 +22,12 @@ export class Value<T> implements Clay<Value<T>> {
     error?: ValidationError,
     state: State = 'normal',
     original?: Value<T>,
-    uniqueId?: symbol,
+    identifier?: symbol,
   ) {
     if (value instanceof Value) {
       return value;
     }
-    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
+    this.identifier = typeof identifier === 'symbol' ? identifier : Symbol();
     this.original = original ? <this>original : this;
     this.state = state;
     this.value = value;
@@ -43,15 +43,15 @@ export class Value<T> implements Clay<Value<T>> {
   }
 
   public reduce(action: Action<any>): this {
-    if (CLAY_CLEAR.is(this.uniqueId, action)) {
+    if (CLAY_CLEAR.is(this.identifier, action)) {
       return <this>this.original;
     }
 
-    if (CLAY_REPLACE.is(this.uniqueId, action)) {
+    if (CLAY_REPLACE.is(this.identifier, action)) {
       return action.payload;
     }
 
-    if (CLAY_SET_VALUE.is(this.uniqueId, action)) {
+    if (CLAY_SET_VALUE.is(this.identifier, action)) {
       if (!action.payload || this.value === action.payload.value) {
         return this;
       }
@@ -66,10 +66,16 @@ export class Value<T> implements Clay<Value<T>> {
         return <this>this.original;
       }
 
-      return <this>new Value(action.payload.value, error, this.state, this.original, this.uniqueId);
+      return <this>new Value(
+        action.payload.value,
+        error,
+        this.state,
+        this.original,
+        this.identifier,
+      );
     }
 
-    if (CLAY_SET_ERROR.is(this.uniqueId, action)) {
+    if (CLAY_SET_ERROR.is(this.identifier, action)) {
       if (isEqual(this.error, action.payload)) {
         return this;
       }
@@ -82,10 +88,16 @@ export class Value<T> implements Clay<Value<T>> {
         return <this>this.original;
       }
 
-      return <this>new Value(this.value, action.payload, this.state, this.original, this.uniqueId);
+      return <this>new Value(
+        this.value,
+        action.payload,
+        this.state,
+        this.original,
+        this.identifier,
+      );
     }
 
-    if (CLAY_SET_STATE.is(this.uniqueId, action)) {
+    if (CLAY_SET_STATE.is(this.identifier, action)) {
       if (this.state === action.payload) {
         return this;
       }
@@ -98,29 +110,35 @@ export class Value<T> implements Clay<Value<T>> {
         return <this>this.original;
       }
 
-      return <this>new Value(this.value, this.error, action.payload, this.original, this.uniqueId);
+      return <this>new Value(
+        this.value,
+        this.error,
+        action.payload,
+        this.original,
+        this.identifier,
+      );
     }
 
     return this;
   }
 
   public clear(dispatch: Dispatch): void {
-    dispatch(CLAY_CLEAR.create.unicast(this.uniqueId));
+    dispatch(CLAY_CLEAR.create.unicast(this.identifier));
   }
 
   public replace(dispatch: Dispatch, by: this): void {
-    dispatch(CLAY_REPLACE.create.unicast(this.uniqueId, by));
+    dispatch(CLAY_REPLACE.create.unicast(this.identifier, by));
   }
 
   public setValue(dispatch: Dispatch, value: T, resetError = true): void {
-    dispatch(CLAY_SET_VALUE.create.unicast(this.uniqueId, { value, resetError }));
+    dispatch(CLAY_SET_VALUE.create.unicast(this.identifier, { value, resetError }));
   }
 
   public setError(dispatch: Dispatch, error: ValidationError): void {
-    dispatch(CLAY_SET_ERROR.create.unicast(this.uniqueId, error));
+    dispatch(CLAY_SET_ERROR.create.unicast(this.identifier, error));
   }
 
   public setState(dispatch: Dispatch, state: State): void {
-    dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, state));
+    dispatch(CLAY_SET_STATE.create.unicast(this.identifier, state));
   }
 }

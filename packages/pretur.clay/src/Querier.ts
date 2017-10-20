@@ -55,20 +55,20 @@ export function setInclude<T extends SpecType, S extends SpecType = SpecType>(
 }
 
 export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
-  public readonly uniqueId: symbol;
+  public readonly identifier: symbol;
   public readonly count?: number;
   public readonly model: T['name'];
   public readonly query: Query<T>;
 
-  constructor(model: T['name'], query: Query<T>, count?: number, uniqueId?: symbol) {
-    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
+  constructor(model: T['name'], query: Query<T>, count?: number, identifier?: symbol) {
+    this.identifier = typeof identifier === 'symbol' ? identifier : Symbol();
     this.count = count;
     this.model = model;
     this.query = query;
   }
 
   public reduce(action: Action<any>): this {
-    if (CLAY_SET_QUERY_ATTRIBUTES.is(this.uniqueId, action)) {
+    if (CLAY_SET_QUERY_ATTRIBUTES.is(this.identifier, action)) {
       if (isEqual(this.query.attributes, action.payload)) {
         return this;
       }
@@ -86,10 +86,10 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.uniqueId);
+      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
     }
 
-    if (CLAY_SET_QUERY_FILTERS.is(this.uniqueId, action)) {
+    if (CLAY_SET_QUERY_FILTERS.is(this.identifier, action)) {
       if (!action.payload) {
         return this;
       }
@@ -122,10 +122,10 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.uniqueId);
+      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
     }
 
-    if (CLAY_SET_QUERY_PAGINATION.is(this.uniqueId, action)) {
+    if (CLAY_SET_QUERY_PAGINATION.is(this.identifier, action)) {
       if (isEqual(this.query.pagination, action.payload)) {
         return this;
       }
@@ -136,10 +136,10 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = action.payload;
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.uniqueId);
+      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
     }
 
-    if (CLAY_SET_QUERY_ORDER.is(this.uniqueId, action)) {
+    if (CLAY_SET_QUERY_ORDER.is(this.identifier, action)) {
       if (isEqual(this.query.order, action.payload)) {
         return this;
       }
@@ -154,10 +154,10 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.uniqueId);
+      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
     }
 
-    if (CLAY_SET_QUERY_EXTRA.is(this.uniqueId, action)) {
+    if (CLAY_SET_QUERY_EXTRA.is(this.identifier, action)) {
       if (!action.payload || isEqual(this.query.extra, action.payload.extra)) {
         return this;
       }
@@ -168,38 +168,38 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.uniqueId);
+      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
     }
 
-    if (CLAY_SET_QUERIEIR_COUNT.is(this.uniqueId, action)) {
+    if (CLAY_SET_QUERIEIR_COUNT.is(this.identifier, action)) {
       if (this.count === action.payload) {
         return this;
       }
 
-      return <this>new Querier(this.model, this.query, action.payload, this.uniqueId);
+      return <this>new Querier(this.model, this.query, action.payload, this.identifier);
     }
 
-    if (CLAY_RESET_QUERIEIR.is(this.uniqueId, action)) {
+    if (CLAY_RESET_QUERIEIR.is(this.identifier, action)) {
       if (!action.payload) {
         return this;
       }
 
-      return <this>new Querier(this.model, action.payload, undefined, this.uniqueId);
+      return <this>new Querier(this.model, action.payload, undefined, this.identifier);
     }
 
-    if (CLAY_REFRESH.is(this.uniqueId, action)) {
+    if (CLAY_REFRESH.is(this.identifier, action)) {
       if (!action.payload || this.count === action.payload.count) {
         return this;
       }
 
-      return <this>new Querier(this.model, this.query, action.payload.count, this.uniqueId);
+      return <this>new Querier(this.model, this.query, action.payload.count, this.identifier);
     }
 
     return this;
   }
 
   public setAttributes(dispatch: Dispatch, attributes?: (keyof T['fields'])[]): void {
-    dispatch(CLAY_SET_QUERY_ATTRIBUTES.create.unicast(this.uniqueId, attributes));
+    dispatch(CLAY_SET_QUERY_ATTRIBUTES.create.unicast(this.identifier, attributes));
   }
 
   public resetFilters(
@@ -207,7 +207,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
     filters?: Filter<T>,
     path?: string[],
   ): void {
-    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
+    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.identifier, { filters, path }));
   }
 
   public setFilter(
@@ -221,7 +221,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
 
     filters[field] = filter;
 
-    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
+    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.identifier, { filters, path }));
   }
 
   public clearFilter(dispatch: Dispatch, field: keyof T['fields'], path?: string[]): void {
@@ -233,11 +233,11 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
 
     const filters = omit(target.filters, field);
 
-    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.uniqueId, { filters, path }));
+    dispatch(CLAY_SET_QUERY_FILTERS.create.unicast(this.identifier, { filters, path }));
   }
 
   public setPagination(dispatch: Dispatch, skip = 0, take = 0): void {
-    dispatch(CLAY_SET_QUERY_PAGINATION.create.unicast(this.uniqueId, { skip, take }));
+    dispatch(CLAY_SET_QUERY_PAGINATION.create.unicast(this.identifier, { skip, take }));
   }
 
   public setOrder(dispatch: Dispatch, field: string, ordering?: Ordering, chain?: string[]): void {
@@ -261,7 +261,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
       }
     }
 
-    dispatch(CLAY_SET_QUERY_ORDER.create.unicast(this.uniqueId, {
+    dispatch(CLAY_SET_QUERY_ORDER.create.unicast(this.identifier, {
       chain,
       field,
       ordering: targetOrdering,
@@ -269,14 +269,14 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
   }
 
   public setExtra(dispatch: Dispatch, extra?: any, resetPagination = false): void {
-    dispatch(CLAY_SET_QUERY_EXTRA.create.unicast(this.uniqueId, { extra, resetPagination }));
+    dispatch(CLAY_SET_QUERY_EXTRA.create.unicast(this.identifier, { extra, resetPagination }));
   }
 
   public setCount(dispatch: Dispatch, count?: number): void {
-    dispatch(CLAY_SET_QUERIEIR_COUNT.create.unicast(this.uniqueId, count));
+    dispatch(CLAY_SET_QUERIEIR_COUNT.create.unicast(this.identifier, count));
   }
 
   public reset(dispatch: Dispatch, query: Query<T>): void {
-    dispatch(CLAY_RESET_QUERIEIR.create.unicast(this.uniqueId, query));
+    dispatch(CLAY_RESET_QUERIEIR.create.unicast(this.identifier, query));
   }
 }

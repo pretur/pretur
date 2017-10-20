@@ -38,7 +38,7 @@ function FieldsEqual<T extends SpecType>(fields1: Fields<T>, fields2: Fields<T>)
 }
 
 export class Record<T extends SpecType> implements Clay<Record<T>> {
-  public readonly uniqueId: symbol;
+  public readonly identifier: symbol;
   public readonly original: this;
   public readonly state: State;
   public readonly fields: Fields<T>;
@@ -49,12 +49,12 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
     error?: ValidationError,
     state: State = 'normal',
     original?: Record<T>,
-    uniqueId?: symbol,
+    identifier?: symbol,
   ) {
     if (fields instanceof Record) {
       return fields;
     }
-    this.uniqueId = typeof uniqueId === 'symbol' ? uniqueId : Symbol();
+    this.identifier = typeof identifier === 'symbol' ? identifier : Symbol();
     this.original = original ? <this>original : this;
     this.state = state;
     this.fields = fields;
@@ -76,15 +76,15 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
   }
 
   public reduce(action: Action<any>): this {
-    if (CLAY_CLEAR.is(this.uniqueId, action)) {
+    if (CLAY_CLEAR.is(this.identifier, action)) {
       return this.original;
     }
 
-    if (CLAY_REPLACE.is(this.uniqueId, action)) {
+    if (CLAY_REPLACE.is(this.identifier, action)) {
       return action.payload;
     }
 
-    if (CLAY_SET_FIELD.is(this.uniqueId, action)) {
+    if (CLAY_SET_FIELD.is(this.identifier, action)) {
       if (!action.payload) {
         return this;
       }
@@ -106,10 +106,16 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
         return this.original;
       }
 
-      return <this>new Record(fieldsWithNew, this.error, this.state, this.original, this.uniqueId);
+      return <this>new Record(
+        fieldsWithNew,
+        this.error,
+        this.state,
+        this.original,
+        this.identifier,
+      );
     }
 
-    if (CLAY_SET_ERROR.is(this.uniqueId, action)) {
+    if (CLAY_SET_ERROR.is(this.identifier, action)) {
       if (isEqual(this.error, action.payload)) {
         return this;
       }
@@ -127,11 +133,11 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
         action.payload,
         this.state,
         this.original,
-        this.uniqueId,
+        this.identifier,
       );
     }
 
-    if (CLAY_SET_STATE.is(this.uniqueId, action)) {
+    if (CLAY_SET_STATE.is(this.identifier, action)) {
       if (this.state === action.payload) {
         return this;
       }
@@ -149,17 +155,17 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
         this.error,
         action.payload,
         this.original,
-        this.uniqueId,
+        this.identifier,
       );
     }
 
-    if (CLAY_SET_REMOVED_AND_RESET.is(this.uniqueId, action)) {
+    if (CLAY_SET_REMOVED_AND_RESET.is(this.identifier, action)) {
       return <this>new Record(
         this.original.fields,
         this.original.error,
         'removed',
         this.original,
-        this.uniqueId,
+        this.identifier,
       );
     }
 
@@ -194,7 +200,7 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
         this.error,
         this.state,
         this.original,
-        this.uniqueId,
+        this.identifier,
       );
     }
 
@@ -202,42 +208,42 @@ export class Record<T extends SpecType> implements Clay<Record<T>> {
   }
 
   public clear(dispatch: Dispatch): void {
-    dispatch(CLAY_CLEAR.create.unicast(this.uniqueId));
+    dispatch(CLAY_CLEAR.create.unicast(this.identifier));
   }
 
   public replace(dispatch: Dispatch, by: this): void {
-    dispatch(CLAY_REPLACE.create.unicast(this.uniqueId, by));
+    dispatch(CLAY_REPLACE.create.unicast(this.identifier, by));
   }
 
   public setField<K extends keyof Fields<T>>(dispatch: Dispatch, field: K, value: Fields<T>[K]) {
-    dispatch(CLAY_SET_FIELD.create.unicast(this.uniqueId, { field, value }));
+    dispatch(CLAY_SET_FIELD.create.unicast(this.identifier, { field, value }));
   }
 
   public setError(dispatch: Dispatch, error: ValidationError): void {
-    dispatch(CLAY_SET_ERROR.create.unicast(this.uniqueId, error));
+    dispatch(CLAY_SET_ERROR.create.unicast(this.identifier, error));
   }
 
   public setState(dispatch: Dispatch, state: State): void {
-    dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, state));
+    dispatch(CLAY_SET_STATE.create.unicast(this.identifier, state));
   }
 
   public remove(dispatch: Dispatch): void {
     if (this.state === 'normal') {
-      dispatch(CLAY_SET_REMOVED_AND_RESET.create.unicast(this.uniqueId));
+      dispatch(CLAY_SET_REMOVED_AND_RESET.create.unicast(this.identifier));
     }
 
     if (this.state === 'new') {
-      dispatch(CLAY_REMOVE.create.broadcast(this.uniqueId));
+      dispatch(CLAY_REMOVE.create.broadcast(this.identifier));
     }
   }
 
   public discard(dispatch: Dispatch): void {
-    dispatch(CLAY_REMOVE.create.broadcast(this.uniqueId));
+    dispatch(CLAY_REMOVE.create.broadcast(this.identifier));
   }
 
   public unremove(dispatch: Dispatch): void {
     if (this.state === 'removed') {
-      dispatch(CLAY_SET_STATE.create.unicast(this.uniqueId, 'normal'));
+      dispatch(CLAY_SET_STATE.create.unicast(this.identifier, 'normal'));
     }
   }
 }
