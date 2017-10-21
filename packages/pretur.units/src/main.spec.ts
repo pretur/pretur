@@ -155,7 +155,7 @@ describe('Units', () => {
 
       const matrix = units.getMatrix('nested');
 
-      expect(matrix).to.be.deep.equal(expectedMatrix);
+      expect(matrix).to.deep.equal(expectedMatrix);
     });
 
     it('should calculate conversion grid matrix', () => {
@@ -177,8 +177,8 @@ describe('Units', () => {
 
       const matrix = units.getMatrix('grid');
 
-      expect(matrix.indices).to.be.deep.equal(unitNames);
-      expect(matrix.grid).to.be.deep.equal(expectedMatrix);
+      expect(matrix.indices).to.deep.equal(unitNames);
+      expect(matrix.grid).to.deep.equal(expectedMatrix);
     });
 
     it('should calculate conversion grid matrix with Infinity values', () => {
@@ -197,8 +197,8 @@ describe('Units', () => {
 
       const matrix = units.getMatrix('grid');
 
-      expect(matrix.indices).to.be.deep.equal(unitNames);
-      expect(matrix.grid).to.be.deep.equal(expectedMatrix);
+      expect(matrix.indices).to.deep.equal(unitNames);
+      expect(matrix.grid).to.deep.equal(expectedMatrix);
     });
 
     it('should calculate conversion array matrix', () => {
@@ -239,7 +239,7 @@ describe('Units', () => {
 
       const matrix = units.getMatrix('array');
 
-      expect(matrix).to.be.deep.equal(expectedMatrix);
+      expect(matrix).to.deep.equal(expectedMatrix);
     });
 
   });

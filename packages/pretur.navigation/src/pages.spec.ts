@@ -2,92 +2,52 @@
 
 import { expect } from 'chai';
 import { StatelessComponent } from 'react';
-import { Pages, PageReducerBuilder, buildPage } from '../src/pages';
+import { buildNode } from 'reducible-node';
+import { Pages, buildPage, folder } from './pages';
 
 // tslint:disable-next-line:no-null-keyword
 const component: StatelessComponent<void> = () => null!;
-const reducerBuilder: PageReducerBuilder<void, string> = () => () => 'state!';
+const node = buildNode(() => ({ value: 'state!' }));
 
 const tree = {
-  'a': {
-    contents: {
-      'b': {
-        contents: {
-          'c': {
-            component,
-            reducerBuilder,
-            titleKey: 'C',
-          },
-        },
-        hidden: true,
-        titleKey: 'B',
-      },
-      'd': {
-        contents: {
-          'e': {
-            component,
-            hidden: true,
-            reducerBuilder,
-            titleKey: 'E',
-          },
-        },
-        titleKey: 'D',
-      },
-    },
-    titleKey: 'A',
-  },
-  'f': {
-    component,
-    reducerBuilder,
-    titleKey: 'F',
-  },
+  'a': folder('A', {
+    'b': folder('B', {
+      'c': buildPage(component, node, { title: 'C' }),
+    }),
+    'd': folder('D', {
+      'e': buildPage(component, node, { title: 'E', hidden: true }),
+    }),
+  }),
+  'f': buildPage(component, node, { title: 'F' }),
 };
 
 describe('buildPage', () => {
 
   it('should properly build a page', () => {
-    const page = buildPage(component, reducerBuilder, 'A');
+    const page = buildPage(component, node, { title: 'A' });
     expect(page.component).to.be.equals(component);
-    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.node).to.be.equals(node);
     expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(false);
     expect(page.persistent).to.be.equals(true);
   });
 
-  it('should properly build a page with dynamic=false', () => {
-    const page = buildPage(component, reducerBuilder, 'A', false);
+  it('should properly build a page with persistent=false', () => {
+    const page = buildPage(component, node, { title: 'A', persistent: false });
     expect(page.component).to.be.equals(component);
-    expect(page.node).to.be.equals(reducerBuilder);
-    expect(page.title).to.be.equals('A');
-    expect(page.hidden).to.be.equals(false);
-    expect(page.persistent).to.be.equals(true);
-  });
-
-  it('should properly build a page with dynamic=true', () => {
-    const page = buildPage(component, reducerBuilder, 'A', true);
-    expect(page.component).to.be.equals(component);
-    expect(page.node).to.be.equals(reducerBuilder);
-    expect(page.title).to.be.equals('A');
-    expect(page.hidden).to.be.equals(true);
-    expect(page.persistent).to.be.equals(false);
-  });
-
-  it('should properly build a page with hidden=true, persistent=true', () => {
-    const page = buildPage(component, reducerBuilder, 'A', true, true);
-    expect(page.component).to.be.equals(component);
-    expect(page.node).to.be.equals(reducerBuilder);
-    expect(page.title).to.be.equals('A');
-    expect(page.hidden).to.be.equals(true);
-    expect(page.persistent).to.be.equals(true);
-  });
-
-  it('should properly build a page with hidden=false, persistent=false', () => {
-    const page = buildPage(component, reducerBuilder, 'A', false, false);
-    expect(page.component).to.be.equals(component);
-    expect(page.node).to.be.equals(reducerBuilder);
+    expect(page.node).to.be.equals(node);
     expect(page.title).to.be.equals('A');
     expect(page.hidden).to.be.equals(false);
     expect(page.persistent).to.be.equals(false);
+  });
+
+  it('should properly build a page with hidden=true', () => {
+    const page = buildPage(component, node, { title: 'A', hidden: true });
+    expect(page.component).to.be.equals(component);
+    expect(page.node).to.be.equals(node);
+    expect(page.title).to.be.equals('A');
+    expect(page.hidden).to.be.equals(true);
+    expect(page.persistent).to.be.equals(true);
   });
 
 });
@@ -107,8 +67,7 @@ describe('Pages', () => {
   it('should correctly determine whether the specified path is hidden', () => {
     const pages = new Pages(tree);
     expect(pages.isHidden('a/d/e')).to.be.true;
-    expect(pages.isHidden('a/b')).to.be.true;
-    expect(pages.isHidden('a/b/c')).to.be.true;
+    expect(pages.isHidden('a/b/c')).to.be.false;
   });
 
   it('should return a folder of specified path', () => {

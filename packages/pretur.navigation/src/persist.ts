@@ -1,27 +1,27 @@
-import { PageInstantiationData } from './pages';
+import { PageOccurrence } from './pages';
 const ls = require('local-storage');
 
-export function save(prefix: string, data: PageInstantiationData<any>[]) {
-  ls.set(`${prefix}_PAGES`, data);
+export function save(data: PageOccurrence[]) {
+  ls.set(`__NAVIGATION_PAGES__`, data);
 }
 
-export function load(prefix: string): PageInstantiationData<any>[] {
-  return ls.get(`${prefix}_PAGES`) || [];
+export function load(): PageOccurrence[] {
+  return ls.get(`__NAVIGATION_PAGES__`) || [];
 }
 
-export function saveActivePage(prefix: string, mutex: string | undefined) {
+export function saveActivePage(mutex: string | undefined) {
   if (typeof mutex === 'string') {
-    ls.set(`${prefix}_ACTIVE_PAGE`, mutex);
+    ls.set(`__NAVIGATION_ACTIVE_PAGE__`, mutex);
   } else {
-    ls.remove(`${prefix}_ACTIVE_PAGE`);
+    ls.remove(`__NAVIGATION_ACTIVE_PAGE__`);
   }
 }
 
-export function loadActivePage(prefix: string): string | undefined {
-  return ls.get(`${prefix}_ACTIVE_PAGE`) || undefined;
+export function loadActivePage(): string | undefined {
+  return ls.get(`__NAVIGATION_ACTIVE_PAGE__`) || undefined;
 }
 
-export function clear(prefix: string) {
-  ls.remove(`${prefix}_PAGES`);
-  ls.remove(`${prefix}_ACTIVE_PAGE`);
+export function clear() {
+  ls.remove(`__NAVIGATION_PAGES__`);
+  ls.remove(`__NAVIGATION_ACTIVE_PAGE__`);
 }

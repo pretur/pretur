@@ -1,44 +1,50 @@
 /// <reference types="mocha" />
 
+// tslint:disable:no-invalid-this
 import { expect } from 'chai';
-import { PageInstance } from '../src/pageInstance';
+import { buildNode } from 'reducible-node';
+import { PageInstance } from './pageInstance';
+import { buildPage, Pages } from './pages';
 
 interface Prop {
   A: number;
 }
 
 interface State {
-  B: number;
+  B: { value: number };
 }
 
-interface ReducerBuilderData {
+interface Params {
   rank: number;
-  fail: boolean;
 }
 
-const desciptor = {
-  // tslint:disable-next-line:no-null-keyword
-  component: () => null!,
-  path: 'admin',
-  reducerBuilder: ({ rank, fail }: ReducerBuilderData) => (s = { B: rank }, a: any): State => {
-    if (!fail) {
-      if (a.type === 'INC') {
-        return { B: rank + (a.payload || 0) };
-      }
-      return s;
-    }
-    return undefined!;
-  },
-  titleKey: 'ADMIN_TITLE',
-};
+let fail = false;
 
-const instance = new PageInstance<Prop, State, ReducerBuilderData>(desciptor, {
+const component: any = () => (<any>{});
+const node = buildNode(() => (fail ? undefined : {
+  B: {
+    value: 1,
+
+    reduce(action: any) {
+      if (action.type === 'INC') {
+        return { value: this.value + action.payload, reduce: this.reduce };
+      }
+
+      return this;
+    },
+  },
+}));
+
+const page = buildPage<Params, Prop, State>(component, node, { title: 'ADMIN_TITLE' });
+
+new Pages({ admin: page });
+
+const instance = new PageInstance(page, {
   mutex: '1',
   openedFrom: '3',
   parent: '2',
   path: 'admin',
-  reducerBuilderData: <ReducerBuilderData>{ rank: 1 },
-  titleData: { NAME: 'jim' },
+  params: { rank: 1 },
 });
 
 describe('PageInstance', () => {
@@ -60,19 +66,21 @@ describe('PageInstance', () => {
   });
 
   it('should contain the correct title', () => {
-    expect(instance.title).to.be.deep.equal({ data: { NAME: 'jim' }, key: 'ADMIN_TITLE' });
+    expect(instance.title).to.be.equals('ADMIN_TITLE');
+  });
+
+  it('should contain the correct params', () => {
+    expect(instance.params.rank).to.be.equals(1);
   });
 
   it('should throw if the reducer is faulty', () => {
-    expect(() => new PageInstance(desciptor, {
-      mutex: '1',
-      path: 'admin',
-      reducerBuilderData: { fail: true, rank: 1 },
-    })).to.throw();
+    fail = true;
+    expect(() => new PageInstance(page, { mutex: '1', path: 'admin' })).to.throw();
+    fail = false;
   });
 
   it('should correctly calculate the initial state', () => {
-    expect(instance.state.B).to.be.equals(1);
+    expect(instance.state.B.value).to.be.equals(1);
   });
 
   it('should return the same object if state is unchanged after reduction', () => {
@@ -83,7 +91,7 @@ describe('PageInstance', () => {
   it('should return the another object if state is changed after reduction', () => {
     const page2 = instance.reduce({ payload: 2, type: 'INC' });
     expect(page2).not.to.be.equals(instance);
-    expect(page2.state.B).to.be.equals(3);
+    expect(page2.state.B.value).to.be.equals(3);
   });
 
 });

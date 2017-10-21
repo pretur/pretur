@@ -1,10 +1,10 @@
 import { Reducible, Action, Dispatch } from 'reducible-node';
 import { keyBy } from 'lodash';
 import { PageInstance } from './pageInstance';
-import { Pages, PageInstantiationData } from './pages';
+import { Pages, PageOccurrence } from './pages';
 import { load, clear, loadActivePage, save, saveActivePage } from './persist';
-
 import {
+  __NAVIGATION_IDENTIFIER__,
   NAVIGATION_TRANSIT_TO_PAGE,
   NAVIGATION_OPEN_PAGE,
   NAVIGATION_REPLACE_PAGE,
@@ -13,11 +13,11 @@ import {
   NAVIGATION_CLEAR_PAGES,
 } from './actions';
 
-export interface PageReplaceOptions extends PageInstantiationData<any> {
+export interface PageReplaceOptions extends PageOccurrence<any> {
   toRemoveMutex: string;
 }
 
-export interface PageOpenOptions extends PageInstantiationData<any> {
+export interface PageOpenOptions extends PageOccurrence<any> {
   insertAfterMutex?: string;
 }
 
@@ -52,43 +52,43 @@ function cloneInstances(oldInstances: Instances): Instances {
 
 function openPage(instances: Instances, options: PageOpenOptions, pages: Pages): Instances {
   const newInstances = cloneInstances(instances);
-  const { insertAfterMutex, ...instantiationData } = options;
+  const { insertAfterMutex, ...occurrence } = options;
   const insertAfterIndex = insertAfterMutex ? newInstances.pageOrder.indexOf(insertAfterMutex) : -1;
 
-  if (instantiationData.parent) {
-    if (instantiationData.parent === instantiationData.mutex) {
-      throw new Error(`${instantiationData.mutex} cannot be child of itself.`);
+  if (occurrence.parent) {
+    if (occurrence.parent === occurrence.mutex) {
+      throw new Error(`${occurrence.mutex} cannot be child of itself.`);
     }
 
-    if (!instances.pages[instantiationData.parent]) {
-      throw new Error(`Parent of ${instantiationData.mutex} is invalid.`);
+    if (!instances.pages[occurrence.parent]) {
+      throw new Error(`Parent of ${occurrence.mutex} is invalid.`);
     }
 
     if (
       insertAfterIndex !== -1 &&
-      insertAfterIndex < instances.pageOrder.indexOf(instantiationData.parent)
+      insertAfterIndex < instances.pageOrder.indexOf(occurrence.parent)
     ) {
       throw new Error(
-        `Cannot open ${instantiationData.mutex}. Cannot be inserted before the parent.`,
+        `Cannot open ${occurrence.mutex}. Cannot be inserted before the parent.`,
       );
     }
 
-    if (instances.pages[instantiationData.parent].parent) {
+    if (instances.pages[occurrence.parent].parent) {
       throw new Error(
-        `Cannot open ${instantiationData.mutex}. Nesting more than one level is forbidden.`,
+        `Cannot open ${occurrence.mutex}. Nesting more than one level is forbidden.`,
       );
     }
   }
 
-  const newPage = pages.buildInstance(instantiationData);
+  const newPage = pages.buildInstance(occurrence);
 
   if (insertAfterIndex !== -1) {
-    newInstances.pageOrder.splice(insertAfterIndex + 1, 0, instantiationData.mutex);
+    newInstances.pageOrder.splice(insertAfterIndex + 1, 0, occurrence.mutex);
   } else {
-    newInstances.pageOrder.push(instantiationData.mutex);
+    newInstances.pageOrder.push(occurrence.mutex);
   }
 
-  newInstances.pages[instantiationData.mutex] = newPage;
+  newInstances.pages[occurrence.mutex] = newPage;
 
   return newInstances;
 }
@@ -142,25 +142,25 @@ function findClosePageTarget(
 }
 
 function replacePage(instances: Instances, options: PageReplaceOptions, pages: Pages): Instances {
-  const { toRemoveMutex, ...instantiationData } = options;
+  const { toRemoveMutex, ...occurrence } = options;
   const toInsertIndex = instances.pageOrder.indexOf(toRemoveMutex);
 
   if (toInsertIndex === -1) {
-    return openPage(instances, instantiationData, pages);
+    return openPage(instances, occurrence, pages);
   }
 
-  if (instantiationData.parent !== instances.pages[toRemoveMutex].parent) {
+  if (occurrence.parent !== instances.pages[toRemoveMutex].parent) {
     throw new Error(
-      `Cannot open ${instantiationData.mutex}. ` +
+      `Cannot open ${occurrence.mutex}. ` +
       'The new page and the page to be removed must have the same parent.',
     );
   }
 
-  const newPage = pages.buildInstance(instantiationData);
+  const newPage = pages.buildInstance(occurrence);
   const newInstances = closePage(instances, toRemoveMutex);
 
-  newInstances.pageOrder.splice(toInsertIndex, 0, instantiationData.mutex);
-  newInstances.pages[instantiationData.mutex] = newPage;
+  newInstances.pageOrder.splice(toInsertIndex, 0, occurrence.mutex);
+  newInstances.pages[occurrence.mutex] = newPage;
 
   return newInstances;
 }
@@ -236,20 +236,17 @@ function getTransitionTarget(
 }
 
 export class Navigator implements Reducible<Navigator> {
-  private _pages: Pages;
-  private _prefix: string;
+  private pages: Pages;
+  private instances: Instances = { pageOrder: [], pages: {} };
+  private activePageMutex: string | undefined;
+  private activeChildren: ActiveChildren = {};
 
-  private _instances: Instances = { pageOrder: [], pages: {} };
-  private _activePageMutex: string | undefined;
-  private _activeChildren: ActiveChildren = {};
-
-  constructor(pages: Pages, prefix = '') {
-    this._pages = pages;
-    this._prefix = prefix;
+  constructor(pages: Pages) {
+    this.pages = pages;
   }
 
   public get all(): PageInstance<any, any, any>[] {
-    return orderedPages(this._instances);
+    return orderedPages(this.instances);
   }
 
   public get roots(): PageInstance<any, any, any>[] {
@@ -257,54 +254,63 @@ export class Navigator implements Reducible<Navigator> {
   }
 
   public get active(): PageInstance<any, any, any> | undefined {
-    if (!this._activePageMutex) {
+    if (!this.activePageMutex) {
       return;
     }
-    return this._instances.pages[this._activePageMutex];
+    return this.instances.pages[this.activePageMutex];
   }
 
   public get activeMutex(): string | undefined {
-    return this._activePageMutex;
+    return this.activePageMutex;
   }
 
   public get activeRootMutex(): string | undefined {
-    if (!this._activePageMutex || !this._instances.pages[this._activePageMutex]) {
+    if (!this.activePageMutex || !this.instances.pages[this.activePageMutex]) {
       return;
     }
 
-    if (this._instances.pages[this._activePageMutex].parent) {
-      return this._instances.pages[this._activePageMutex].parent;
+    if (this.instances.pages[this.activePageMutex].parent) {
+      return this.instances.pages[this.activePageMutex].parent;
     }
 
-    return this._activePageMutex;
+    return this.activePageMutex;
+  }
+
+  public get activeRoot(): PageInstance<any, any, any> | undefined {
+    const mutex = this.activeRootMutex;
+    if (!mutex) {
+      return;
+    }
+
+    return this.instances.pages[mutex];
   }
 
   public get activeRootIndex(): number {
-    if (!this._activePageMutex || !this._instances.pages[this._activePageMutex]) {
+    if (!this.activePageMutex || !this.instances.pages[this.activePageMutex]) {
       return -1;
     }
 
-    const parentMutex = this._instances.pages[this._activePageMutex].parent;
+    const parentMutex = this.instances.pages[this.activePageMutex].parent;
 
     if (!parentMutex) {
-      return this.roots.map(page => page.mutex).indexOf(this._activePageMutex);
+      return this.roots.map(page => page.mutex).indexOf(this.activePageMutex);
     }
 
     return this.roots.map(page => page.mutex).indexOf(parentMutex);
   }
 
   public get indexAsChildOfActiveRoot(): number {
-    if (!this._activePageMutex || !this._instances.pages[this._activePageMutex]) {
+    if (!this.activePageMutex || !this.instances.pages[this.activePageMutex]) {
       return -1;
     }
 
-    const parentMutex = this._instances.pages[this._activePageMutex].parent;
+    const parentMutex = this.instances.pages[this.activePageMutex].parent;
 
     if (!parentMutex) {
       return -1;
     }
 
-    return this.childrenOf(parentMutex).map(page => page.mutex).indexOf(this._activePageMutex);
+    return this.childrenOf(parentMutex).map(page => page.mutex).indexOf(this.activePageMutex);
   }
 
   public hasChildren(mutex: string): boolean {
@@ -316,213 +322,213 @@ export class Navigator implements Reducible<Navigator> {
   }
 
   public pageFromMutex(mutex: string | undefined): PageInstance<any, any, any> | undefined {
-    return typeof mutex === 'string' ? this._instances.pages[mutex] : undefined;
+    return typeof mutex === 'string' ? this.instances.pages[mutex] : undefined;
   }
 
   public getActiveChild(mutex: string | undefined): string | undefined {
-    return mutex ? this._activeChildren[mutex] : undefined;
+    return mutex ? this.activeChildren[mutex] : undefined;
   }
 
   private persistInstances(instances: Instances): void {
-    const toSave: PageInstantiationData<any>[] = [];
+    const toSave: PageOccurrence<any>[] = [];
 
     for (const instance of orderedPages(instances)) {
-      if (instance.descriptor.persistent !== false) {
+      if (instance.page.persistent !== false) {
         if (instance.parent) {
-          if (instances.pages[instance.parent].descriptor.persistent !== false) {
-            toSave.push(instance.instantiationData);
+          if (instances.pages[instance.parent].page.persistent !== false) {
+            toSave.push(instance.occurrence);
           }
         } else {
-          toSave.push(instance.instantiationData);
+          toSave.push(instance.occurrence);
         }
       }
     }
 
-    save(this._prefix, toSave);
+    save(toSave);
   }
 
   private persistActivePage(instances: Instances, mutex: string | undefined): void {
     if (!mutex) {
-      saveActivePage(this._prefix, undefined);
+      saveActivePage(undefined);
       return;
     }
 
-    if (instances.pages[mutex].descriptor.persistent !== false) {
+    if (instances.pages[mutex].page.persistent !== false) {
       const parentMutex = instances.pages[mutex].parent;
 
       if (parentMutex) {
         const parent = instances.pages[parentMutex];
 
-        if (parent.descriptor.persistent !== false) {
-          saveActivePage(this._prefix, mutex);
+        if (parent.page.persistent !== false) {
+          saveActivePage(mutex);
         }
       } else {
-        saveActivePage(this._prefix, mutex);
+        saveActivePage(mutex);
       }
     }
   }
 
   public reduce(action: Action<any>): this {
-    if (NAVIGATION_TRANSIT_TO_PAGE.is(this._prefix, action)) {
-      if (action.payload === this._activePageMutex) {
+    if (NAVIGATION_TRANSIT_TO_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
+      if (action.payload === this.activePageMutex) {
         return this;
       }
 
       if (!action.payload) {
-        this.persistActivePage(this._instances, undefined);
-        const newNavWithoutActive = <this>new Navigator(this._pages, this._prefix);
-        newNavWithoutActive._instances = this._instances;
-        newNavWithoutActive._activeChildren = this._activeChildren;
+        this.persistActivePage(this.instances, undefined);
+        const newNavWithoutActive = <this>new Navigator(this.pages);
+        newNavWithoutActive.instances = this.instances;
+        newNavWithoutActive.activeChildren = this.activeChildren;
         return newNavWithoutActive;
       }
 
-      if (!this._instances.pages[action.payload]) {
+      if (!this.instances.pages[action.payload]) {
         return this;
       }
 
       const transitionTarget = getTransitionTarget(
-        this._instances,
-        this._activeChildren,
-        this._activePageMutex,
+        this.instances,
+        this.activeChildren,
+        this.activePageMutex,
         action.payload,
       );
 
-      this.persistActivePage(this._instances, transitionTarget);
+      this.persistActivePage(this.instances, transitionTarget);
 
-      const newNav = <this>new Navigator(this._pages, this._prefix);
-      newNav._instances = this._instances;
-      newNav._activePageMutex = transitionTarget;
-      newNav._activeChildren
-        = updateActiveChildren(this._instances, this._activeChildren, transitionTarget);
+      const newNav = <this>new Navigator(this.pages);
+      newNav.instances = this.instances;
+      newNav.activePageMutex = transitionTarget;
+      newNav.activeChildren
+        = updateActiveChildren(this.instances, this.activeChildren, transitionTarget);
       return newNav;
     }
 
-    if (NAVIGATION_OPEN_PAGE.is(this._prefix, action)) {
-      if (!action.payload || action.payload.mutex === this._activePageMutex) {
+    if (NAVIGATION_OPEN_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
+      if (!action.payload || action.payload.mutex === this.activePageMutex) {
         return this;
       }
 
       const { mutex, path } = action.payload;
 
-      if (this._instances.pages[mutex]) {
+      if (this.instances.pages[mutex]) {
 
-        this.persistActivePage(this._instances, mutex);
+        this.persistActivePage(this.instances, mutex);
 
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = this._instances;
-        newNav._activePageMutex = mutex;
-        newNav._activeChildren = updateActiveChildren(this._instances, this._activeChildren, mutex);
+        const newNav = <this>new Navigator(this.pages);
+        newNav.instances = this.instances;
+        newNav.activePageMutex = mutex;
+        newNav.activeChildren = updateActiveChildren(this.instances, this.activeChildren, mutex);
         return newNav;
       }
 
-      if (this._pages.hasPage(path)) {
-        const newInstances = openPage(this._instances, action.payload, this._pages);
+      if (this.pages.hasPage(path)) {
+        const newInstances = openPage(this.instances, action.payload, this.pages);
 
         this.persistInstances(newInstances);
         this.persistActivePage(newInstances, mutex);
 
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = newInstances;
-        newNav._activePageMutex = mutex;
-        newNav._activeChildren = updateActiveChildren(newInstances, this._activeChildren, mutex);
+        const newNav = <this>new Navigator(this.pages);
+        newNav.instances = newInstances;
+        newNav.activePageMutex = mutex;
+        newNav.activeChildren = updateActiveChildren(newInstances, this.activeChildren, mutex);
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_REPLACE_PAGE.is(this._prefix, action)) {
+    if (NAVIGATION_REPLACE_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
       if (!action.payload) {
         return this;
       }
 
       const { mutex, path } = action.payload;
 
-      if (this._instances.pages[mutex]) {
+      if (this.instances.pages[mutex]) {
 
-        this.persistActivePage(this._instances, mutex);
+        this.persistActivePage(this.instances, mutex);
 
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = this._instances;
-        newNav._activePageMutex = mutex;
-        newNav._activeChildren = updateActiveChildren(this._instances, this._activeChildren, mutex);
+        const newNav = <this>new Navigator(this.pages);
+        newNav.instances = this.instances;
+        newNav.activePageMutex = mutex;
+        newNav.activeChildren = updateActiveChildren(this.instances, this.activeChildren, mutex);
         return newNav;
       }
 
-      if (this._pages.hasPage(path)) {
-        const newInstances = replacePage(this._instances, action.payload, this._pages);
+      if (this.pages.hasPage(path)) {
+        const newInstances = replacePage(this.instances, action.payload, this.pages);
 
         this.persistInstances(newInstances);
         this.persistActivePage(newInstances, mutex);
 
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = newInstances;
-        newNav._activePageMutex = mutex;
-        newNav._activeChildren = updateActiveChildren(newInstances, this._activeChildren, mutex);
+        const newNav = <this>new Navigator(this.pages);
+        newNav.instances = newInstances;
+        newNav.activePageMutex = mutex;
+        newNav.activeChildren = updateActiveChildren(newInstances, this.activeChildren, mutex);
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_CLOSE_PAGE.is(this._prefix, action)) {
+    if (NAVIGATION_CLOSE_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
       if (!action.payload) {
         return this;
       }
 
       const { mutex, goto } = action.payload;
 
-      if (!this._instances.pages[mutex]) {
+      if (!this.instances.pages[mutex]) {
         return this;
       }
 
-      const newNav = <this>new Navigator(this._pages, this._prefix);
-      newNav._activePageMutex = this._activePageMutex;
-      const newInstances = closePage(this._instances, mutex);
+      const newNav = <this>new Navigator(this.pages);
+      newNav.activePageMutex = this.activePageMutex;
+      const newInstances = closePage(this.instances, mutex);
 
-      const isParentOfActive = this._activePageMutex &&
-        this._instances.pages[this._activePageMutex].parent === mutex;
+      const isParentOfActive = this.activePageMutex &&
+        this.instances.pages[this.activePageMutex].parent === mutex;
 
-      if (this._activePageMutex === mutex || isParentOfActive) {
+      if (this.activePageMutex === mutex || isParentOfActive) {
         const targetMutex = findClosePageTarget(
-          this._instances,
-          isParentOfActive ? this._instances.pages[this._activePageMutex!].parent! : mutex,
+          this.instances,
+          isParentOfActive ? this.instances.pages[this.activePageMutex!].parent! : mutex,
           goto,
         );
 
         const transitionTarget = targetMutex && getTransitionTarget(
           newInstances,
-          this._activeChildren,
-          this._activePageMutex,
+          this.activeChildren,
+          this.activePageMutex,
           targetMutex,
         );
 
-        this.persistActivePage(this._instances, undefined);
-        this.persistActivePage(this._instances, transitionTarget);
+        this.persistActivePage(this.instances, undefined);
+        this.persistActivePage(this.instances, transitionTarget);
 
-        newNav._activePageMutex = transitionTarget;
+        newNav.activePageMutex = transitionTarget;
       }
 
       this.persistInstances(newInstances);
 
-      newNav._instances = newInstances;
-      newNav._activeChildren
-        = updateActiveChildren(newInstances, this._activeChildren, newNav._activePageMutex);
+      newNav.instances = newInstances;
+      newNav.activeChildren
+        = updateActiveChildren(newInstances, this.activeChildren, newNav.activePageMutex);
       return newNav;
     }
 
-    if (NAVIGATION_LOAD_PAGES.is(this._prefix, action)) {
+    if (NAVIGATION_LOAD_PAGES.is(__NAVIGATION_IDENTIFIER__, action)) {
 
-      const instantiationData = load(this._prefix);
-      const loadedActivePageMutex = loadActivePage(this._prefix);
+      const occurrence = load();
+      const loadedActivePageMutex = loadActivePage();
 
       let instances: Instances | undefined = undefined;
       let activePageMutex: string | undefined = undefined;
 
-      if (instantiationData && instantiationData.length > 0) {
+      if (occurrence && occurrence.length > 0) {
         instances = { pageOrder: [], pages: {} };
 
-        for (const instanceData of instantiationData) {
-          if (this._pages.hasPage(instanceData.path)) {
-            const pageInstance = this._pages.buildInstance(instanceData);
+        for (const instanceData of occurrence) {
+          if (this.pages.hasPage(instanceData.path)) {
+            const pageInstance = this.pages.buildInstance(instanceData);
 
             if (pageInstance.mutex === loadedActivePageMutex) {
               activePageMutex = loadedActivePageMutex;
@@ -535,25 +541,25 @@ export class Navigator implements Reducible<Navigator> {
       }
 
       if (instances && instances.pageOrder.length > 0) {
-        const newNav = <this>new Navigator(this._pages, this._prefix);
-        newNav._instances = instances;
-        newNav._activePageMutex = activePageMutex;
-        newNav._activeChildren
-          = updateActiveChildren(instances, this._activeChildren, activePageMutex);
+        const newNav = <this>new Navigator(this.pages);
+        newNav.instances = instances;
+        newNav.activePageMutex = activePageMutex;
+        newNav.activeChildren
+          = updateActiveChildren(instances, this.activeChildren, activePageMutex);
         return newNav;
       }
       return this;
     }
 
-    if (NAVIGATION_CLEAR_PAGES.is(this._prefix, action)) {
-      clear(this._prefix);
-      return <this>new Navigator(this._pages, this._prefix);
+    if (NAVIGATION_CLEAR_PAGES.is(__NAVIGATION_IDENTIFIER__, action)) {
+      clear();
+      return <this>new Navigator(this.pages);
     }
 
-    const nextInstances: Instances = { pageOrder: this._instances.pageOrder, pages: {} };
+    const nextInstances: Instances = { pageOrder: this.instances.pageOrder, pages: {} };
     let modified = false;
 
-    for (const instance of orderedPages(this._instances)) {
+    for (const instance of orderedPages(this.instances)) {
       const newInstance = instance.reduce(action);
       if (newInstance !== instance) {
         modified = true;
@@ -562,43 +568,43 @@ export class Navigator implements Reducible<Navigator> {
     }
 
     if (modified) {
-      const newNav = <this>new Navigator(this._pages, this._prefix);
-      newNav._activePageMutex = this._activePageMutex;
-      newNav._instances = nextInstances;
-      newNav._activeChildren = this._activeChildren;
+      const newNav = <this>new Navigator(this.pages);
+      newNav.activePageMutex = this.activePageMutex;
+      newNav.instances = nextInstances;
+      newNav.activeChildren = this.activeChildren;
       return newNav;
     }
     return this;
   }
 
   public transit(dispatch: Dispatch, mutex: string | undefined) {
-    dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this._prefix, mutex));
+    dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, mutex));
   }
 
-  public open(dispatch: Dispatch, instantiationData: PageOpenOptions) {
-    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(this._prefix, instantiationData));
+  public open(dispatch: Dispatch, occurrence: PageOpenOptions) {
+    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, occurrence));
   }
 
   public replace(
     dispatch: Dispatch,
     toRemoveMutex: string,
-    instantiationData: PageInstantiationData<any>,
+    occurrence: PageOccurrence<any>,
   ) {
     dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(
-      this._prefix,
-      { toRemoveMutex, ...instantiationData },
+      __NAVIGATION_IDENTIFIER__,
+      { toRemoveMutex, ...occurrence },
     ));
   }
 
   public close(dispatch: Dispatch, mutex: string, goto?: string) {
-    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this._prefix, { mutex, goto }));
+    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, { mutex, goto }));
   }
 
   public load(dispatch: Dispatch) {
-    dispatch(NAVIGATION_LOAD_PAGES.create.unicast(this._prefix));
+    dispatch(NAVIGATION_LOAD_PAGES.create.unicast(__NAVIGATION_IDENTIFIER__));
   }
 
   public clear(dispatch: Dispatch) {
-    dispatch(NAVIGATION_CLEAR_PAGES.create.unicast(this._prefix));
+    dispatch(NAVIGATION_CLEAR_PAGES.create.unicast(__NAVIGATION_IDENTIFIER__));
   }
 }

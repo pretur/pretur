@@ -1,84 +1,64 @@
-import { Bundle } from 'pretur.i18n';
-import { Reducer, Reducible, Action } from 'reducible-node';
-import { PageInstantiationData, PageDescriptor } from './pages';
+import { Reducible, Action } from 'reducible-node';
+import { PageOccurrence, Page } from './pages';
 
-interface PageInstanceParams<TProps, TState, TReducerBuilderData> {
-  reducer: Reducer<TState>;
-  instantiationData: PageInstantiationData<TReducerBuilderData>;
-  descriptor: PageDescriptor<TProps, TState, TReducerBuilderData>;
-  title: Bundle;
-}
+export class PageInstance<TParams = {}, TProps = {}, TState = {}>
+  implements Reducible<PageInstance<TParams, TProps, TState>> {
+  private node: Reducible<TState>;
 
-export class PageInstance<TProps, TState, TReducerBuilderData>
-  implements Reducible<PageInstance<TProps, TState, TReducerBuilderData>> {
-  private params: PageInstanceParams<TProps, TState, TReducerBuilderData>;
-  private currentState: TState;
+  public readonly occurrence: PageOccurrence<TParams>;
+  public readonly page: Page<TParams, TProps, TState>;
 
-  constructor(
-    descriptor: PageDescriptor<TProps, TState, TReducerBuilderData> | undefined,
-    instantiationData: PageInstantiationData<TReducerBuilderData> | undefined,
-  ) {
-    if (descriptor === undefined || instantiationData === undefined) {
+  constructor(page: Page<TParams, TProps, TState>, occurrence: PageOccurrence<TParams>) {
+    if (page === undefined || occurrence === undefined) {
       return;
     }
 
-    const reducer = descriptor.reducerBuilder(instantiationData.parameters);
-    this.currentState = reducer(undefined, { type: '@@INIT_PAGE' });
+    this.occurrence = occurrence;
+    this.page = page;
 
-    if (this.currentState === undefined) {
-      throw new Error('The reducer did not return the initial state.');
+    this.node = page.node();
+
+    if (!this.node) {
+      throw new Error('The node did not return the initial state.');
     }
-
-    this.params = {
-      descriptor,
-      instantiationData,
-      reducer,
-      title: { data: instantiationData.titleData, key: descriptor.title },
-    };
   }
 
   public get path(): string {
-    return this.params.descriptor.path;
+    return this.page.path;
   }
 
   public get mutex(): string {
-    return this.params.instantiationData.mutex;
+    return this.occurrence.mutex;
   }
 
   public get parent(): string | undefined {
-    return this.params.instantiationData.parent;
+    return this.occurrence.parent;
   }
 
   public get openedFrom(): string | undefined {
-    return this.params.instantiationData.openedFrom;
+    return this.occurrence.openedFrom;
   }
 
-  public get title(): Bundle {
-    return this.params.title;
+  public get title(): string | undefined {
+    return this.occurrence.title || this.page.title;
   }
 
   public get state(): TState {
-    return this.currentState;
+    return this.node;
   }
 
-  public get descriptor(): PageDescriptor<TProps, TState, TReducerBuilderData> {
-    return this.params.descriptor;
-  }
-
-  public get instantiationData(): PageInstantiationData<TReducerBuilderData> {
-    return this.params.instantiationData;
+  public get params(): TParams {
+    return this.occurrence.params || <TParams>{};
   }
 
   public reduce(action: Action<any>): this {
-    const newState = this.params.reducer(this.state, action);
+    const newState = this.node.reduce(action);
     if (newState === this.state) {
       return this;
     }
 
-    const clone = <this>new PageInstance(undefined, undefined);
-    clone.params = this.params;
-    clone.currentState = newState;
+    const clone = <this>new PageInstance(this.page, this.occurrence);
+    clone.node = newState;
     return clone;
   }
-
 }

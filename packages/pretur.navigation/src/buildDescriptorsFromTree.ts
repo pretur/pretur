@@ -1,55 +1,48 @@
-import {
-  PageDescriptor,
-  PageFolderDescriptor,
-  PathTree,
-  FolderContents,
-  PageTreeRoot,
-  PageTreeFolder,
-  Page,
-} from './pages';
+import { PageFolder, PathTree, PageTreeNode, Page, ValidTreeNode } from './pages';
 
 export interface Descriptors {
-  pages: PageDescriptor<any, any, any>[];
-  folders: PageFolderDescriptor[];
+  pages: Page<any, any, any>[];
+  folders: PageFolder[];
   pathTree: PathTree;
-  folderContents: FolderContents;
+  folderContents: { [folder: string]: string[] };
   filteredPathTree: PathTree;
-  filteredFolderContents: FolderContents;
+  filteredFolderContents: { [folder: string]: string[] };
 }
 
-function byPath(descriptor: PageFolderDescriptor | PageDescriptor<any, any, any>) {
+function byPath(descriptor: PageFolder | Page) {
   return descriptor.path;
 }
 
-function visible(descriptor: PageFolderDescriptor | PageDescriptor<any, any, any>) {
+function visible(descriptor: Page) {
   return !descriptor.hidden;
 }
 
-export function buildDescriptorsFromTree(root: PageTreeRoot): Descriptors {
-  const pages: PageDescriptor<any, any, any>[] = [];
-  const folders: PageFolderDescriptor[] = [];
+export function buildDescriptorsFromTree<T extends ValidTreeNode>(
+  root: PageTreeNode<T>,
+): Descriptors {
+  const pages: Page[] = [];
+  const folders: PageFolder[] = [];
   const pathTree: PathTree = [];
   const filteredPathTree: PathTree = [];
 
-  buildPageFolderTree(root, pages, folders, pathTree, filteredPathTree, [], false);
+  buildPageFolderTree<T>(root, pages, folders, pathTree, filteredPathTree, []);
 
   const folderContents = buildFolderContents(folders.map(byPath), pages.map(byPath));
   const filteredFolderContents = buildFolderContents(
-    folders.filter(visible).map(byPath),
+    folders.map(byPath),
     pages.filter(visible).map(byPath),
   );
 
   return { pages, folders, pathTree, folderContents, filteredPathTree, filteredFolderContents };
 }
 
-function buildPageFolderTree(
-  root: PageTreeRoot,
-  pages: PageDescriptor<any, any, any>[],
-  folders: PageFolderDescriptor[],
+function buildPageFolderTree<T extends ValidTreeNode>(
+  root: PageTreeNode<T>,
+  pages: Page[],
+  folders: PageFolder[],
   pathTree: PathTree,
   filteredPathTree: PathTree,
   chain: string[],
-  hidden: boolean,
 ): void {
 
   pathTree.push(chain.join('/'));
@@ -59,22 +52,15 @@ function buildPageFolderTree(
     const newChain = chain.concat(path);
     const absolutePath = newChain.join('/');
 
-    if ((<PageTreeFolder>root[path]).contents) {
-      const folder = <PageTreeFolder>root[path];
+    if ((<PageFolder>root[path]).contents) {
+      const folder = <PageFolder>root[path];
       folder.path = absolutePath;
-      const folderHidden = hidden ? true : Boolean(folder.hidden);
 
       const newPathTree: PathTree = [];
       const newFilteredPathTree: PathTree = [];
       pathTree.push(newPathTree);
 
-      const folderDescriptor: PageFolderDescriptor = {
-        hidden: folderHidden,
-        path: absolutePath,
-        title: folder.title,
-      };
-
-      folders.push(folderDescriptor);
+      folders.push(folder);
 
       buildPageFolderTree(
         folder.contents,
@@ -83,44 +69,29 @@ function buildPageFolderTree(
         newPathTree,
         newFilteredPathTree,
         newChain,
-        folderHidden,
       );
 
-      if (newFilteredPathTree.length > 1 && !folderHidden) {
+      if (newFilteredPathTree.length > 1) {
         filteredPathTree.push(newFilteredPathTree);
       }
 
-      if (newFilteredPathTree.length <= 1) {
-        folderDescriptor.hidden = true;
-      }
-
     } else {
-      const page = <Page<any, any, any>>root[path];
+      const page = <Page>root[path];
       page.path = absolutePath;
-      const pageHidden = hidden ? true : page.hidden;
 
       pathTree.push(absolutePath);
 
-      if (!pageHidden) {
+      if (!page.hidden) {
         filteredPathTree.push(absolutePath);
       }
 
-      pages.push({
-        component: page.component,
-        hidden: pageHidden,
-        path: absolutePath,
-        persistent: page.persistent,
-        reducerBuilder: page.node,
-        title: page.title,
-      });
-
+      pages.push(page);
     }
-
   }
 }
 
-function buildFolderContents(folders: string[], pages: string[]): FolderContents {
-  const folderContents: FolderContents = {};
+function buildFolderContents(folders: string[], pages: string[]): { [folder: string]: string[] } {
+  const folderContents: { [folder: string]: string[] } = {};
 
   folderContents[''] = pages.slice();
 

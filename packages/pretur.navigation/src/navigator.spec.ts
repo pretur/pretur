@@ -1,57 +1,38 @@
 /// <reference types="mocha" />
 
+// tslint:disable:no-invalid-this
+// tslint:disable:no-null-keyword
 import { expect } from 'chai';
-import { Pages, PageTreeRoot } from '../src/pages';
-import { Navigator } from '../src/navigator';
-import * as actions from '../src/actions';
-import * as persist from '../src/persist';
+import { buildNode } from 'reducible-node';
+import { Pages, folder, buildPage } from './pages';
+import { Navigator } from './navigator';
+import * as actions from './actions';
+import * as persist from './persist';
 
-// tslint:disable-next-line:no-null-keyword
 const component = () => null!;
-const reducerBuilder: any
-  = () => (s = { value: 1 }, { value }: { value: any }) => value ? { value } : s;
-
-const tree: PageTreeRoot = {
-  'a': {
-    contents: {
-      'd': {
-        contents: {
-          'e': {
-            component,
-            hidden: true,
-            reducerBuilder,
-            titleKey: 'E',
-          },
-        },
-        titleKey: 'D',
-      },
-      'g': {
-        contents: {
-          'e': {
-            component,
-            persistent: false,
-            reducerBuilder,
-            titleKey: 'E',
-          },
-        },
-        titleKey: 'G',
-      },
+const node = buildNode(() => ({
+  stuff: {
+    value: 1,
+    reduce({ value }: any) {
+      return { value, reduce: this.reduce };
     },
-    titleKey: 'A',
   },
-  'f': {
-    component,
-    reducerBuilder,
-    titleKey: 'F',
-  },
-  'k': {
-    component,
-    reducerBuilder,
-    titleKey: 'F',
-  },
-};
+}));
 
-const navigator = new Navigator(new Pages(tree), 'ADMIN');
+const pages = new Pages({
+  'a': folder('A', {
+    'd': folder('D', {
+      'e': buildPage(component, node, { hidden: true, title: 'E' }),
+    }),
+    'g': folder('G', {
+      'e': buildPage(component, node, { persistent: false, title: 'E' }),
+    }),
+  }),
+  'f': buildPage(component, node, { title: 'F' }),
+  'k': buildPage(component, node, { title: 'F' }),
+});
+
+const navigator = new Navigator(pages);
 
 function check(nav: Navigator, open: string[], active: string | undefined, store = true) {
 
@@ -71,8 +52,8 @@ function check(nav: Navigator, open: string[], active: string | undefined, store
 }
 
 function checkStore(_: Navigator, open: string[], active: string | undefined) {
-  expect(persist.load('ADMIN').map(i => i.path)).to.be.deep.equal(open);
-  expect(persist.loadActivePage('ADMIN')).to.be.equals(active);
+  expect(persist.load().map(i => i.path)).to.deep.equal(open);
+  expect(persist.loadActivePage()).to.be.equals(active);
 }
 
 describe('Navigator', () => {
@@ -82,7 +63,7 @@ describe('Navigator', () => {
     describe('open', () => {
 
       it('should open a page and set active page to it', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -91,8 +72,18 @@ describe('Navigator', () => {
         check(nav, ['a/d/e'], '1');
       });
 
+      it('should open a page from a page descriptor with mutex appended to path', () => {
+        persist.clear();
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        pages.getPage('a/d/e').open(dispatch, { mutex: '1' });
+
+        check(nav, ['a/d/e'], 'a/d/e/1');
+      });
+
       it('should ignore when the target is the current page', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -108,7 +99,7 @@ describe('Navigator', () => {
       });
 
       it('should insert a page after a given index and set active page to it', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -134,7 +125,7 @@ describe('Navigator', () => {
       });
 
       it('should throw when opening a page with invalid parent', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -143,7 +134,7 @@ describe('Navigator', () => {
       });
 
       it('should throw when opening a page as a child of itself', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -152,7 +143,7 @@ describe('Navigator', () => {
       });
 
       it('should throw when trying to nest more than one level', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -162,7 +153,7 @@ describe('Navigator', () => {
       });
 
       it('should throw when trying to insert a page before parent', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -175,7 +166,7 @@ describe('Navigator', () => {
       });
 
       it('should ignore pages with unknown path', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -189,7 +180,7 @@ describe('Navigator', () => {
       });
 
       it('should leave store unchanged when opening non persistent pages', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -207,7 +198,7 @@ describe('Navigator', () => {
       });
 
       it('should transit to pages with already open mutex instead', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -223,7 +214,7 @@ describe('Navigator', () => {
       });
 
       it('should properly update active children', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -247,7 +238,7 @@ describe('Navigator', () => {
     describe('replace', () => {
 
       it('should behave like open when target mutex exists', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -257,7 +248,7 @@ describe('Navigator', () => {
       });
 
       it('should throw when replacing with a page with different parent', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -279,7 +270,7 @@ describe('Navigator', () => {
       });
 
       it('should transit to pages with already open mutex instead', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -295,7 +286,7 @@ describe('Navigator', () => {
       });
 
       it('should properly replace an already open page', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -310,8 +301,24 @@ describe('Navigator', () => {
         check(nav, ['a/d/e', 'a/d/e', 'a/d/e'], '4');
       });
 
+      it('should properly replace an already open page from a page descriptor', () => {
+        persist.clear();
+        let nav = navigator;
+        const dispatch: any = (a: any) => nav = nav.reduce(a);
+
+        nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
+        nav.open(dispatch, { mutex: '2', path: 'f' });
+        nav.open(dispatch, { mutex: '3', path: 'a/d/e' });
+
+        check(nav, ['a/d/e', 'f', 'a/d/e'], '3');
+
+        pages.getPage('a/d/e').replace(dispatch, '2', { mutex: '4' });
+
+        check(nav, ['a/d/e', 'a/d/e', 'a/d/e'], 'a/d/e/4');
+      });
+
       it('should properly replace an already open page with children', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -330,7 +337,7 @@ describe('Navigator', () => {
       });
 
       it('should ignore pages with unknown path', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -344,7 +351,7 @@ describe('Navigator', () => {
       });
 
       it('should remove the replaced page from store when the new page is not persistent', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -362,7 +369,7 @@ describe('Navigator', () => {
       });
 
       it('should properly update active children', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         let nav = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -393,7 +400,7 @@ describe('Navigator', () => {
       let nav: Navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
       beforeEach('open pages for testing close', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         nav = navigator;
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
         nav.open(dispatch, { mutex: '2', path: 'f' });
@@ -655,7 +662,7 @@ describe('Navigator', () => {
       let nav: Navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
       beforeEach('open pages for testing close', () => {
-        persist.clear('ADMIN');
+        persist.clear();
         nav = navigator;
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
         nav.open(dispatch, { mutex: '2', path: 'f' });
@@ -747,7 +754,7 @@ describe('Navigator', () => {
       it('should properly clear all and active pages', () => {
         let nav: Navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
-        persist.clear('ADMIN');
+        persist.clear();
         nav = navigator;
         nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
         nav.open(dispatch, { mutex: '2', path: 'f' });
@@ -765,18 +772,18 @@ describe('Navigator', () => {
       it('should return self if persistent store is empty or has invalid paths', () => {
         let nav: Navigator = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
-        persist.clear('ADMIN');
+        persist.clear();
 
         nav.load(dispatch);
 
         expect(nav).to.be.equals(navigator);
 
-        persist.save('ADMIN', [
+        persist.save([
           { mutex: '1', path: 'blah!' },
           { mutex: '2', path: 'blah!blah!' },
           { mutex: '3', path: 'blah!blah!blah!' },
         ]);
-        persist.saveActivePage('ADMIN', '2');
+        persist.saveActivePage('2');
 
         nav.load(dispatch);
 
@@ -786,13 +793,13 @@ describe('Navigator', () => {
       it('should properly load instances and the active page from persistent store', () => {
         let nav: Navigator = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
-        persist.clear('ADMIN');
-        persist.save('ADMIN', [
+        persist.clear();
+        persist.save([
           { mutex: '1', path: 'a/d/e' },
           { mutex: '2', path: 'f' },
           { mutex: '3', path: 'a/d/e', parent: '2' },
         ]);
-        persist.saveActivePage('ADMIN', '3');
+        persist.saveActivePage('3');
 
         nav.load(dispatch);
 
@@ -803,13 +810,13 @@ describe('Navigator', () => {
       it('should ignore unknown paths', () => {
         let nav: Navigator = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
-        persist.clear('ADMIN');
-        persist.save('ADMIN', [
+        persist.clear();
+        persist.save([
           { mutex: '1', path: 'a/d/e' },
           { mutex: '2', path: 'blah!' },
           { mutex: '3', path: 'a/d/e', parent: '1' },
         ]);
-        persist.saveActivePage('ADMIN', '2');
+        persist.saveActivePage('2');
 
         nav.load(dispatch);
 
@@ -819,8 +826,8 @@ describe('Navigator', () => {
       it('should tolerate undefined active page', () => {
         let nav: Navigator = navigator;
         const dispatch: any = (a: any) => nav = nav.reduce(a);
-        persist.clear('ADMIN');
-        persist.save('ADMIN', [
+        persist.clear();
+        persist.save([
           { mutex: '1', path: 'a/d/e' },
           { mutex: '2', path: 'a/d/e' },
         ]);
@@ -839,7 +846,7 @@ describe('Navigator', () => {
     let nav: Navigator;
     const dispatch: any = (a: any) => nav = nav.reduce(a);
     beforeEach('open pages for testing close', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       nav = navigator;
       nav.open(dispatch, { mutex: '1', path: 'a/d/e' });
       nav.open(dispatch, { mutex: '2', path: 'f' });
@@ -849,31 +856,37 @@ describe('Navigator', () => {
     });
 
     it('should properly initialize page states', () => {
-      nav.all.forEach(page => expect(page!.state).to.be.deep.equal({ value: 1 }));
+      nav.all.forEach(page => expect(page.state.stuff.value).to.be.equals(1));
     });
 
     it('should absorb actions that target it', () => {
-      const action1: any = actions.NAVIGATION_CLOSE_PAGE.create.unicast('ADMIN', { mutex: '2' });
+      const action1: any = actions.NAVIGATION_CLOSE_PAGE.create.unicast(
+        actions.__NAVIGATION_IDENTIFIER__,
+        { mutex: '2' },
+      );
       action1['value'] = 10;
       const newNav1 = nav.reduce(action1);
-      expect(nav.active!.state.value).to.be.equals(1);
-      expect(newNav1.active!.state.value).to.be.equals(1);
+      expect(nav.active!.state.stuff.value).to.be.equals(1);
+      expect(newNav1.active!.state.stuff.value).to.be.equals(1);
 
-      const action2: any = actions.NAVIGATION_OPEN_PAGE.create.unicast('ADMIN', {
-        mutex: '3',
-        path: 'a/d/e',
-      });
+      const action2: any = actions.NAVIGATION_OPEN_PAGE.create.unicast(
+        actions.__NAVIGATION_IDENTIFIER__,
+        { mutex: '3', path: 'a/d/e' },
+      );
 
-      action2['value'] = 10;
+      action2.value = 10;
       const newNav2 = nav.reduce(action2);
-      expect(nav.active!.state.value).to.be.equals(1);
-      expect(newNav2.active!.state.value).to.be.equals(1);
+      expect(nav.active!.state.stuff.value).to.be.equals(1);
+      expect(newNav2.active!.state.stuff.value).to.be.equals(1);
 
-      const action3: any = actions.NAVIGATION_TRANSIT_TO_PAGE.create.unicast('ADMIN', '3');
-      action3['value'] = 10;
+      const action3: any = actions.NAVIGATION_TRANSIT_TO_PAGE.create.unicast(
+        actions.__NAVIGATION_IDENTIFIER__,
+        '3',
+      );
+      action3.value = 10;
       const newNav3 = nav.reduce(action3);
-      expect(nav.active!.state.value).to.be.equals(1);
-      expect(newNav3.active!.state.value).to.be.equals(1);
+      expect(nav.active!.state.stuff.value).to.be.equals(1);
+      expect(newNav3.active!.state.stuff.value).to.be.equals(1);
     });
 
   });
@@ -885,7 +898,7 @@ describe('Navigator', () => {
     });
 
     it('should return all open pages in correct order', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -915,7 +928,7 @@ describe('Navigator', () => {
     });
 
     it('should return all open root pages in correct order', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -940,7 +953,7 @@ describe('Navigator', () => {
     });
 
     it('should return the current active page', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -958,7 +971,7 @@ describe('Navigator', () => {
     });
 
     it('should return the current active page\'s mutex', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -976,7 +989,7 @@ describe('Navigator', () => {
     });
 
     it('should return the current active page\'s mutex when current page is root', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -990,7 +1003,7 @@ describe('Navigator', () => {
     });
 
     it('should return the parent mutex of current active page', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1013,7 +1026,7 @@ describe('Navigator', () => {
     });
 
     it('should return the current active page\'s index when current page is root', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1032,7 +1045,7 @@ describe('Navigator', () => {
     });
 
     it('should return the parent root index of current active page', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1069,7 +1082,7 @@ describe('Navigator', () => {
     });
 
     it('should return -1 when the current page is not a child', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1090,7 +1103,7 @@ describe('Navigator', () => {
     });
 
     it('should return the proper index when transiting to previous roots', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1111,7 +1124,7 @@ describe('Navigator', () => {
     });
 
     it('should return the index relative to it\'s siblings when active page is a child', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1149,7 +1162,7 @@ describe('Navigator', () => {
   describe('hasChildren', () => {
 
     it('should return true when there are one or more children', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1164,7 +1177,7 @@ describe('Navigator', () => {
     });
 
     it('should return false when there are no children', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1184,7 +1197,7 @@ describe('Navigator', () => {
   describe('childrenOf', () => {
 
     it('should return the list of children when there are one or more children', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1199,7 +1212,7 @@ describe('Navigator', () => {
     });
 
     it('should return empty array when there are no children', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1219,7 +1232,7 @@ describe('Navigator', () => {
   describe('pageFromMutex', () => {
 
     it('should return the page identified by mutex', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
@@ -1244,7 +1257,7 @@ describe('Navigator', () => {
   describe('getActiveChild', () => {
 
     it('should return the active child by mutex', () => {
-      persist.clear('ADMIN');
+      persist.clear();
       let nav = navigator;
       const dispatch: any = (a: any) => nav = nav.reduce(a);
 
