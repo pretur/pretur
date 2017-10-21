@@ -1,14 +1,14 @@
 /// <reference types="node" />
 
-const {resolve} = require('path');
-const {readdirSync} = require('fs');
-const {execSync} = require('child_process');
+const { resolve } = require('path');
+const { readdirSync } = require('fs');
+const { execSync } = require('child_process');
 
 function execute(targetDir, cmd) {
   console.log(`\nin ${targetDir}:\n\trunning: ${cmd}\n`);
-  try{
-  execSync(cmd, { cwd: targetDir, env: process.env, stdio: 'inherit' });
-  } catch(error) {
+  try {
+    execSync(cmd, { cwd: targetDir, env: process.env, stdio: 'inherit' });
+  } catch (error) {
     console.log(`Command failed:`);
     console.log(`\t${cmd}:`);
     console.log(`\t${error}`);
