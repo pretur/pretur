@@ -102,7 +102,7 @@ export interface PageOccurrence<TParams = {}> {
 export type PathTreeNode = string | PathTree;
 export interface PathTree extends Array<PathTreeNode> { }
 
-export class Pages<T extends ValidTreeNode> {
+export class Pages<T extends ValidTreeNode = any> {
   private pages: { [page: string]: Page<any, any, any> };
   private folders: { [page: string]: PageFolder };
   private calculatedPathTree: PathTree;
