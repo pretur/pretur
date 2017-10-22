@@ -66,5 +66,5 @@ export function set<T, K1 extends keyof T, K2 extends keyof T[K1]>(
 ): T;
 export function set<T, K1 extends keyof T>(obj: T, value: T[K1], path: K1): T;
 export function set<T>(obj: T, value: any, ...paths: string[]): T {
-  return lodashSet<T>(obj, paths, value);
+  return lodashSet<T>(<any>obj, paths, value);
 }

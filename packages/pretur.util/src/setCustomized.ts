@@ -79,5 +79,5 @@ export function setCustomized<T, K1 extends keyof T>(
 export function setCustomized<T>(
   obj: T, value: any, customizer: SetCustomizer, ...paths: string[],
 ): T {
-  return setWith<T>(obj, paths, value, customizer);
+  return setWith(<any>obj, paths, value, customizer);
 }
