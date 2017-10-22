@@ -21,7 +21,7 @@ interface Params {
 let fail = false;
 
 const component: any = () => (<any>{});
-const node = buildNode(() => (fail ? undefined : {
+const node = buildNode(() => (fail ? undefined! : {
   B: {
     value: 1,
 
