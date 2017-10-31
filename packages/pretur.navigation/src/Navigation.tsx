@@ -1,13 +1,14 @@
 import * as React from 'react';
+import { ReducibleNode } from 'reducible-node';
 import { Navigator } from './navigator';
 
-export interface NavigationPassedProps<TState = {}, TParams = {}> {
+export interface NavigationPassedProps<R extends ReducibleNode<any>, TParams = {}> {
   mutex: string;
   parent: string | undefined;
   path: string;
   openedFrom: string | undefined;
   params: TParams;
-  state: TState;
+  state: R['type'];
   title: string;
   navigator: Navigator;
 }
