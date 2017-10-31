@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
-    "@types/mocha": "^2.2.43",
-    "@types/node": "^8.0.46",
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^8.0.47",
     "@types/react-addons-test-utils": "^0.14.20",
     "chai": "^4.1.2",
     "lerna": "^2.4.0",
@@ -28,6 +28,6 @@
     "tslint": "^5.8.0",
     "tslint-eslint-rules": "^4.1.1",
     "tslint-microsoft-contrib": "^5.0.1",
-    "typescript": "^2.6.0-dev.20171013"
+    "typescript": "^2.7.0-dev.20171031"
   }
 }
