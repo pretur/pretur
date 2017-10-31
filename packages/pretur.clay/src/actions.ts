@@ -2,7 +2,7 @@ import { createHomingAction, HomingActionDefinition } from 'reducible-node';
 import { Query, Filter, QueryPagination, QueryOrder } from 'pretur.sync';
 import { ValidationError } from 'pretur.validation';
 import { State } from './clay';
-import { Record } from './record';
+import { Record } from './Record';
 
 export interface SetValuePayload {
   value: any;
