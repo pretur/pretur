@@ -114,7 +114,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
       } else {
         newQuery = omit(this.query, 'filters');
         if (filters) {
-          newQuery.filters = filters;
+          newQuery.filters = <Filter<T>>filters;
         }
       }
 

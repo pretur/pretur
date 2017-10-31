@@ -131,7 +131,7 @@ async function defaultInsertBehavior<T extends SpecType>(
   item: InsertMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const data: Partial<Model<T>> = { ...(<any>item.data) };
+  const data: Model<T> = { ...(<any>item.data) };
 
   if (!provider.database) {
     throw new Error(`model ${provider.name} must have a sequelize model`);
@@ -175,7 +175,6 @@ async function defaultInsertBehavior<T extends SpecType>(
       }
 
       data[<keyof Model<T>>master.key] = generatedIds[provider.metadata.primaryKeys[0]];
-
     }
   }
 
