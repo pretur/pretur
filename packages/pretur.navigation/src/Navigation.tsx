@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { Navigator } from './navigator';
-import { Page } from './pages';
 
-export interface NavigationPassedProps<P extends Page> {
+export interface NavigationPassedProps<TState = {}, TParams = {}> {
   mutex: string;
   parent: string | undefined;
   path: string;
   openedFrom: string | undefined;
-  params: P['type']['params'];
-  state: P['type']['state'];
+  params: TParams;
+  state: TState;
   title: string;
   navigator: Navigator;
 }
@@ -20,7 +19,7 @@ export interface NavigationProps {
 
 export function Navigation(
   { navigator, mutex }: NavigationProps,
-): React.ReactElement<NavigationPassedProps<Page<any, any>>> {
+): React.ReactElement<NavigationPassedProps<any, any>> {
   const page = navigator.pageFromMutex(mutex) || navigator.active;
   if (!page) {
     // tslint:disable-next-line:no-null-keyword

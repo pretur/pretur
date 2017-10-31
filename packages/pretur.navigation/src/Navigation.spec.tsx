@@ -3,25 +3,11 @@
 // tslint:disable:no-invalid-this
 import { expect } from 'chai';
 import * as React from 'react';
-import { buildNode } from 'reducible-node';
+import { buildNode, NodeStateType } from 'reducible-node';
 import { createRenderer } from 'react-addons-test-utils';
 import { Pages, Page, buildPage, folder } from './pages';
 import { Navigator } from './navigator';
 import { Navigation, NavigationPassedProps } from './Navigation';
-
-interface State {
-  stuff: { value: number };
-}
-
-interface Params {
-  param1: number;
-}
-
-type Props = NavigationPassedProps<Page<Params, State>>;
-
-const component: React.StatelessComponent<Props> = props => {
-  return <input type="number" value={String(props.state)} />;
-};
 
 const node = buildNode(() => ({
   stuff: {
@@ -34,6 +20,16 @@ const node = buildNode(() => ({
     },
   },
 }));
+
+interface Params {
+  param1: number;
+}
+
+type Props = NavigationPassedProps<NodeStateType<typeof node>, Params>;
+
+const component: React.StatelessComponent<Props> = props => {
+  return <input type="number" value={String(props.state)} />;
+};
 
 const tree = {
   'a': folder('A', {
