@@ -27,7 +27,7 @@ export interface PageCloseOptions {
 }
 
 interface InstanceMap {
-  [prop: string]: PageInstance<any, any, any>;
+  [prop: string]: PageInstance<any, any>;
 }
 
 interface Instances {
@@ -39,7 +39,7 @@ interface ActiveChildren {
   [root: string]: string;
 }
 
-function orderedPages(instances: Instances): PageInstance<any, any, any>[] {
+function orderedPages(instances: Instances): PageInstance<any, any>[] {
   return instances.pageOrder.map(path => instances.pages[path]);
 }
 
@@ -245,15 +245,15 @@ export class Navigator implements Reducible<Navigator> {
     this.pages = pages;
   }
 
-  public get all(): PageInstance<any, any, any>[] {
+  public get all(): PageInstance<any, any>[] {
     return orderedPages(this.instances);
   }
 
-  public get roots(): PageInstance<any, any, any>[] {
+  public get roots(): PageInstance<any, any>[] {
     return this.all.filter(page => !page.parent);
   }
 
-  public get active(): PageInstance<any, any, any> | undefined {
+  public get active(): PageInstance<any, any> | undefined {
     if (!this.activePageMutex) {
       return;
     }
@@ -276,7 +276,7 @@ export class Navigator implements Reducible<Navigator> {
     return this.activePageMutex;
   }
 
-  public get activeRoot(): PageInstance<any, any, any> | undefined {
+  public get activeRoot(): PageInstance<any, any> | undefined {
     const mutex = this.activeRootMutex;
     if (!mutex) {
       return;
@@ -317,11 +317,11 @@ export class Navigator implements Reducible<Navigator> {
     return this.all.some(page => page.parent === mutex);
   }
 
-  public childrenOf(mutex: string): PageInstance<any, any, any>[] {
+  public childrenOf(mutex: string): PageInstance<any, any>[] {
     return this.all.filter(page => page.parent === mutex);
   }
 
-  public pageFromMutex(mutex: string | undefined): PageInstance<any, any, any> | undefined {
+  public pageFromMutex(mutex: string | undefined): PageInstance<any, any> | undefined {
     return typeof mutex === 'string' ? this.instances.pages[mutex] : undefined;
   }
 

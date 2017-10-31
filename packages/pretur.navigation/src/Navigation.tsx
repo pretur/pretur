@@ -20,7 +20,7 @@ export interface NavigationProps {
 
 export function Navigation(
   { navigator, mutex }: NavigationProps,
-): React.ReactElement<NavigationPassedProps<Page<any, any, any>>> {
+): React.ReactElement<NavigationPassedProps<Page<any, any>>> {
   const page = navigator.pageFromMutex(mutex) || navigator.active;
   if (!page) {
     // tslint:disable-next-line:no-null-keyword

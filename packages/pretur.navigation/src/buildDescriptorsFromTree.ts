@@ -1,7 +1,7 @@
 import { PageFolder, PathTree, PageTreeNode, Page, ValidTreeNode } from './pages';
 
 export interface Descriptors {
-  pages: Page<any, any, any>[];
+  pages: Page<any, any>[];
   folders: PageFolder[];
   pathTree: PathTree;
   folderContents: { [folder: string]: string[] };

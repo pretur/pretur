@@ -17,7 +17,7 @@ interface Params {
   param1: number;
 }
 
-type Props = NavigationPassedProps<Page<Params, {}, State>>;
+type Props = NavigationPassedProps<Page<Params, State>>;
 
 const component: React.StatelessComponent<Props> = props => {
   return <input type="number" value={String(props.state)} />;

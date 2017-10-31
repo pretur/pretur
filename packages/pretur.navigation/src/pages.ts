@@ -37,13 +37,13 @@ export interface OpenOptions<TParams> extends ReplaceOptions<TParams> {
   insertAfterMutex?: string;
 }
 
-export interface Page<TParams = any, TProps = any, TState = any> {
-  readonly type: { params: TParams, props: TProps, state: TState };
+export interface Page<TParams = any, TState = any> {
+  readonly type: { params: TParams, state: TState };
   title?: string;
   path: string;
   hidden: boolean;
   persistent: boolean;
-  component: ComponentClass<TProps> | StatelessComponent<TProps>;
+  component: ComponentClass<any> | StatelessComponent<any>;
   node: ReducibleNode<TState>;
   open: (dispatch: Dispatch, opt?: OpenOptions<TParams>) => void;
   replace: (dispatch: Dispatch, target: string, opt?: ReplaceOptions<TParams>) => void;
@@ -55,12 +55,12 @@ export interface BuildPageOptions {
   persistent?: boolean;
 }
 
-export function buildPage<TParams, TProps, TState>(
-  component: ComponentClass<TProps> | StatelessComponent<TProps>,
+export function buildPage<TParams, TState>(
+  component: ComponentClass<any> | StatelessComponent<any>,
   node: ReducibleNode<TState>,
   options: BuildPageOptions = {},
-): Page<TParams, TProps, TState> {
-  const page = <Page<TParams, TProps, TState>>{
+): Page<TParams, TState> {
+  const page = <Page<TParams, TState>>{
     hidden: false,
     persistent: true,
     ...options,
@@ -103,7 +103,7 @@ export type PathTreeNode = string | PathTree;
 export interface PathTree extends Array<PathTreeNode> { }
 
 export class Pages<T extends ValidTreeNode = any> {
-  private pages: { [page: string]: Page<any, any, any> };
+  private pages: { [page: string]: Page<any, any> };
   private folders: { [page: string]: PageFolder };
   private calculatedPathTree: PathTree;
   private calculatedFolderContents: { [folder: string]: string[] };
@@ -173,9 +173,9 @@ export class Pages<T extends ValidTreeNode = any> {
     return this.calculatedFilteredFolderContents;
   }
 
-  public buildInstance<TProps, TState, TReducerBuilderData>(
+  public buildInstance<TState, TReducerBuilderData>(
     occurrence: PageOccurrence<TReducerBuilderData>,
-  ): PageInstance<TProps, TState, TReducerBuilderData> {
+  ): PageInstance<TState, TReducerBuilderData> {
     if (!this.hasPage(occurrence.path)) {
       throw new Error(`No descriptor exists for the provided path (${occurrence.path})`);
     }

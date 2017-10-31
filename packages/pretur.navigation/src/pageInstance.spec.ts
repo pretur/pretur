@@ -6,10 +6,6 @@ import { buildNode } from 'reducible-node';
 import { PageInstance } from './pageInstance';
 import { buildPage, Pages } from './pages';
 
-interface Prop {
-  A: number;
-}
-
 interface State {
   B: { value: number };
 }
@@ -35,7 +31,7 @@ const node = buildNode(() => (fail ? undefined! : {
   },
 }));
 
-const page = buildPage<Params, Prop, State>(component, node, { title: 'ADMIN_TITLE' });
+const page = buildPage<Params, State>(component, node, { title: 'ADMIN_TITLE' });
 
 new Pages({ admin: page });
 

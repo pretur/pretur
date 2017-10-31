@@ -1,14 +1,14 @@
 import { Reducible, Action } from 'reducible-node';
 import { PageOccurrence, Page } from './pages';
 
-export class PageInstance<TParams = {}, TProps = {}, TState = {}>
-  implements Reducible<PageInstance<TParams, TProps, TState>> {
+export class PageInstance<TParams = {}, TState = {}>
+  implements Reducible<PageInstance<TParams, TState>> {
   private node: Reducible<TState>;
 
   public readonly occurrence: PageOccurrence<TParams>;
-  public readonly page: Page<TParams, TProps, TState>;
+  public readonly page: Page<TParams, TState>;
 
-  constructor(page: Page<TParams, TProps, TState>, occurrence: PageOccurrence<TParams>) {
+  constructor(page: Page<TParams, TState>, occurrence: PageOccurrence<TParams>) {
     if (page === undefined || occurrence === undefined) {
       return;
     }
