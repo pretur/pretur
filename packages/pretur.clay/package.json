@@ -1,6 +1,6 @@
 {
   "name": "pretur.clay",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "description": "Client-side immutability helper",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
