@@ -25,7 +25,7 @@ interface Params {
   param1: number;
 }
 
-type Props = NavigationPassedProps<NodeStateType<typeof node>, Params>;
+type Props = NavigationPassedProps<typeof node, Params>;
 
 const component: React.StatelessComponent<Props> = props => {
   return <input type="number" value={String(props.state)} />;
@@ -39,7 +39,7 @@ const tree = {
   }),
 };
 
-const navigator = new Navigator(new Pages(tree));
+const navigator = new Navigator(new Pages('A', tree));
 
 describe('NavPage', () => {
 

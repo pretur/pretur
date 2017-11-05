@@ -1,8 +1,6 @@
 import { createHomingAction, HomingActionDefinition } from 'reducible-node';
 import { PageReplaceOptions, PageOpenOptions, PageCloseOptions } from './navigator';
 
-export const __NAVIGATION_IDENTIFIER__ = Symbol();
-
 export const NAVIGATION_TRANSIT_TO_PAGE: HomingActionDefinition<string>
   = createHomingAction<string>('NAVIGATION_TRANSIT_TO_PAGE');
 

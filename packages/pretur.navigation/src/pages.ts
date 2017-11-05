@@ -2,11 +2,8 @@ import { ComponentClass, StatelessComponent } from 'react';
 import { Dispatch, ReducibleNode } from 'reducible-node';
 import { PageInstance } from './pageInstance';
 import { buildDescriptorsFromTree } from './buildDescriptorsFromTree';
-import {
-  __NAVIGATION_IDENTIFIER__,
-  NAVIGATION_OPEN_PAGE,
-  NAVIGATION_REPLACE_PAGE,
-} from './actions';
+import { Navigator } from './navigator';
+import { NAVIGATION_OPEN_PAGE, NAVIGATION_REPLACE_PAGE } from './actions';
 
 export type ValidTreeNode = { [path: string]: PageFolder | Page };
 
@@ -45,8 +42,13 @@ export interface Page<TParams = any, TState = any> {
   persistent: boolean;
   component: ComponentClass<any> | StatelessComponent<any>;
   node: ReducibleNode<TState>;
-  open: (dispatch: Dispatch, opt?: OpenOptions<TParams>) => void;
-  replace: (dispatch: Dispatch, target: string, opt?: ReplaceOptions<TParams>) => void;
+  open: (dispatch: Dispatch, navigator: Navigator, opt?: OpenOptions<TParams>) => void;
+  replace: (
+    dispatch: Dispatch,
+    navigator: Navigator,
+    target: string,
+    opt?: ReplaceOptions<TParams>,
+  ) => void;
 }
 
 export interface BuildPageOptions {
@@ -70,16 +72,21 @@ export function buildPage<TParams, TState>(
     replace,
   };
 
-  function open(dispatch: Dispatch, opt: OpenOptions<TParams> = {}) {
-    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, {
+  function open(dispatch: Dispatch, navigator: Navigator, opt: OpenOptions<TParams> = {}) {
+    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(navigator.identifier, {
       ...opt,
       mutex: opt.mutex ? `${page.path}/${opt.mutex}` : page.path,
       path: page.path,
     }));
   }
 
-  function replace(dispatch: Dispatch, target: string, opt: ReplaceOptions<TParams> = {}) {
-    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, {
+  function replace(
+    dispatch: Dispatch,
+    navigator: Navigator,
+    target: string,
+    opt: ReplaceOptions<TParams> = {},
+  ) {
+    dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(navigator.identifier, {
       ...opt,
       toRemoveMutex: target,
       mutex: opt.mutex ? `${page.path}/${opt.mutex}` : page.path,
@@ -110,11 +117,13 @@ export class Pages<T extends ValidTreeNode = any> {
   private calculatedFilteredPathTree: PathTree;
   private calculatedFilteredFolderContents: { [folder: string]: string[] };
 
+  public readonly prefix: string;
   public readonly tree: PageTreeNode<T>;
 
-  constructor(root: PageTreeNode<T>) {
+  constructor(prefix: string, root: PageTreeNode<T>) {
     const descriptors = buildDescriptorsFromTree(root);
 
+    this.prefix = prefix;
     this.tree = root;
 
     this.pages = {};

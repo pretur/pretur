@@ -9,8 +9,8 @@ describe('persist', () => {
 
     it('should save and load correctly', () => {
       const home = { mutex: '1', path: 'home' };
-      save([home]);
-      expect(load()).to.deep.equal([home]);
+      save('A', [home]);
+      expect(load('A')).to.deep.equal([home]);
     });
 
   });
@@ -18,8 +18,8 @@ describe('persist', () => {
   describe('save, load active page', () => {
 
     it('should save and load the active page correctly', () => {
-      saveActivePage('home');
-      expect(loadActivePage()).to.be.equals('home');
+      saveActivePage('A', 'home');
+      expect(loadActivePage('A')).to.be.equals('home');
     });
 
   });
@@ -28,11 +28,11 @@ describe('persist', () => {
 
     it('should clear pages and the active page without affecting other values', () => {
       const home = { mutex: '1', path: 'home' };
-      save([home]);
-      saveActivePage('home');
-      clear();
-      expect(load()).to.deep.equal([]);
-      expect(loadActivePage()).to.be.undefined;
+      save('A', [home]);
+      saveActivePage('A', 'home');
+      clear('A');
+      expect(load('A')).to.deep.equal([]);
+      expect(loadActivePage('A')).to.be.undefined;
     });
 
   });

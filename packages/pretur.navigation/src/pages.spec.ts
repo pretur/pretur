@@ -55,33 +55,33 @@ describe('buildPage', () => {
 describe('Pages', () => {
 
   it('should correctly determine whether is has a folder of specified path', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     expect(pages.hasFolder('a/d')).to.be.true;
   });
 
   it('should correctly determine whether is has a page of specified path', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     expect(pages.hasPage('a/d/e')).to.be.true;
   });
 
   it('should correctly determine whether the specified path is hidden', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     expect(pages.isHidden('a/d/e')).to.be.true;
     expect(pages.isHidden('a/b/c')).to.be.false;
   });
 
   it('should return a folder of specified path', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     expect(pages.getFolder('a/d').title).to.be.equals('D');
   });
 
   it('should return a page of specified path', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     expect(pages.getPage('a/b/c').title).to.be.equals('C');
   });
 
   it('should build valid page instances with unique ids', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     const ins1 = pages.buildInstance({ mutex: '1', path: 'a/b/c' });
     const ins2 = pages.buildInstance({ mutex: '2', path: 'a/d/e' });
     const ins3 = pages.buildInstance({ mutex: '3', path: 'f', parent: '2' });
@@ -97,7 +97,7 @@ describe('Pages', () => {
   });
 
   it('should fail to build a page from an unknown path', () => {
-    const pages = new Pages(tree);
+    const pages = new Pages('', tree);
     expect(() => pages.buildInstance({ mutex: '1', path: 'blah!' })).to.throw();
   });
 

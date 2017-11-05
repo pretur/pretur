@@ -4,7 +4,6 @@ import { PageInstance } from './pageInstance';
 import { Pages, PageOccurrence } from './pages';
 import { load, clear, loadActivePage, save, saveActivePage } from './persist';
 import {
-  __NAVIGATION_IDENTIFIER__,
   NAVIGATION_TRANSIT_TO_PAGE,
   NAVIGATION_OPEN_PAGE,
   NAVIGATION_REPLACE_PAGE,
@@ -236,13 +235,16 @@ function getTransitionTarget(
 }
 
 export class Navigator implements Reducible<Navigator> {
+  public readonly identifier: symbol;
+
   private pages: Pages;
   private instances: Instances = { pageOrder: [], pages: {} };
   private activePageMutex: string | undefined;
   private activeChildren: ActiveChildren = {};
 
-  constructor(pages: Pages) {
+  constructor(pages: Pages, identifier?: symbol) {
     this.pages = pages;
+    this.identifier = typeof identifier === 'symbol' ? identifier : Symbol();
   }
 
   public get all(): PageInstance<any, any>[] {
@@ -344,12 +346,12 @@ export class Navigator implements Reducible<Navigator> {
       }
     }
 
-    save(toSave);
+    save(this.pages.prefix, toSave);
   }
 
   private persistActivePage(instances: Instances, mutex: string | undefined): void {
     if (!mutex) {
-      saveActivePage(undefined);
+      saveActivePage(this.pages.prefix, undefined);
       return;
     }
 
@@ -360,23 +362,23 @@ export class Navigator implements Reducible<Navigator> {
         const parent = instances.pages[parentMutex];
 
         if (parent.page.persistent !== false) {
-          saveActivePage(mutex);
+          saveActivePage(this.pages.prefix, mutex);
         }
       } else {
-        saveActivePage(mutex);
+        saveActivePage(this.pages.prefix, mutex);
       }
     }
   }
 
   public reduce(action: Action<any>): this {
-    if (NAVIGATION_TRANSIT_TO_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
+    if (NAVIGATION_TRANSIT_TO_PAGE.is(this.identifier, action)) {
       if (action.payload === this.activePageMutex) {
         return this;
       }
 
       if (!action.payload) {
         this.persistActivePage(this.instances, undefined);
-        const newNavWithoutActive = <this>new Navigator(this.pages);
+        const newNavWithoutActive = <this>new Navigator(this.pages, this.identifier);
         newNavWithoutActive.instances = this.instances;
         newNavWithoutActive.activeChildren = this.activeChildren;
         return newNavWithoutActive;
@@ -395,7 +397,7 @@ export class Navigator implements Reducible<Navigator> {
 
       this.persistActivePage(this.instances, transitionTarget);
 
-      const newNav = <this>new Navigator(this.pages);
+      const newNav = <this>new Navigator(this.pages, this.identifier);
       newNav.instances = this.instances;
       newNav.activePageMutex = transitionTarget;
       newNav.activeChildren
@@ -403,7 +405,7 @@ export class Navigator implements Reducible<Navigator> {
       return newNav;
     }
 
-    if (NAVIGATION_OPEN_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
+    if (NAVIGATION_OPEN_PAGE.is(this.identifier, action)) {
       if (!action.payload || action.payload.mutex === this.activePageMutex) {
         return this;
       }
@@ -414,7 +416,7 @@ export class Navigator implements Reducible<Navigator> {
 
         this.persistActivePage(this.instances, mutex);
 
-        const newNav = <this>new Navigator(this.pages);
+        const newNav = <this>new Navigator(this.pages, this.identifier);
         newNav.instances = this.instances;
         newNav.activePageMutex = mutex;
         newNav.activeChildren = updateActiveChildren(this.instances, this.activeChildren, mutex);
@@ -427,7 +429,7 @@ export class Navigator implements Reducible<Navigator> {
         this.persistInstances(newInstances);
         this.persistActivePage(newInstances, mutex);
 
-        const newNav = <this>new Navigator(this.pages);
+        const newNav = <this>new Navigator(this.pages, this.identifier);
         newNav.instances = newInstances;
         newNav.activePageMutex = mutex;
         newNav.activeChildren = updateActiveChildren(newInstances, this.activeChildren, mutex);
@@ -436,7 +438,7 @@ export class Navigator implements Reducible<Navigator> {
       return this;
     }
 
-    if (NAVIGATION_REPLACE_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
+    if (NAVIGATION_REPLACE_PAGE.is(this.identifier, action)) {
       if (!action.payload) {
         return this;
       }
@@ -447,7 +449,7 @@ export class Navigator implements Reducible<Navigator> {
 
         this.persistActivePage(this.instances, mutex);
 
-        const newNav = <this>new Navigator(this.pages);
+        const newNav = <this>new Navigator(this.pages, this.identifier);
         newNav.instances = this.instances;
         newNav.activePageMutex = mutex;
         newNav.activeChildren = updateActiveChildren(this.instances, this.activeChildren, mutex);
@@ -460,7 +462,7 @@ export class Navigator implements Reducible<Navigator> {
         this.persistInstances(newInstances);
         this.persistActivePage(newInstances, mutex);
 
-        const newNav = <this>new Navigator(this.pages);
+        const newNav = <this>new Navigator(this.pages, this.identifier);
         newNav.instances = newInstances;
         newNav.activePageMutex = mutex;
         newNav.activeChildren = updateActiveChildren(newInstances, this.activeChildren, mutex);
@@ -469,7 +471,7 @@ export class Navigator implements Reducible<Navigator> {
       return this;
     }
 
-    if (NAVIGATION_CLOSE_PAGE.is(__NAVIGATION_IDENTIFIER__, action)) {
+    if (NAVIGATION_CLOSE_PAGE.is(this.identifier, action)) {
       if (!action.payload) {
         return this;
       }
@@ -480,7 +482,7 @@ export class Navigator implements Reducible<Navigator> {
         return this;
       }
 
-      const newNav = <this>new Navigator(this.pages);
+      const newNav = <this>new Navigator(this.pages, this.identifier);
       newNav.activePageMutex = this.activePageMutex;
       const newInstances = closePage(this.instances, mutex);
 
@@ -515,10 +517,10 @@ export class Navigator implements Reducible<Navigator> {
       return newNav;
     }
 
-    if (NAVIGATION_LOAD_PAGES.is(__NAVIGATION_IDENTIFIER__, action)) {
+    if (NAVIGATION_LOAD_PAGES.is(this.identifier, action)) {
 
-      const occurrence = load();
-      const loadedActivePageMutex = loadActivePage();
+      const occurrence = load(this.pages.prefix);
+      const loadedActivePageMutex = loadActivePage(this.pages.prefix);
 
       let instances: Instances | undefined = undefined;
       let activePageMutex: string | undefined = undefined;
@@ -541,7 +543,7 @@ export class Navigator implements Reducible<Navigator> {
       }
 
       if (instances && instances.pageOrder.length > 0) {
-        const newNav = <this>new Navigator(this.pages);
+        const newNav = <this>new Navigator(this.pages, this.identifier);
         newNav.instances = instances;
         newNav.activePageMutex = activePageMutex;
         newNav.activeChildren
@@ -551,9 +553,9 @@ export class Navigator implements Reducible<Navigator> {
       return this;
     }
 
-    if (NAVIGATION_CLEAR_PAGES.is(__NAVIGATION_IDENTIFIER__, action)) {
-      clear();
-      return <this>new Navigator(this.pages);
+    if (NAVIGATION_CLEAR_PAGES.is(this.identifier, action)) {
+      clear(this.pages.prefix);
+      return <this>new Navigator(this.pages, this.identifier);
     }
 
     const nextInstances: Instances = { pageOrder: this.instances.pageOrder, pages: {} };
@@ -568,7 +570,7 @@ export class Navigator implements Reducible<Navigator> {
     }
 
     if (modified) {
-      const newNav = <this>new Navigator(this.pages);
+      const newNav = <this>new Navigator(this.pages, this.identifier);
       newNav.activePageMutex = this.activePageMutex;
       newNav.instances = nextInstances;
       newNav.activeChildren = this.activeChildren;
@@ -578,11 +580,11 @@ export class Navigator implements Reducible<Navigator> {
   }
 
   public transit(dispatch: Dispatch, mutex: string | undefined) {
-    dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, mutex));
+    dispatch(NAVIGATION_TRANSIT_TO_PAGE.create.unicast(this.identifier, mutex));
   }
 
   public open(dispatch: Dispatch, occurrence: PageOpenOptions) {
-    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, occurrence));
+    dispatch(NAVIGATION_OPEN_PAGE.create.unicast(this.identifier, occurrence));
   }
 
   public replace(
@@ -591,20 +593,20 @@ export class Navigator implements Reducible<Navigator> {
     occurrence: PageOccurrence<any>,
   ) {
     dispatch(NAVIGATION_REPLACE_PAGE.create.unicast(
-      __NAVIGATION_IDENTIFIER__,
+      this.identifier,
       { toRemoveMutex, ...occurrence },
     ));
   }
 
   public close(dispatch: Dispatch, mutex: string, goto?: string) {
-    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(__NAVIGATION_IDENTIFIER__, { mutex, goto }));
+    dispatch(NAVIGATION_CLOSE_PAGE.create.unicast(this.identifier, { mutex, goto }));
   }
 
   public load(dispatch: Dispatch) {
-    dispatch(NAVIGATION_LOAD_PAGES.create.unicast(__NAVIGATION_IDENTIFIER__));
+    dispatch(NAVIGATION_LOAD_PAGES.create.unicast(this.identifier));
   }
 
   public clear(dispatch: Dispatch) {
-    dispatch(NAVIGATION_CLEAR_PAGES.create.unicast(__NAVIGATION_IDENTIFIER__));
+    dispatch(NAVIGATION_CLEAR_PAGES.create.unicast(this.identifier));
   }
 }

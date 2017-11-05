@@ -33,7 +33,7 @@ const node = buildNode(() => (fail ? undefined! : {
 
 const page = buildPage<Params, State>(component, node, { title: 'ADMIN_TITLE' });
 
-new Pages({ admin: page });
+new Pages('A', { admin: page });
 
 const instance = new PageInstance(page, {
   mutex: '1',
