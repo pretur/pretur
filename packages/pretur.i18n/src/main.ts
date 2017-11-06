@@ -42,12 +42,6 @@ export interface Formatter<T> {
   <K extends keyof T>(bundle: Bundle<K, T[K]>): string;
 }
 
-export interface Internationalization<T> {
-  keys: Keys<T>;
-  bundle: Bundler<T>;
-  buildFormatter(locale: string): Formatter<T>;
-}
-
 function createStringBuilders(locale: string): StringBuilders {
   const MessageFormat = require('messageformat');
   const mf = new MessageFormat(locale);
@@ -98,6 +92,16 @@ function format<T>(
   return '';
 }
 
+function bundle(key: any, data?: any) {
+  return { key, data };
+}
+
+export interface Internationalization<T> {
+  keys: Keys<T>;
+  bundle: Bundler<T>;
+  buildFormatter(locale: string): Formatter<T>;
+}
+
 export function internationalize<T>(
   main: Locale<T>,
   ...alts: Locale<Partial<T>>[],
@@ -108,10 +112,6 @@ export function internationalize<T>(
 
   for (const key of Object.keys(mainDefinition)) {
     (<any>keys)[key] = key;
-  }
-
-  function bundle<K extends keyof T>(key: K, data?: T[K]) {
-    return { key, data };
   }
 
   function buildFormatter(locale: string): Formatter<T> {
@@ -130,6 +130,33 @@ export function internationalize<T>(
 
     return (bundleOrKey: Bundle | string, data?: any) =>
       format(targetDefinition, mainDefinition, bundleOrKey, data);
+  }
+
+  return { keys, bundle, buildFormatter };
+}
+
+export function combine<T1, T2>(
+  i18n1: Internationalization<T1>,
+  i18n2: Internationalization<T2>,
+): Internationalization<T1 & T2> {
+  const keys = { ...(<any>i18n1.keys), ...(<any>i18n2.keys) };
+
+  function buildFormatter(locale: string): Formatter<T1 & T2> {
+    const formatter1 = i18n1.buildFormatter(locale);
+    const formatter2 = i18n2.buildFormatter(locale);
+
+    return (bundleOrKey: Bundle | string, data?: any) => {
+      const key = typeof bundleOrKey === 'string' ? bundleOrKey : bundleOrKey.key;
+      if (process.env.NODE_ENV !== 'production' && !keys[key]) {
+        throw new TypeError('provided key does not exist in any of the provided i18ns');
+      }
+
+      if ((<any>i18n2.keys)[key]) {
+        return formatter2(<any>bundleOrKey, data);
+      }
+
+      return formatter1(<any>bundleOrKey, data);
+    };
   }
 
   return { keys, bundle, buildFormatter };
