@@ -24,6 +24,7 @@ export interface UninitializedDatabaseModel<T extends SpecType> {
 }
 
 export interface BuildDatabaseOptions<T extends SpecType> {
+  ignoreSchema?: boolean;
   attributeToFieldMap?: {[P in keyof T['fields']]?: string };
   tableName?: string;
   creationHook?: TableCreationHook;
@@ -55,6 +56,7 @@ export function buildDatabaseModel<T extends SpecType>(
   }
 
   const defineOptions: Sequelize.DefineOptions<DatabaseInstance<T>> = {
+    schema: options.ignoreSchema === true ? undefined : spec.scope,
     tableName: options.tableName || spec.name,
   };
 

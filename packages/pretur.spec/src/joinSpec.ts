@@ -1,5 +1,5 @@
 import { ModificationActions, appendRelation } from './relation';
-import { Spec, SpecType, Scope } from './spec';
+import { Spec, SpecType } from './spec';
 import { AttributeBuilder, createAttributeBuilder, NormalType } from './attribute';
 
 export interface JoinSpecBuilder<J extends SpecType> {
@@ -11,7 +11,7 @@ export interface JoinKey<N extends string> {
   name: N;
   type?: NormalType;
   primary?: boolean;
-  scope?: Scope;
+  scope?: string;
 }
 
 export interface JoineeOptions<J extends SpecType, S extends SpecType, T extends SpecType> {
@@ -21,7 +21,7 @@ export interface JoineeOptions<J extends SpecType, S extends SpecType, T extends
   key: JoinKey<keyof J['fields']>;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  scope?: Scope;
+  scope?: string;
 }
 
 export function validateJoinee<J extends SpecType, S extends SpecType, T extends SpecType>(
@@ -44,7 +44,7 @@ export function validateJoinee<J extends SpecType, S extends SpecType, T extends
 
 export interface CreateJoinSpecOptions<J extends SpecType, F extends SpecType, S extends SpecType> {
   name: J['name'];
-  scope: Scope;
+  scope: string;
   firstJoinee: JoineeOptions<J, F, S>;
   secondJoinee: JoineeOptions<J, S, F>;
 }

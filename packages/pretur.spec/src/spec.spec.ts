@@ -46,11 +46,11 @@ describe('spec', () => {
     it('should properly build an Spec object', () => {
       const spec = createSpec<MockModel>({
         name: 'a',
-        scope: ['b', 'c'],
+        scope: 'b',
       });
 
       expect(spec.join).to.be.false;
-      expect(spec.scope).to.deep.equal(['b', 'c']);
+      expect(spec.scope).to.deep.equal('b');
       expect(spec.name).to.be.equals('a');
       expect(spec.initialize).to.be.a('function');
     });

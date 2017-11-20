@@ -29,7 +29,7 @@ export interface Spec<T extends SpecType = SpecType> {
   model: Model<T>;
   type: T;
   name: T['name'];
-  scope: Scope;
+  scope: string;
   join: boolean;
   attributes: Attribute<T['fields']>[];
   indexes: Indexes<T['fields']>;
@@ -39,7 +39,7 @@ export interface Spec<T extends SpecType = SpecType> {
 
 export interface CreateSpecOptions<N extends string> {
   name: N;
-  scope: Scope;
+  scope: string;
 }
 
 export interface SpecBuilder<T extends SpecType> {
