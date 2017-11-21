@@ -1,4 +1,4 @@
-import { SpecType, Model, SpecPool, Scope, collide } from 'pretur.spec';
+import { SpecType, Model, SpecPool, collide } from 'pretur.spec';
 import { MutateRequest, Requester, MutateResult } from 'pretur.sync';
 import { Set } from './Set';
 import { Record } from './Record';
@@ -86,7 +86,10 @@ export interface MutationsExtractor {
   ): MutateRequest<any>[];
 }
 
-export function buildMutationsExtractor(specPool: SpecPool, scope: Scope): MutationsExtractor {
+export function buildMutationsExtractor(
+  specPool: SpecPool,
+  scope: string | string[],
+): MutationsExtractor {
   function extractInsertData<T extends SpecType>(
     clay: Record<T>,
     model: T['name'],

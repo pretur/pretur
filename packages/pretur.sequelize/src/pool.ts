@@ -8,13 +8,14 @@ import { Provider } from './provider';
 export type Transaction = Sequelize.Transaction;
 
 export interface ProviderMap {
-  [model: string]: Provider<any>;
+  [scope: string]: { [model: string]: Provider<any> };
 }
 
-export interface ProviderPool {
-  providers: ProviderMap;
+export interface ProviderPool<M extends ProviderMap = ProviderMap> {
+  providers: M;
   resolve<T extends SpecType>(
     transaction: Transaction,
+    scope: string,
     model: T['name'],
     query: Query<T>,
     context?: any,
@@ -26,19 +27,12 @@ export interface ProviderPool {
   ): Promise<SyncResult<T>>;
 }
 
-export function buildProviderPool(...descriptors: Provider<any>[]): ProviderPool {
-  const pool = <ProviderPool>{
-    providers: descriptors.reduce(
-      (m, d) => {
-        m[d.name] = d;
-        return m;
-      },
-      <ProviderMap>{},
-    ),
-  };
+export function buildProviderPool<M extends ProviderMap>(providers: M): ProviderPool<M> {
+  const pool = <ProviderPool<M>>{ providers };
 
   pool.resolve = async function resolve<T extends SpecType>(
     transaction: Transaction,
+    scope: string,
     model: T['name'],
     query: Query<T>,
     context: any,
@@ -47,7 +41,11 @@ export function buildProviderPool(...descriptors: Provider<any>[]): ProviderPool
       throw new Error('query or query.model was not specified.');
     }
 
-    const provider = pool.providers[model];
+    if (!pool.providers[scope]) {
+      throw new Error(`scope ${scope} does not exist`);
+    }
+
+    const provider = pool.providers[scope][model];
 
     if (!provider) {
       throw new Error(`${model} is not a valid model`);
@@ -69,7 +67,11 @@ export function buildProviderPool(...descriptors: Provider<any>[]): ProviderPool
       throw new Error('item.model was not specified.');
     }
 
-    const provider = pool.providers[item.model];
+    if (!pool.providers[item.scope]) {
+      throw new Error(`scope ${item.scope} does not exist`);
+    }
+
+    const provider = pool.providers[item.scope][item.model];
 
     if (!provider) {
       throw new Error(`${item.model} is not a valid model`);
@@ -82,8 +84,10 @@ export function buildProviderPool(...descriptors: Provider<any>[]): ProviderPool
     return provider.metadata.synchronizer(transaction, item, context);
   };
 
-  for (const descriptor of descriptors) {
-    descriptor.metadata.initialize(pool);
+  for (const map of Object.values(providers)) {
+    for (const descriptor of Object.values(map)) {
+      descriptor.metadata.initialize(pool);
+    }
   }
 
   return pool;

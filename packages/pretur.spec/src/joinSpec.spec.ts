@@ -86,7 +86,7 @@ describe('joinSpec', () => {
           spec: specA,
         },
         name: 'a',
-        scope: ['b', 'c'],
+        scope: 'b',
         secondJoinee: {
           aliasOnJoin: 'b',
           aliasOnTarget: 'all_b',
@@ -96,7 +96,7 @@ describe('joinSpec', () => {
       });
 
       expect(joinSpec.join).to.be.true;
-      expect(joinSpec.scope).to.deep.equal(['b', 'c']);
+      expect(joinSpec.scope).to.deep.equal('b');
       expect(joinSpec.name).to.be.equals('a');
       expect(joinSpec.initialize).to.be.a('function');
     });
@@ -113,7 +113,7 @@ describe('joinSpec', () => {
           spec: specA,
         },
         name: 'a',
-        scope: ['b', 'c'],
+        scope: 'b',
         secondJoinee: {
           aliasOnJoin: 'b',
           aliasOnTarget: 'all_b',
@@ -134,7 +134,7 @@ describe('joinSpec', () => {
       expect(joinSpec.attributes[1].mutable).to.be.false;
 
       expect(joinSpec.relations[0].type).to.be.equals('MASTER');
-      expect(joinSpec.relations[0].scope).to.deep.equal(['b', 'c']);
+      expect(joinSpec.relations[0].scope).to.deep.equal('b');
       expect(joinSpec.relations[0].alias).to.be.equals('a');
       expect(joinSpec.relations[0].key).to.be.equals('aId');
       expect(joinSpec.relations[0].model).to.be.equals('A');
@@ -143,7 +143,7 @@ describe('joinSpec', () => {
       expect(joinSpec.relations[0].required).to.be.true;
 
       expect(joinSpec.relations[1].type).to.be.equals('MASTER');
-      expect(joinSpec.relations[1].scope).to.deep.equal(['b', 'c']);
+      expect(joinSpec.relations[1].scope).to.deep.equal('b');
       expect(joinSpec.relations[1].alias).to.be.equals('b');
       expect(joinSpec.relations[1].key).to.be.equals('bId');
       expect(joinSpec.relations[1].model).to.be.equals('B');
@@ -164,7 +164,7 @@ describe('joinSpec', () => {
           spec: specA,
         },
         name: 'J',
-        scope: ['b', 'c'],
+        scope: 'b',
         secondJoinee: {
           aliasOnJoin: 'b',
           aliasOnTarget: 'all_b',
@@ -174,7 +174,7 @@ describe('joinSpec', () => {
       });
 
       expect(specA.relations[0].type).to.be.equals('MANY_TO_MANY');
-      expect(specA.relations[0].scope).to.deep.equal(['b', 'c']);
+      expect(specA.relations[0].scope).to.deep.equal('b');
       expect(specA.relations[0].alias).to.be.equals('all_b');
       expect(specA.relations[0].key).to.be.equals('aId');
       expect(specA.relations[0].model).to.be.equals('B');
@@ -184,7 +184,7 @@ describe('joinSpec', () => {
       expect(specA.relations[0].required).to.be.true;
 
       expect(specB.relations[0].type).to.be.equals('MANY_TO_MANY');
-      expect(specB.relations[0].scope).to.deep.equal(['b', 'c']);
+      expect(specB.relations[0].scope).to.deep.equal('b');
       expect(specB.relations[0].alias).to.be.equals('all_a');
       expect(specB.relations[0].key).to.be.equals('bId');
       expect(specB.relations[0].model).to.be.equals('A');
@@ -207,7 +207,7 @@ describe('joinSpec', () => {
             spec: specA,
           },
           name: 'a',
-          scope: ['b', 'c'],
+          scope: 'b',
           secondJoinee: {
             aliasOnJoin: 'b',
             aliasOnTarget: 'all_b',

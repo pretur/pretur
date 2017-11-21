@@ -57,12 +57,16 @@ export function setInclude<T extends SpecType, S extends SpecType = SpecType>(
 export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
   public readonly identifier: symbol;
   public readonly count?: number;
+  public readonly scope: string;
   public readonly model: T['name'];
   public readonly query: Query<T>;
 
-  constructor(model: T['name'], query: Query<T>, count?: number, identifier?: symbol) {
+  constructor(
+    scope: string, model: T['name'], query: Query<T>, count?: number, identifier?: symbol,
+  ) {
     this.identifier = typeof identifier === 'symbol' ? identifier : Symbol();
     this.count = count;
+    this.scope = scope;
     this.model = model;
     this.query = query;
   }
@@ -86,7 +90,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
+      return <this>new Querier(this.scope, this.model, newQuery, this.count, this.identifier);
     }
 
     if (CLAY_SET_QUERY_FILTERS.is(this.identifier, action)) {
@@ -122,7 +126,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
+      return <this>new Querier(this.scope, this.model, newQuery, this.count, this.identifier);
     }
 
     if (CLAY_SET_QUERY_PAGINATION.is(this.identifier, action)) {
@@ -136,7 +140,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = action.payload;
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
+      return <this>new Querier(this.scope, this.model, newQuery, this.count, this.identifier);
     }
 
     if (CLAY_SET_QUERY_ORDER.is(this.identifier, action)) {
@@ -154,7 +158,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
+      return <this>new Querier(this.scope, this.model, newQuery, this.count, this.identifier);
     }
 
     if (CLAY_SET_QUERY_EXTRA.is(this.identifier, action)) {
@@ -168,7 +172,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         newQuery.pagination = { skip: 0, take: newQuery.pagination.take };
       }
 
-      return <this>new Querier(this.model, newQuery, this.count, this.identifier);
+      return <this>new Querier(this.scope, this.model, newQuery, this.count, this.identifier);
     }
 
     if (CLAY_SET_QUERIEIR_COUNT.is(this.identifier, action)) {
@@ -176,7 +180,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         return this;
       }
 
-      return <this>new Querier(this.model, this.query, action.payload, this.identifier);
+      return <this>new Querier(this.scope, this.model, this.query, action.payload, this.identifier);
     }
 
     if (CLAY_RESET_QUERIEIR.is(this.identifier, action)) {
@@ -184,7 +188,7 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         return this;
       }
 
-      return <this>new Querier(this.model, action.payload, undefined, this.identifier);
+      return <this>new Querier(this.scope, this.model, action.payload, undefined, this.identifier);
     }
 
     if (CLAY_REFRESH.is(this.identifier, action)) {
@@ -192,7 +196,9 @@ export class Querier<T extends SpecType> implements Reducible<Querier<T>> {
         return this;
       }
 
-      return <this>new Querier(this.model, this.query, action.payload.count, this.identifier);
+      return <this>new Querier(
+        this.scope, this.model, this.query, action.payload.count, this.identifier,
+      );
     }
 
     return this;

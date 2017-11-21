@@ -23,7 +23,7 @@ function buildQuerier<T extends SpecType>(
   spec: Spec<T>,
   query: Query<T> = {},
 ): Querier<T> {
-  return new Querier<T>(spec.name, query);
+  return new Querier<T>(spec.scope, spec.name, query);
 }
 
 async function loadSimple<T extends SpecType>(
@@ -31,7 +31,7 @@ async function loadSimple<T extends SpecType>(
   requester: Requester,
   query: Query<T> = {},
 ) {
-  const { data = [], count = 0 } = await requester.select<T>(spec.name, query);
+  const { data = [], count = 0 } = await requester.select<T>(spec.scope, spec.name, query);
   return { data, count };
 }
 
@@ -43,7 +43,7 @@ async function loadIntoSet<T extends SpecType>(
   set: Set<T>,
   query: Query<T> = {},
 ) {
-  const { data = [] } = await requester.select<T>(spec.name, query);
+  const { data = [] } = await requester.select<T>(spec.scope, spec.name, query);
   set.replace(dispatch, buildSet(pool, spec, data));
 }
 
@@ -55,7 +55,7 @@ async function loadIntoRecord<T extends SpecType>(
   record: Record<T>,
   query: Query<T> = {},
 ) {
-  const { data } = await requester.select<T>(spec.name, query);
+  const { data } = await requester.select<T>(spec.scope, spec.name, query);
   const row = data && data[0];
   if (row) {
     record.replace(dispatch, buildRecord(pool, spec, row));
@@ -73,7 +73,7 @@ export async function selectAndRefresh<T extends SpecType>(
   querier: Querier<T>,
   extra: Query<T> = {},
 ) {
-  const { data = [], count = 0 } = await requester.select<T>(spec.name, {
+  const { data = [], count = 0 } = await requester.select<T>(spec.scope, spec.name, {
     ...querier.query,
     ...extra,
   });

@@ -27,7 +27,8 @@ export async function createDatabase(
 
   for (const database of topologicallySorted) {
     const name: string = (<any>database)['name'];
-    const provider = pool.providers[name];
+    const schema: string = (<any>database)['schema'];
+    const provider = pool.providers[schema][name];
 
     const create = async () => {
       await database.sync();
@@ -42,7 +43,8 @@ export async function createDatabase(
 
   for (const database of topologicallySorted) {
     const name: string = (<any>database)['name'];
-    const provider = pool.providers[name];
+    const schema: string = (<any>database)['schema'];
+    const provider = pool.providers[schema][name];
 
     if (provider && provider.metadata.afterDatabaseCreationHook) {
       await provider.metadata.afterDatabaseCreationHook(database, context);
@@ -60,7 +62,8 @@ export async function destroyDatabase(
 
   for (const database of topologicallySorted) {
     const name: string = (<any>database)['name'];
-    const provider = pool.providers[name];
+    const schema: string = (<any>database)['schema'];
+    const provider = pool.providers[schema][name];
 
     const destroy = async () => {
       await database.drop({ cascade: true });
@@ -75,7 +78,8 @@ export async function destroyDatabase(
 
   for (const database of topologicallySorted) {
     const name: string = (<any>database)['name'];
-    const provider = pool.providers[name];
+    const schema: string = (<any>database)['schema'];
+    const provider = pool.providers[schema][name];
 
     if (provider && provider.metadata.afterDatabaseDestructionHook) {
       await provider.metadata.afterDatabaseDestructionHook(database, context);

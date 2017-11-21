@@ -23,34 +23,44 @@ import {
 
 export type InsertOptions<T extends SpecType> = {
   data: Partial<Model<T>>;
+  scope: string,
   model: T['name'];
 };
 
 export type UpdateOptions<T extends SpecType> = {
   data: Partial<T['fields']>;
+  scope: string,
   model: T['name'];
 };
 
 export type RemoveOptions<T extends SpecType> = {
   identifiers: Partial<T['fields']>;
+  scope: string,
   model: T['name'];
 };
 
 export interface Requester {
-  select<T extends SpecType>(model: T['name'], query: Query<T>): Promise<SelectResult<T>>;
+  select<T extends SpecType>(
+    scope: string,
+    model: T['name'],
+    query: Query<T>,
+  ): Promise<SelectResult<T>>;
   operate<TData, TResult>(name: string, data?: TData): Promise<OperateResult<TResult>>;
   insert<T extends SpecType>(options: InsertOptions<T>): Promise<MutateResult<T>>;
   insert<T extends SpecType>(
+    scope: string,
     model: T['name'],
     data: Partial<Model<T>>,
   ): Promise<MutateResult<T>>;
   update<T extends SpecType>(options: UpdateOptions<T>): Promise<MutateResult>;
   update<T extends SpecType>(
+    scope: string,
     model: T['name'],
     data: Partial<T['fields']>,
   ): Promise<MutateResult>;
   remove<T extends SpecType>(options: RemoveOptions<T>): Promise<MutateResult>;
   remove<T extends SpecType>(
+    scope: string,
     model: T['name'],
     identifiers: Partial<T['fields']>,
   ): Promise<MutateResult>;
@@ -150,10 +160,14 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
     }
   }
 
-  function select<T extends SpecType>(model: T['name'], query: Query<T>): Promise<SelectResult<T>> {
+  function select<T extends SpecType>(
+    scope: string,
+    model: T['name'],
+    query: Query<T>,
+  ): Promise<SelectResult<T>> {
     return new Promise<SelectResult<T>>(resolve => {
       const requestId = uniqueId();
-      const request: SelectRequest<T> = { model, query, requestId, type: 'select' };
+      const request: SelectRequest<T> = { scope, model, query, requestId, type: 'select' };
 
       const item: RequestQueueItem<SelectResponse<T>> = {
         request,
@@ -186,19 +200,22 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
 
   function insert<T extends SpecType>(options: InsertOptions<T>): Promise<MutateResult<T>>;
   function insert<T extends SpecType>(
+    scope: string,
     model: T['name'],
     data: Partial<Model<T>>,
   ): Promise<MutateResult<T>>;
   function insert<T extends SpecType>(
-    model: T['name'] | InsertOptions<T>,
+    scopeOrOpts: string | InsertOptions<T>,
+    model?: T['name'],
     data?: Partial<Model<T>>,
   ): Promise<MutateResult<T>> {
     return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
       const request: MutateRequest<T> = {
         action: 'insert',
-        data: typeof model === 'string' ? data || {} : model.data,
-        model: typeof model === 'string' ? model : model.model,
+        data: typeof scopeOrOpts === 'string' ? data || {} : scopeOrOpts.data,
+        scope: typeof scopeOrOpts === 'string' ? scopeOrOpts : scopeOrOpts.scope,
+        model: typeof scopeOrOpts === 'string' ? model! : scopeOrOpts.model,
         requestId,
         type: 'mutate',
       };
@@ -220,19 +237,22 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
 
   function update<T extends SpecType>(options: UpdateOptions<T>): Promise<MutateResult<T>>;
   function update<T extends SpecType>(
+    scope: string,
     model: T['name'],
     data: Partial<T['fields']>,
   ): Promise<MutateResult<T>>;
   function update<T extends SpecType>(
-    model: T['name'] | UpdateOptions<T>,
+    scopeOrOpts: string | UpdateOptions<T>,
+    model?: T['name'],
     data?: Partial<T['fields']>,
   ): Promise<MutateResult<T>> {
     return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
       const request: MutateRequest<T> = {
         action: 'update',
-        data: typeof model === 'string' ? data || {} : model.data,
-        model: typeof model === 'string' ? model : model.model,
+        data: typeof scopeOrOpts === 'string' ? data || {} : scopeOrOpts.data,
+        scope: typeof scopeOrOpts === 'string' ? scopeOrOpts : scopeOrOpts.scope,
+        model: typeof scopeOrOpts === 'string' ? model! : scopeOrOpts.model,
         requestId,
         type: 'mutate',
       };
@@ -254,19 +274,22 @@ export function buildRequester(endPoint: string, options: BuildRequesterOptions)
 
   function remove<T extends SpecType>(options: RemoveOptions<T>): Promise<MutateResult<T>>;
   function remove<T extends SpecType>(
+    scope: string,
     model: T['name'],
     identifiers: Partial<T['fields']>,
   ): Promise<MutateResult<T>>;
   function remove<T extends SpecType>(
-    model: T['name'] | RemoveOptions<T>,
+    scopeOrOpts: string | RemoveOptions<T>,
+    model?: T['name'],
     identifiers?: Partial<T['fields']>,
   ): Promise<MutateResult<T>> {
     return new Promise<MutateResult<T>>(resolve => {
       const requestId = uniqueId();
       const request: MutateRequest<T> = {
         action: 'remove',
-        identifiers: typeof model === 'string' ? identifiers || {} : model.identifiers,
-        model: typeof model === 'string' ? model : model.model,
+        identifiers: typeof scopeOrOpts === 'string' ? identifiers || {} : scopeOrOpts.identifiers,
+        scope: typeof scopeOrOpts === 'string' ? scopeOrOpts : scopeOrOpts.scope,
+        model: typeof scopeOrOpts === 'string' ? model! : scopeOrOpts.model,
         requestId,
         type: 'mutate',
       };

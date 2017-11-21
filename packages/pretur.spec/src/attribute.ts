@@ -1,5 +1,5 @@
 import { chain } from 'lodash';
-import { Spec, SpecType, Scope } from './spec';
+import { Spec, SpecType } from './spec';
 
 export type NormalType = 'INTEGER' | 'BIGINT' | 'BOOLEAN' | 'DATE' | 'DOUBLE' | 'STRING' | 'OBJECT';
 export type RangeType = 'INTEGER' | 'BIGINT' | 'DATE';
@@ -32,7 +32,7 @@ export type ArraySubtype =
 
 export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
-  scope?: Scope;
+  scope?: string;
   required?: boolean;
   unique?: boolean;
   primary?: boolean;

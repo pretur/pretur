@@ -126,6 +126,7 @@ export function createJoinSpec<
     required: true,
     scope: options.firstJoinee.scope || options.scope,
     through: spec.name,
+    throughScope: options.scope,
     type: 'MANY_TO_MANY',
   });
 
@@ -138,6 +139,7 @@ export function createJoinSpec<
     required: true,
     scope: options.secondJoinee.scope || options.scope,
     through: spec.name,
+    throughScope: options.scope,
     type: 'MANY_TO_MANY',
   });
 

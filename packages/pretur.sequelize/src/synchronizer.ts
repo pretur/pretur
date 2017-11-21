@@ -84,6 +84,7 @@ export function buildSynchronizer<T extends SpecType>(
     if (item.action === 'insert') {
       return insert(
         pool,
+        spec.scope,
         spec.name,
         (options && options.insertInterceptor) || undefined,
         transaction,
@@ -95,6 +96,7 @@ export function buildSynchronizer<T extends SpecType>(
     if (item.action === 'update') {
       return update(
         pool,
+        spec.scope,
         spec.name,
         (options && options.updateInterceptor) || undefined,
         transaction,
@@ -106,6 +108,7 @@ export function buildSynchronizer<T extends SpecType>(
     if (item.action === 'remove') {
       return remove(
         pool,
+        spec.scope,
         spec.name,
         (options && options.removeInterceptor) || undefined,
         transaction,
@@ -142,7 +145,7 @@ async function defaultInsertBehavior<T extends SpecType>(
     data[master.alias] = undefined;
 
     if (masterData) {
-      const masterProvider = pool.providers[master.model];
+      const masterProvider = pool.providers[master.scope!][master.model];
 
       if (!masterProvider.metadata.synchronizer) {
         throw new Error(`model ${masterProvider.name} must have a synchronizer`);
@@ -159,6 +162,7 @@ async function defaultInsertBehavior<T extends SpecType>(
         {
           action: 'insert',
           data: masterData,
+          scope: masterProvider.scope,
           model: masterProvider.name,
           requestId: item.requestId,
           type: 'mutate',
@@ -190,21 +194,21 @@ async function defaultInsertBehavior<T extends SpecType>(
 
   for (const alias of <(keyof Model<T>)[]>Object.keys(aliasModelMap)) {
     const nested = (<any>data)[alias];
-    const targetProvider = pool.providers[aliasModelMap[alias]];
+    const target = aliasModelMap[alias];
+    const targetProvider = pool.providers[target.scope][target.model];
 
     if (nested) {
       if (!targetProvider) {
-        throw new Error(`model ${aliasModelMap[alias]} does not exist`);
+        throw new Error(`model ${target.scope}.${target.model} does not exist`);
       }
 
       if (!targetProvider.metadata.synchronizer) {
-        throw new Error(`model ${targetProvider.name} must have a synchronizer`);
+        throw new Error(`model ${target.scope}.${target.model} must have a synchronizer`);
       }
 
       if (provider.metadata.primaryKeys.length !== 1) {
-        throw new Error(
-          `model ${provider.name} must have exactly one primaryKey for complex operations`,
-        );
+        throw new Error(`model ${target.scope}.${target.model} must ` +
+          ` have exactly one primaryKey for complex operations`);
       }
 
       if (Array.isArray(nested)) {
@@ -220,7 +224,8 @@ async function defaultInsertBehavior<T extends SpecType>(
             {
               action: 'insert',
               data: nestedInsertData,
-              model: aliasModelMap[alias],
+              scope: target.scope,
+              model: target.model,
               requestId: item.requestId,
               type: 'mutate',
             },
@@ -242,7 +247,8 @@ async function defaultInsertBehavior<T extends SpecType>(
           {
             action: 'insert',
             data: nestedInsertData,
-            model: aliasModelMap[alias],
+            scope: target.scope,
+            model: target.model,
             requestId: item.requestId,
             type: 'mutate',
           },
@@ -268,16 +274,17 @@ async function defaultInsertBehavior<T extends SpecType>(
 
 function insert<T extends SpecType>(
   pool: ProviderPool,
+  scope: string,
   model: string,
   interceptor: InsertSyncInterceptor<T> | undefined,
   transaction: Transaction,
   item: InsertMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const provider = <Provider<T>>pool.providers[model];
+  const provider = <Provider<T>>pool.providers[scope][model];
 
   if (!provider) {
-    throw new Error(`model ${model} does not exist`);
+    throw new Error(`model ${scope}.${model} does not exist`);
   }
 
   if (typeof interceptor === 'function') {
@@ -328,16 +335,17 @@ async function defaultUpdateBehavior<T extends SpecType>(
 
 function update<T extends SpecType>(
   pool: ProviderPool,
+  scope: string,
   model: string,
   interceptor: UpdateSyncInterceptor<T> | undefined,
   transaction: Transaction,
   item: UpdateMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const provider = <Provider<T>>pool.providers[model];
+  const provider = <Provider<T>>pool.providers[scope][model];
 
   if (!provider) {
-    throw new Error(`model ${model} does not exist`);
+    throw new Error(`model ${scope}.${model} does not exist`);
   }
 
   if (typeof interceptor === 'function') {
@@ -379,16 +387,17 @@ async function defaultRemoveBehavior<T extends SpecType>(
 
 function remove<T extends SpecType>(
   pool: ProviderPool,
+  scope: string,
   model: string,
   interceptor: RemoveSyncInterceptor<T> | undefined,
   transaction: Transaction,
   item: RemoveMutateRequest<T>,
   context: any,
 ): Promise<SyncResult<T>> {
-  const provider = <Provider<T>>pool.providers[model];
+  const provider = <Provider<T>>pool.providers[scope][model];
 
   if (!provider) {
-    throw new Error(`model ${model} does not exist`);
+    throw new Error(`model ${scope}.${model} does not exist`);
   }
 
   if (typeof interceptor === 'function') {

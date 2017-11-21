@@ -25,11 +25,16 @@ export interface SyncResult {
 export interface PoolLike<C> {
   resolve(
     transaction: any,
+    scope: string,
     model: string,
     query: Query<EmptySpec>,
     context?: C,
   ): Promise<ResolveResult>;
-  sync(transaction: any, item: MutateRequest, context?: C): Promise<SyncResult>;
+  sync(
+    transaction: any,
+    item: MutateRequest,
+    context?: C,
+  ): Promise<SyncResult>;
 }
 
 export interface ResponderOptions<C> {
@@ -61,7 +66,13 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
             }
             const tr = await transact();
             try {
-              const { data, count } = await pool.resolve(tr, request.model, request.query, context);
+              const { data, count } = await pool.resolve(
+                tr,
+                request.scope,
+                request.model,
+                request.query,
+                context,
+              );
               tr.commit();
               responses.push({ errors: [], count, data, requestId, type: 'select' });
             } catch (error) {

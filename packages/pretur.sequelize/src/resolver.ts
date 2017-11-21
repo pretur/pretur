@@ -64,7 +64,7 @@ async function defaultResolveBehavior<T extends SpecType>(
   transaction: Transaction,
   query: Query<T>,
 ): Promise<ResolveResult<T>> {
-  const provider = pool.providers[spec.name];
+  const provider = pool.providers[spec.scope][spec.name];
   const database = <DatabaseModel<T>>provider.database;
 
   if (!database) {
@@ -74,8 +74,8 @@ async function defaultResolveBehavior<T extends SpecType>(
   const findOptions: Sequelize.FindOptions<Model<T>> = {};
 
   findOptions.attributes = provider.metadata.sanitizeAttributes(query.attributes);
-  findOptions.include = buildInclude(query, pool, spec.name);
-  findOptions.where = buildWhere(query, pool, spec.name) || {};
+  findOptions.include = buildInclude(query, pool, spec.scope, spec.name);
+  findOptions.where = buildWhere(query, pool, spec.scope, spec.name) || {};
 
   if (query.byId) {
     for (const pk of (<(keyof T['fields'])[]>provider.metadata.primaryKeys)) {
@@ -93,7 +93,7 @@ async function defaultResolveBehavior<T extends SpecType>(
     return { data: [<Model<T>>instance.get({ plain: true })], count: 1 };
   }
 
-  findOptions.order = buildOrder(query, pool, spec.name);
+  findOptions.order = buildOrder(query, pool, spec.scope, spec.name);
 
   if (query.pagination) {
     findOptions.offset = query.pagination.skip;
@@ -116,18 +116,19 @@ function plain<T extends SpecType>(rows: DatabaseInstance<T>[]) {
 function buildOrder<T extends SpecType>(
   query: Query<T>,
   pool: ProviderPool,
+  scope: string,
   model: T['name'],
 ): any[] | undefined {
-  const defaultOrder = pool.providers[model].metadata.defaultOrder;
+  const defaultOrder = pool.providers[scope][model].metadata.defaultOrder;
   const parameters: any[] = [];
 
   if (query.order && query.order.field && query.order.ordering !== 'NONE') {
 
     if (Array.isArray(query.order.chain)) {
-      let current = model;
+      let current = { model, scope };
       for (const alias of query.order.chain) {
-        const next = pool.providers[current].metadata.aliasModelMap[alias];
-        parameters.push({ as: alias, model: pool.providers[next].database });
+        const next = pool.providers[current.scope][current.model].metadata.aliasModelMap[alias];
+        parameters.push({ as: alias, model: pool.providers[next.scope][next.model].database });
         current = next;
       }
     }
@@ -150,10 +151,11 @@ function buildOrder<T extends SpecType>(
 function getAliasFilters<T extends SpecType>(
   filter: FilterFields<T> & FilterNested<T>,
   pool: ProviderPool,
+  scope: string,
   model: T['name'],
   path: string[],
 ): Sequelize.WhereOptions<Model<T>> {
-  const provider = pool.providers[model];
+  const provider = pool.providers[scope][model];
 
   const where: Sequelize.WhereOptions<Model<T>> = {};
 
@@ -166,8 +168,10 @@ function getAliasFilters<T extends SpecType>(
 
   for (const alias of aliases) {
     if ((<any>filter)[alias]) {
-      const aliasModel = provider.metadata.aliasModelMap[alias];
-      const aliasFilter = getAliasFilters((<any>filter)[alias], pool, aliasModel, [...path, alias]);
+      const target = provider.metadata.aliasModelMap[alias];
+      const aliasFilter = getAliasFilters(
+        (<any>filter)[alias], pool, target.scope, target.model, [...path, alias],
+      );
       Object.assign(where, aliasFilter);
     }
   }
@@ -178,31 +182,32 @@ function getAliasFilters<T extends SpecType>(
 function traverseTree<T extends SpecType>(
   filter: FilterCombinations<T>,
   pool: ProviderPool,
+  scope: string,
   model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> {
   const where: Sequelize.WhereOptions<Model<T>> = {};
 
   if (filter.$and) {
     if (Array.isArray(filter.$and)) {
-      where.$and = <any>filter.$and.map(and => transformFilter(and, pool, model));
+      where.$and = <any>filter.$and.map(and => transformFilter(and, pool, scope, model));
     } else {
-      where.$and = transformFilter(filter.$and, pool, model);
+      where.$and = transformFilter(filter.$and, pool, scope, model);
     }
   }
 
   if (filter.$or) {
     if (Array.isArray(filter.$or)) {
-      where.$or = <any>filter.$or.map(or => transformFilter(or, pool, model));
+      where.$or = <any>filter.$or.map(or => transformFilter(or, pool, scope, model));
     } else {
-      where.$or = transformFilter(filter.$or, pool, model);
+      where.$or = transformFilter(filter.$or, pool, scope, model);
     }
   }
 
   if (filter.$not) {
     if (Array.isArray(filter.$not)) {
-      where.$not = <any>filter.$not.map(not => transformFilter(not, pool, model));
+      where.$not = <any>filter.$not.map(not => transformFilter(not, pool, scope, model));
     } else {
-      where.$not = transformFilter(filter.$not, pool, model);
+      where.$not = transformFilter(filter.$not, pool, scope, model);
     }
   }
 
@@ -212,9 +217,10 @@ function traverseTree<T extends SpecType>(
 function transformFilter<T extends SpecType>(
   filter: Filter<T>,
   pool: ProviderPool,
+  scope: string,
   model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> {
-  const provider = pool.providers[model];
+  const provider = pool.providers[scope][model];
 
   const where: Sequelize.WhereOptions<Model<T>> = {};
 
@@ -228,13 +234,15 @@ function transformFilter<T extends SpecType>(
 
   for (const alias of aliases) {
     if ((<any>filter)[alias]) {
-      const aliasModel = provider.metadata.aliasModelMap[alias];
-      const aliasFilter = getAliasFilters((<any>filter)[alias], pool, aliasModel, [alias]);
+      const target = provider.metadata.aliasModelMap[alias];
+      const aliasFilter = getAliasFilters(
+        (<any>filter)[alias], pool, target.scope, target.model, [alias],
+      );
       Object.assign(where, aliasFilter);
     }
   }
 
-  const combinations = traverseTree(filter, pool, model);
+  const combinations = traverseTree(filter, pool, scope, model);
   Object.assign(where, combinations);
 
   return where;
@@ -243,10 +251,11 @@ function transformFilter<T extends SpecType>(
 function buildWhere<T extends SpecType>(
   query: Query<T> | SubQuery<T>,
   pool: ProviderPool,
+  scope: string,
   model: T['name'],
 ): Sequelize.WhereOptions<Model<T>> | undefined {
   if (query.filters) {
-    return transformFilter(<any>query.filters, pool, model);
+    return transformFilter(<any>query.filters, pool, scope, model);
   }
   return;
 }
@@ -254,20 +263,22 @@ function buildWhere<T extends SpecType>(
 function buildInclude<T extends SpecType>(
   query: Query<T>,
   pool: ProviderPool,
+  scope: string,
   model: T['name'],
 ): Sequelize.IncludeOptions[] | undefined {
   const orderChain = query.order && query.order.chain;
 
-  return buildNestedInclude<T>(pool, query.include, orderChain, model);
+  return buildNestedInclude<T>(pool, query.include, orderChain, scope, model);
 }
 
 function buildNestedInclude<T extends SpecType>(
   pool: ProviderPool,
   queryInclude: QueryInclude<T> | undefined,
   orderChain: string[] | undefined,
+  scope: string,
   model: T['name'],
 ): Sequelize.IncludeOptions[] | undefined {
-  const aliasModelMap = pool.providers[model].metadata.aliasModelMap;
+  const aliasModelMap = pool.providers[scope][model].metadata.aliasModelMap;
 
   if (queryInclude || orderChain) {
     const include: Sequelize.IncludeOptions[] = [];
@@ -278,25 +289,26 @@ function buildNestedInclude<T extends SpecType>(
         (orderChain && orderChain[0] === alias)
       ) {
         const subQuery = queryInclude && queryInclude[alias];
-        const target = pool.providers[aliasModelMap[alias]];
+        const target = aliasModelMap[alias];
+        const targetProvider = pool.providers[target.scope][target.model];
 
-        if (!target.database) {
+        if (!targetProvider.database) {
           continue;
         }
 
         const includedModel: Sequelize.IncludeOptions = {
           as: alias,
-          attributes: target.metadata.allowedAttributes,
-          model: target.database,
+          attributes: targetProvider.metadata.allowedAttributes,
+          model: targetProvider.database,
           required: subQuery ? subQuery.required : false,
         };
 
         if (subQuery) {
-          const attributes = target.metadata.sanitizeAttributes(subQuery.attributes);
+          const attributes = targetProvider.metadata.sanitizeAttributes(subQuery.attributes);
           if (attributes) {
             includedModel.attributes = attributes;
           }
-          const where = buildWhere(subQuery, pool, aliasModelMap[alias]);
+          const where = buildWhere(subQuery, pool, target.scope, target.model);
           if (where) {
             includedModel.where = <any>where;
           }
@@ -306,7 +318,8 @@ function buildNestedInclude<T extends SpecType>(
           pool,
           subQuery && subQuery.include,
           Array.isArray(orderChain) ? orderChain.slice(1) : undefined,
-          aliasModelMap[alias],
+          target.scope,
+          target.model,
         );
 
         if (nestedInclude) {

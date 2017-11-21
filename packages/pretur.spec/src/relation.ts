@@ -1,5 +1,5 @@
 import { appendAttribute, NormalType } from './attribute';
-import { Spec, SpecType, Scope } from './spec';
+import { Spec, SpecType } from './spec';
 
 export type ModificationActions =
   'RESTRICT' |
@@ -20,10 +20,11 @@ export type RelationType =
 export interface Relation<T extends SpecType> {
   type: RelationType;
   model: string;
-  scope?: Scope;
+  scope?: string;
   alias: keyof T['records'] | keyof T['sets'];
   key: string;
   through?: string;
+  throughScope?: string;
   required?: boolean;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
@@ -37,7 +38,7 @@ export interface ForeignKey<N extends string> {
   primary?: boolean;
   mutable?: boolean;
   elide?: boolean;
-  scope?: Scope;
+  scope?: string;
 }
 
 export interface Inheritor<S extends SpecType, T extends SpecType> {
@@ -61,8 +62,8 @@ export interface MasterOptions<S extends SpecType, T extends SpecType> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  scope?: Scope;
-  targetScope?: Scope;
+  scope?: string;
+  targetScope?: string;
 }
 
 export interface InjectiveOptions<S extends SpecType, T extends SpecType> {
@@ -73,8 +74,8 @@ export interface InjectiveOptions<S extends SpecType, T extends SpecType> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  scope?: Scope;
-  targetScope?: Scope;
+  scope?: string;
+  targetScope?: string;
 }
 
 export interface RecursiveOptions<S extends SpecType> {

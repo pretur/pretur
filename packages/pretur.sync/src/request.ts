@@ -7,6 +7,7 @@ export interface RequestBase {
 
 export interface SelectRequest<T extends SpecType = EmptySpec> extends RequestBase {
   type: 'select';
+  scope: string;
   model: T['name'];
   query: Query<T>;
 }
@@ -26,6 +27,7 @@ export interface OperateRequest<T = any> extends RequestBase {
 export interface InsertMutateRequest<T extends SpecType = EmptySpec> extends RequestBase {
   type: 'mutate';
   action: 'insert';
+  scope: string;
   model: T['name'];
   data: Partial<Model<T>>;
 }
@@ -33,6 +35,7 @@ export interface InsertMutateRequest<T extends SpecType = EmptySpec> extends Req
 export interface UpdateMutateRequest<T extends SpecType = EmptySpec> extends RequestBase {
   type: 'mutate';
   action: 'update';
+  scope: string;
   model: T['name'];
   data: Partial<T['fields']>;
 }
@@ -40,6 +43,7 @@ export interface UpdateMutateRequest<T extends SpecType = EmptySpec> extends Req
 export interface RemoveMutateRequest<T extends SpecType = EmptySpec> extends RequestBase {
   type: 'mutate';
   action: 'remove';
+  scope: string;
   model: T['name'];
   identifiers: Partial<T['fields']>;
 }

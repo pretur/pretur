@@ -2,8 +2,6 @@ import { trim, castArray, intersection } from 'lodash';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 
-export type Scope = string | string[];
-
 export interface Indexes<F> {
   unique: (keyof F)[][];
 }
@@ -96,7 +94,7 @@ export function buildSpecPool(...specs: Spec<any>[]): SpecPool {
   return pool;
 }
 
-function validateScope(scope: Scope): boolean {
+function validateScope(scope: string): boolean {
   if (typeof scope !== 'string') {
     return false;
   }
@@ -104,7 +102,7 @@ function validateScope(scope: Scope): boolean {
   return trim(scope) !== '';
 }
 
-export function collide(first: Scope, second: Scope): boolean {
+export function collide(first: string | string[], second: string | string[]): boolean {
   const firstAsArray = castArray(first || undefined);
   const secondAsArray = castArray(second || undefined);
 

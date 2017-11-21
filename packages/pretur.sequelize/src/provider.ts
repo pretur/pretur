@@ -13,7 +13,7 @@ import {
 } from './buildDatabase';
 
 export type AliasModelMap<T extends SpecType> = {
-  [P in keyof T['records'] | keyof T['sets']]: string;
+  [P in keyof T['records'] | keyof T['sets']]: { model: string; scope: string };
 };
 
 export type AliasKeyMap<T extends SpecType> = {
@@ -39,7 +39,8 @@ export interface ProviderMetadata<T extends SpecType> {
 
 export interface Provider<T extends SpecType> {
   spec: Spec<T>;
-  name: string;
+  scope: string;
+  name: T['name'];
   metadata: ProviderMetadata<T>;
   database: DatabaseModel<T>;
   select(tr: Transaction, query?: Query<T>, context?: any): Promise<ResolveResult<T>>;
@@ -73,7 +74,7 @@ export function buildProvider<T extends SpecType>(
 
   const aliasModelMap = spec.relations.reduce(
     (m, r) => {
-      m[r.alias] = r.model;
+      m[r.alias] = { scope: r.scope!, model: r.model };
       return m;
     },
     <AliasModelMap<T>>{},
@@ -145,6 +146,7 @@ export function buildProvider<T extends SpecType>(
       {
         type: 'mutate',
         action: 'insert',
+        scope: spec.scope,
         model: spec.name,
         requestId: 1,
         data,
@@ -167,6 +169,7 @@ export function buildProvider<T extends SpecType>(
       {
         type: 'mutate',
         action: 'update',
+        scope: spec.scope,
         model: spec.name,
         requestId: 1,
         data,
@@ -189,6 +192,7 @@ export function buildProvider<T extends SpecType>(
       {
         type: 'mutate',
         action: 'remove',
+        scope: spec.scope,
         model: spec.name,
         requestId: 1,
         identifiers,
@@ -198,6 +202,7 @@ export function buildProvider<T extends SpecType>(
   }
 
   return {
+    scope: spec.scope,
     name: spec.name,
     metadata: {
       afterDatabaseCreationHook: adbCreate,
