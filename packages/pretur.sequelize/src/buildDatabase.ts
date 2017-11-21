@@ -26,8 +26,8 @@ export async function createDatabase(
   (<any>sequelize).modelManager.forEachModel((db: any) => topologicallySorted.push(db));
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database)['name'];
-    const schema: string = (<any>database)['schema'];
+    const name: string = (<any>database).name;
+    const schema: string = (<any>database).options.schema;
     const provider = pool.providers[schema][name];
 
     const create = async () => {
@@ -42,8 +42,8 @@ export async function createDatabase(
   }
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database)['name'];
-    const schema: string = (<any>database)['schema'];
+    const name: string = (<any>database).name;
+    const schema: string = (<any>database).options.schema;
     const provider = pool.providers[schema][name];
 
     if (provider && provider.metadata.afterDatabaseCreationHook) {
@@ -61,8 +61,8 @@ export async function destroyDatabase(
   (<any>sequelize).modelManager.forEachModel((db: any) => topologicallySorted.push(db));
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database)['name'];
-    const schema: string = (<any>database)['schema'];
+    const name: string = (<any>database).name;
+    const schema: string = (<any>database).options.schema;
     const provider = pool.providers[schema][name];
 
     const destroy = async () => {
@@ -77,8 +77,8 @@ export async function destroyDatabase(
   }
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database)['name'];
-    const schema: string = (<any>database)['schema'];
+    const name: string = (<any>database).name;
+    const schema: string = (<any>database).options.schema;
     const provider = pool.providers[schema][name];
 
     if (provider && provider.metadata.afterDatabaseDestructionHook) {

@@ -68,14 +68,12 @@ export function buildDatabaseModel<T extends SpecType>(
 
   function initialize(pool: ProviderPool) {
     for (const relation of spec.relations) {
-      if (!relation.scope) {
-        throw new Error(`relation ${relation.alias} on ${relation.model} does not have scope`);
-      }
+      const targetProvider = pool.providers[relation.scope!] &&
+        pool.providers[relation.scope!][relation.model];
+      const throughProvider = relation.through &&
+        pool.providers[relation.throughScope!][relation.through];
 
-      const ownProvider = pool.providers[relation.scope][relation.model];
-      const throughProvider = relation.through && pool.providers[relation.scope][relation.through];
-
-      const target = ownProvider && ownProvider.database;
+      const target = targetProvider && targetProvider.database;
       const through = throughProvider && throughProvider.database;
 
       if (target) {
