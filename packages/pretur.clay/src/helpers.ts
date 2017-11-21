@@ -8,7 +8,7 @@ import { Set } from './Set';
 import { Fields, buildFields, buildRecord, buildSet } from './fields';
 
 export interface MutationGetter<T extends SpecType = SpecType> {
-  (clay: Set<T> | Record<T>, model: T['name']): MutateRequest<T>[];
+  (clay: Set<T> | Record<T>, scope: string, model: T['name']): MutateRequest<T>[];
 }
 
 function buildGetMutations<T extends SpecType>(
@@ -16,7 +16,7 @@ function buildGetMutations<T extends SpecType>(
   mutationGetter: MutationGetter<T>,
   clay: Set<T> | Record<T>,
 ): MutateRequest<T>[] {
-  return mutationGetter(clay, spec.name);
+  return mutationGetter(clay, spec.scope, spec.name);
 }
 
 function buildQuerier<T extends SpecType>(

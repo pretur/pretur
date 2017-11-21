@@ -81,14 +81,14 @@ export function createSpec<T extends SpecType>(
 }
 
 export interface SpecPool {
-  [model: string]: Spec<any>;
+  [scope: string]: { [model: string]: Spec<any> };
 }
 
-export function buildSpecPool(...specs: Spec<any>[]): SpecPool {
-  const pool: SpecPool = {};
-
-  for (const spec of specs) {
-    pool[spec.name] = spec;
+export function buildSpecPool<S extends SpecPool>(pool: S): S {
+  for (const scope of Object.values(pool)) {
+    for (const spec of Object.values(scope)) {
+      spec.initialize();
+    }
   }
 
   return pool;
