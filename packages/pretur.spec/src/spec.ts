@@ -26,8 +26,8 @@ export type Model<T extends SpecType> =
 export interface Spec<T extends SpecType = SpecType> {
   model: Model<T>;
   type: T;
-  name: T['name'];
   scope: string;
+  name: T['name'];
   join: boolean;
   attributes: Attribute<T['fields']>[];
   indexes: Indexes<T['fields']>;

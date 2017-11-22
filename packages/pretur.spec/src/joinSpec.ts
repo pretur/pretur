@@ -11,7 +11,6 @@ export interface JoinKey<N extends string> {
   name: N;
   type?: NormalType;
   primary?: boolean;
-  scope?: string;
 }
 
 export interface JoineeOptions<J extends SpecType, S extends SpecType, T extends SpecType> {
@@ -21,7 +20,6 @@ export interface JoineeOptions<J extends SpecType, S extends SpecType, T extends
   key: JoinKey<keyof J['fields']>;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  scope?: string;
 }
 
 export function validateJoinee<J extends SpecType, S extends SpecType, T extends SpecType>(
@@ -83,7 +81,6 @@ export function createJoinSpec<
     mutable: false,
     name: options.firstJoinee.key.name,
     primary: options.firstJoinee.key.primary !== false,
-    scope: options.firstJoinee.key.scope || options.firstJoinee.scope || options.scope,
     type: options.firstJoinee.key.type || 'INTEGER',
   });
 
@@ -91,55 +88,60 @@ export function createJoinSpec<
     mutable: false,
     name: options.secondJoinee.key.name,
     primary: options.secondJoinee.key.primary !== false,
-    scope: options.secondJoinee.key.scope || options.secondJoinee.scope || options.scope,
     type: options.secondJoinee.key.type || 'INTEGER',
   });
 
   appendRelation(spec, {
     alias: options.firstJoinee.aliasOnJoin,
     key: options.firstJoinee.key.name,
-    model: options.firstJoinee.spec.name,
+    target: {
+      scope: options.firstJoinee.spec.scope,
+      model: options.firstJoinee.spec.name,
+    },
     onDelete: options.firstJoinee.onDelete || 'CASCADE',
     onUpdate: options.firstJoinee.onUpdate || 'CASCADE',
     required: true,
-    scope: options.firstJoinee.scope || options.scope,
     type: 'MASTER',
   });
 
   appendRelation(spec, {
     alias: options.secondJoinee.aliasOnJoin,
     key: options.secondJoinee.key.name,
-    model: options.secondJoinee.spec.name,
+    target: {
+      scope: options.secondJoinee.spec.scope,
+      model: options.secondJoinee.spec.name,
+    },
     onDelete: options.secondJoinee.onDelete || 'CASCADE',
     onUpdate: options.secondJoinee.onUpdate || 'CASCADE',
     required: true,
-    scope: options.secondJoinee.scope || options.scope,
     type: 'MASTER',
   });
 
   appendRelation(options.firstJoinee.spec, {
     alias: options.secondJoinee.aliasOnTarget,
     key: options.firstJoinee.key.name,
-    model: options.secondJoinee.spec.name,
+    target: {
+      scope: options.secondJoinee.spec.scope,
+      model: options.secondJoinee.spec.name,
+    },
     onDelete: options.firstJoinee.onDelete || 'CASCADE',
     onUpdate: options.firstJoinee.onUpdate || 'CASCADE',
     required: true,
-    scope: options.firstJoinee.scope || options.scope,
-    through: spec.name,
-    throughScope: options.scope,
+    through: { scope: spec.scope, model: spec.name },
     type: 'MANY_TO_MANY',
   });
 
   appendRelation(options.secondJoinee.spec, {
     alias: options.firstJoinee.aliasOnTarget,
     key: options.secondJoinee.key.name,
-    model: options.firstJoinee.spec.name,
+    target: {
+      scope: options.firstJoinee.spec.scope,
+      model: options.firstJoinee.spec.name,
+    },
     onDelete: options.secondJoinee.onDelete || 'CASCADE',
     onUpdate: options.secondJoinee.onUpdate || 'CASCADE',
     required: true,
-    scope: options.secondJoinee.scope || options.scope,
-    through: spec.name,
-    throughScope: options.scope,
+    through: { scope: spec.scope, model: spec.name },
     type: 'MANY_TO_MANY',
   });
 

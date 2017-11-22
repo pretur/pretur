@@ -32,7 +32,7 @@ export type ArraySubtype =
 
 export interface AttributeBase<T, K extends keyof T = keyof T> {
   name: K;
-  scope?: string;
+  virtual?: boolean;
   required?: boolean;
   unique?: boolean;
   primary?: boolean;
@@ -157,7 +157,7 @@ export function createAttributeBuilder<T extends SpecType>(
   function attributeBuilder<K extends keyof T['fields']>(
     options: Attribute<T['fields'], K>,
   ): void {
-    appendAttribute(spec, { ...defaults, scope: spec.scope, ...options });
+    appendAttribute(spec, { ...defaults, ...options });
   }
 
   const ab = <AttributeBuilder<T['fields']>>attributeBuilder;

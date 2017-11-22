@@ -19,12 +19,10 @@ export type RelationType =
 
 export interface Relation<T extends SpecType> {
   type: RelationType;
-  model: string;
-  scope?: string;
+  target: { scope: string; model: string };
+  through?: { scope: string; model: string };
   alias: keyof T['records'] | keyof T['sets'];
   key: string;
-  through?: string;
-  throughScope?: string;
   required?: boolean;
   onDelete: ModificationActions;
   onUpdate: ModificationActions;
@@ -38,7 +36,6 @@ export interface ForeignKey<N extends string> {
   primary?: boolean;
   mutable?: boolean;
   elide?: boolean;
-  scope?: string;
 }
 
 export interface Inheritor<S extends SpecType, T extends SpecType> {
@@ -62,8 +59,6 @@ export interface MasterOptions<S extends SpecType, T extends SpecType> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  scope?: string;
-  targetScope?: string;
 }
 
 export interface InjectiveOptions<S extends SpecType, T extends SpecType> {
@@ -106,7 +101,7 @@ export function appendRelation<T extends SpecType>(spec: Spec<T>, relation: Rela
 
     if (spec.relations.filter(r => r.alias === relation.alias).length > 0) {
       throw new Error(
-        `relation from ${spec.name} to ${relation.model} as ${relation.alias} ` +
+        `relation from ${spec.name} to ${relation.target.model} as ${relation.alias} ` +
         `cannot be applied because there is already another relation with the same alias.`,
       );
     }
@@ -134,7 +129,7 @@ export function appendRelation<T extends SpecType>(spec: Spec<T>, relation: Rela
       );
     }
 
-    if (relation.type === 'RECURSIVE' && relation.model !== spec.name) {
+    if (relation.type === 'RECURSIVE' && relation.target.model !== spec.name) {
       throw new Error(
         `Recursive relations must reference their own model. ` +
         `Please check ${spec.name}.${relation.alias}`,
@@ -174,22 +169,20 @@ function inheritors<S extends SpecType, T extends SpecType>(
     appendRelation(spec, {
       alias: inheritor.alias,
       key: options.sharedExistingUniqueField,
-      model: inheritor.target.name,
+      target: { scope: inheritor.target.scope, model: inheritor.target.name },
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
       required: false,
-      scope: spec.scope,
       type: 'SUBCLASS',
     });
 
     appendRelation(inheritor.target, {
       alias: options.aliasOnSubclasses,
       key: options.sharedExistingUniqueField,
-      model: spec.name,
+      target: { scope: spec.scope, model: spec.name },
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
       required: false,
-      scope: spec.scope,
       type: 'SUPERCLASS',
     });
 
@@ -200,7 +193,6 @@ function inheritors<S extends SpecType, T extends SpecType>(
     mutable: true,
     name: options.typeIdentifierFieldName,
     required: options.typeIdentifierRequired || false,
-    scope: spec.scope,
     type: 'ENUM',
     typename: spec.name + 'SubclassType',
     values: typeEnumValues,
@@ -214,22 +206,20 @@ function master<S extends SpecType, T extends SpecType>(
   appendRelation(spec, {
     alias: options.alias,
     key: options.foreignKey.name,
-    model: options.target.name,
+    target: { scope: options.target.scope, model: options.target.name },
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
     required: options.required || false,
-    scope: options.scope || spec.scope,
     type: 'MASTER',
   });
 
   appendRelation(options.target, {
     alias: options.ownAliasOnTarget,
     key: options.foreignKey.name,
-    model: spec.name,
+    target: { scope: spec.scope, model: spec.name },
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
     required: options.required || false,
-    scope: options.targetScope || spec.scope,
     type: 'DETAIL',
   });
 
@@ -243,7 +233,6 @@ function master<S extends SpecType, T extends SpecType>(
       required: typeof options.foreignKey.required === 'boolean'
         ? options.foreignKey.required
         : (!options.foreignKey.primary && options.required) || false,
-      scope: options.foreignKey.scope || options.scope || spec.scope,
       type: (options.foreignKey.type || 'INTEGER'),
       unique: options.foreignKey.unique || false,
     });
@@ -257,22 +246,20 @@ function injective<S extends SpecType, T extends SpecType>(
   appendRelation(spec, {
     alias: options.alias,
     key: options.foreignKey.name,
-    model: options.target.name,
+    target: { scope: options.target.scope, model: options.target.name },
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
     required: options.required || false,
-    scope: options.scope || spec.scope,
     type: 'MASTER',
   });
 
   appendRelation(options.target, {
     alias: options.ownAliasOnTarget,
     key: options.foreignKey.name,
-    model: spec.name,
+    target: { scope: spec.scope, model: spec.name },
     onDelete: options.onDelete || 'CASCADE',
     onUpdate: options.onUpdate || 'CASCADE',
     required: options.required || false,
-    scope: options.targetScope || spec.scope,
     type: 'INJECTIVE',
   });
 
@@ -286,7 +273,6 @@ function injective<S extends SpecType, T extends SpecType>(
       required: typeof options.foreignKey.required === 'boolean'
         ? options.foreignKey.required
         : (!options.foreignKey.primary && options.required) || false,
-      scope: options.foreignKey.scope || options.scope || spec.scope,
       type: options.foreignKey.type || 'INTEGER',
       unique: typeof options.foreignKey.unique === 'boolean'
         ? options.foreignKey.unique
@@ -299,11 +285,10 @@ function recursive<S extends SpecType>(spec: Spec<S>, options: RecursiveOptions<
   appendRelation(spec, {
     alias: options.alias,
     key: options.key,
-    model: spec.name,
+    target: { scope: spec.scope, model: spec.name },
     onDelete: options.onDelete || 'RESTRICT',
     onUpdate: options.onUpdate || 'CASCADE',
     required: false,
-    scope: spec.scope,
     type: 'RECURSIVE',
   });
 
@@ -311,7 +296,6 @@ function recursive<S extends SpecType>(spec: Spec<S>, options: RecursiveOptions<
     mutable: true,
     name: options.key,
     required: false,
-    scope: spec.scope,
     type: options.keyType || 'INTEGER',
   });
 }
