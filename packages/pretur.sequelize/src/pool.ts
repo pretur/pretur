@@ -25,6 +25,7 @@ export interface ProviderPool<M extends ProviderMap = ProviderMap> {
     item: MutateRequest<T>,
     context?: any,
   ): Promise<SyncResult<T>>;
+  initialize(): void;
 }
 
 export function buildProviderPool<M extends ProviderMap>(providers: M): ProviderPool<M> {
@@ -84,11 +85,13 @@ export function buildProviderPool<M extends ProviderMap>(providers: M): Provider
     return provider.metadata.synchronizer(transaction, item, context);
   };
 
-  for (const map of Object.values(providers)) {
-    for (const descriptor of Object.values(map)) {
-      descriptor.metadata.initialize(pool);
+  pool.initialize = function initialize() {
+    for (const map of Object.values(providers)) {
+      for (const descriptor of Object.values(map)) {
+        descriptor.metadata.initialize(pool);
+      }
     }
-  }
+  };
 
   return pool;
 }

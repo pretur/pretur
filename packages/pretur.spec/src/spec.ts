@@ -84,14 +84,12 @@ export interface SpecPool {
   [scope: string]: { [model: string]: Spec<any> };
 }
 
-export function buildSpecPool<S extends SpecPool>(pool: S): S {
+export function initializePool<S extends SpecPool>(pool: S) {
   for (const scope of Object.values(pool)) {
     for (const spec of Object.values(scope)) {
       spec.initialize();
     }
   }
-
-  return pool;
 }
 
 function validateScope(scope: string): boolean {
