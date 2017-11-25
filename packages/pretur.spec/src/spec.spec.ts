@@ -1,7 +1,7 @@
 /// <reference types="mocha" />
 
 import { expect } from 'chai';
-import { createSpec, collide } from './spec';
+import { createSpec } from './spec';
 
 type MockModel = {
   name: 'a';
@@ -17,27 +17,6 @@ type MockModel = {
   records: {};
   sets: {};
 };
-
-describe('collide', () => {
-
-  it('should properly check if the two scope definitions intersect', () => {
-    expect(collide(['', '', 'o'], 'o')).to.be.true;
-    expect(collide(['', 's', 'o'], 's')).to.be.true;
-    expect(collide(['', 's', 'o'], ['s', '', 'o'])).to.be.true;
-    expect(collide('s', ['s', '', 'o'])).to.be.true;
-    expect(collide('o', ['s', 'o', 'o'])).to.be.true;
-
-    expect(collide(['', '  \t \n\n\n ', 'o'], '  \t \n\n\n ')).to.be.false;
-    expect(collide([' ', '  \t \n\n\n ', 'o'], ' ')).to.be.false;
-    expect(collide(['', '', 'o'], undefined!)).to.be.false;
-    expect(collide(['', undefined!, 'o'], undefined!)).to.be.false;
-    expect(collide(['', undefined!, 'o'], undefined!)).to.be.false;
-    expect(collide(['', undefined!, 'o'], undefined!)).to.be.false;
-    expect(collide(['', '', 'o'], undefined!)).to.be.false;
-    expect(collide(['', 's', 'o'], ['t', '', 'i'])).to.be.false;
-  });
-
-});
 
 describe('spec', () => {
 

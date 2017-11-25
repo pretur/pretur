@@ -1,4 +1,3 @@
-import { trim, castArray, intersection } from 'lodash';
 import { createAttributeBuilder, AttributeBuilder, Attribute } from './attribute';
 import { Relation, RelationsBuilder, createRelationBuilder } from './relation';
 
@@ -90,19 +89,4 @@ export function initializePool<S extends SpecPool>(pool: S) {
       spec.initialize();
     }
   }
-}
-
-function validateScope(scope: string): boolean {
-  if (typeof scope !== 'string') {
-    return false;
-  }
-
-  return trim(scope) !== '';
-}
-
-export function collide(first: string | string[], second: string | string[]): boolean {
-  const firstAsArray = castArray(first || undefined);
-  const secondAsArray = castArray(second || undefined);
-
-  return intersection(firstAsArray, secondAsArray).filter(validateScope).length > 0;
 }

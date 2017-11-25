@@ -1,4 +1,4 @@
-import { SpecType, Model, SpecPool, collide } from 'pretur.spec';
+import { SpecType, Model, SpecPool } from 'pretur.spec';
 import { MutateRequest, Requester, MutateResult } from 'pretur.sync';
 import { Set } from './Set';
 import { Record } from './Record';
@@ -93,7 +93,6 @@ export interface MutationsExtractor {
 
 export function buildMutationsExtractor(
   specPool: SpecPool,
-  scopes: string | string[],
 ): MutationsExtractor {
   function extractInsertData<T extends SpecType>(
     clay: Record<T>,
@@ -123,19 +122,18 @@ export function buildMutationsExtractor(
     const data: any = {};
     const spec = specPool[scope][model];
 
-    const nonAutoIncrementedOwnedAttributes = <(keyof T['fields'])[]>spec.attributes
-      .filter(attrib => !attrib.autoIncrement && collide(attrib.scope || [], scopes))
+    const nonAutoIncrementedAttributes = <(keyof T['fields'])[]>spec.attributes
+      .filter(attrib => !attrib.autoIncrement)
       .map(attrib => attrib.name);
 
-    for (const attribute of nonAutoIncrementedOwnedAttributes) {
+    for (const attribute of nonAutoIncrementedAttributes) {
       const value = clay.fields[attribute];
       if (value) {
         data[attribute] = <any>toPlain(value);
       }
     }
 
-    const ownedTargetRelations = spec.relations
-      .filter(relation => collide(relation.scope || [], scopes))
+    const targetRelations = spec.relations
       .filter(({ type }) =>
         type === 'SUBCLASS' ||
         type === 'MASTER' ||
@@ -144,7 +142,7 @@ export function buildMutationsExtractor(
         type === 'INJECTIVE',
     );
 
-    for (const relation of ownedTargetRelations) {
+    for (const relation of targetRelations) {
       if (clay.fields[relation.alias]) {
         data[relation.alias] = <any>extractInsertData(
           clay.fields[relation.alias],
@@ -173,7 +171,7 @@ export function buildMutationsExtractor(
     }
 
     const mutables = spec.attributes
-      .filter(attrib => attrib.mutable && collide(attrib.scope || [], scopes))
+      .filter(attrib => attrib.mutable)
       .map(attrib => attrib.name);
 
     for (const mutable of mutables) {
@@ -245,10 +243,7 @@ export function buildMutationsExtractor(
           });
         }
 
-        const ownedRelations = spec.relations
-          .filter(relation => collide(relation.scope!, scope));
-
-        for (const relation of ownedRelations) {
+        for (const relation of spec.relations) {
           if (clay.fields[relation.alias]) {
             requests.push(
               ...getMutations(clay.fields[relation.alias], relation.scope!, relation.model),
