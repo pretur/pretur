@@ -138,6 +138,7 @@ export function buildResponder<C>(options: ResponderOptions<C>) {
               await transaction.commit();
               responses.push(<MutateResponse>{
                 action: request.action,
+                errors: [],
                 generatedIds,
                 requestId,
                 type: request.type,
