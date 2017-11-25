@@ -21,7 +21,7 @@ export function buildFields<T extends SpecType>(
   }
 
   for (const relation of spec.relations) {
-    const target = pool[relation.scope!][relation.model];
+    const target = pool[relation.target.scope][relation.target.model];
     if (values[relation.alias]) {
       switch (relation.type) {
         case 'DETAIL':

@@ -69,8 +69,6 @@ export interface InjectiveOptions<S extends SpecType, T extends SpecType> {
   required?: boolean;
   onDelete?: ModificationActions;
   onUpdate?: ModificationActions;
-  scope?: string;
-  targetScope?: string;
 }
 
 export interface RecursiveOptions<S extends SpecType> {

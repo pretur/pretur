@@ -145,7 +145,7 @@ async function defaultInsertBehavior<T extends SpecType>(
     data[master.alias] = undefined;
 
     if (masterData) {
-      const masterProvider = pool.providers[master.scope!][master.model];
+      const masterProvider = pool.providers[master.target.scope][master.target.model];
 
       if (!masterProvider.metadata.synchronizer) {
         throw new Error(`model ${masterProvider.name} must have a synchronizer`);

@@ -68,10 +68,10 @@ export function buildDatabaseModel<T extends SpecType>(
 
   function initialize(pool: ProviderPool) {
     for (const relation of spec.relations) {
-      const targetProvider = pool.providers[relation.scope!] &&
-        pool.providers[relation.scope!][relation.model];
+      const targetProvider = pool.providers[relation.target.scope] &&
+        pool.providers[relation.target.scope][relation.target.model];
       const throughProvider = relation.through &&
-        pool.providers[relation.throughScope!][relation.through];
+        pool.providers[relation.through.scope][relation.through.model];
 
       const target = targetProvider && targetProvider.database;
       const through = throughProvider && throughProvider.database;

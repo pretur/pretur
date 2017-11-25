@@ -38,7 +38,7 @@ function mockSpec(name: string): Spec<MockModel> {
     model: undefined!,
     name,
     relations: [],
-    scope: undefined!,
+    scope: name.toLowerCase(),
     type: undefined!,
   };
 }
@@ -109,7 +109,7 @@ describe('joinSpec', () => {
         firstJoinee: {
           aliasOnJoin: 'a',
           aliasOnTarget: 'all_a',
-          key: { name: 'aId', primary: true, scope: 'aaa' },
+          key: { name: 'aId', primary: true },
           spec: specA,
         },
         name: 'a',
@@ -126,7 +126,6 @@ describe('joinSpec', () => {
       expect(joinSpec.attributes[0].type).to.be.equals('INTEGER');
       expect(joinSpec.attributes[0].primary).to.be.true;
       expect(joinSpec.attributes[0].mutable).to.be.false;
-      expect(joinSpec.attributes[0].scope).to.be.equals('aaa');
 
       expect(joinSpec.attributes[1].name).to.be.equals('bId');
       expect(joinSpec.attributes[1].type).to.be.equals('INTEGER');
@@ -134,19 +133,19 @@ describe('joinSpec', () => {
       expect(joinSpec.attributes[1].mutable).to.be.false;
 
       expect(joinSpec.relations[0].type).to.be.equals('MASTER');
-      expect(joinSpec.relations[0].scope).to.deep.equal('b');
+      expect(joinSpec.relations[0].target.scope).to.deep.equal('a');
       expect(joinSpec.relations[0].alias).to.be.equals('a');
       expect(joinSpec.relations[0].key).to.be.equals('aId');
-      expect(joinSpec.relations[0].model).to.be.equals('A');
+      expect(joinSpec.relations[0].target.model).to.be.equals('A');
       expect(joinSpec.relations[0].onDelete).to.be.equals('CASCADE');
       expect(joinSpec.relations[0].onUpdate).to.be.equals('CASCADE');
       expect(joinSpec.relations[0].required).to.be.true;
 
       expect(joinSpec.relations[1].type).to.be.equals('MASTER');
-      expect(joinSpec.relations[1].scope).to.deep.equal('b');
+      expect(joinSpec.relations[1].target.scope).to.deep.equal('b');
       expect(joinSpec.relations[1].alias).to.be.equals('b');
       expect(joinSpec.relations[1].key).to.be.equals('bId');
-      expect(joinSpec.relations[1].model).to.be.equals('B');
+      expect(joinSpec.relations[1].target.model).to.be.equals('B');
       expect(joinSpec.relations[1].onDelete).to.be.equals('CASCADE');
       expect(joinSpec.relations[1].onUpdate).to.be.equals('CASCADE');
       expect(joinSpec.relations[1].required).to.be.true;
@@ -174,21 +173,21 @@ describe('joinSpec', () => {
       });
 
       expect(specA.relations[0].type).to.be.equals('MANY_TO_MANY');
-      expect(specA.relations[0].scope).to.deep.equal('b');
+      expect(specA.relations[0].target.scope).to.deep.equal('b');
       expect(specA.relations[0].alias).to.be.equals('all_b');
       expect(specA.relations[0].key).to.be.equals('aId');
-      expect(specA.relations[0].model).to.be.equals('B');
-      expect(specA.relations[0].through).to.be.equals('J');
+      expect(specA.relations[0].target.model).to.be.equals('B');
+      expect(specA.relations[0].through!.model).to.be.equals('J');
       expect(specA.relations[0].onDelete).to.be.equals('CASCADE');
       expect(specA.relations[0].onUpdate).to.be.equals('CASCADE');
       expect(specA.relations[0].required).to.be.true;
 
       expect(specB.relations[0].type).to.be.equals('MANY_TO_MANY');
-      expect(specB.relations[0].scope).to.deep.equal('b');
+      expect(specB.relations[0].target.scope).to.deep.equal('a');
       expect(specB.relations[0].alias).to.be.equals('all_a');
       expect(specB.relations[0].key).to.be.equals('bId');
-      expect(specB.relations[0].model).to.be.equals('A');
-      expect(specB.relations[0].through).to.be.equals('J');
+      expect(specB.relations[0].target.model).to.be.equals('A');
+      expect(specB.relations[0].through!.model).to.be.equals('J');
       expect(specB.relations[0].onDelete).to.be.equals('CASCADE');
       expect(specB.relations[0].onUpdate).to.be.equals('CASCADE');
       expect(specB.relations[0].required).to.be.true;

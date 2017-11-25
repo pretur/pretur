@@ -76,7 +76,7 @@ function mockSpec(name: string): Spec<MockType> {
     model: undefined!,
     name,
     relations: [],
-    scope: undefined!,
+    scope: name.toLowerCase(),
     type: undefined!,
   };
 }
@@ -84,10 +84,9 @@ function mockSpec(name: string): Spec<MockType> {
 const baseRelation = <Relation<MockType>>{
   alias: undefined!,
   key: 'aId',
-  model: 'A',
+  target: { model: 'A', scope: 'scope' },
   onDelete: 'CASCADE',
   onUpdate: 'CASCADE',
-  scope: undefined!,
   type: undefined!,
 };
 
@@ -164,7 +163,12 @@ describe('relation', () => {
       const spec = mockSpec('A');
 
       expect(() =>
-        appendRelation(spec, { ...baseRelation, alias: 'some', model: 'B', type: 'RECURSIVE' }),
+        appendRelation(spec, {
+          ...baseRelation,
+          alias: 'some',
+          target: { model: 'B', scope: 'scope' },
+          type: 'RECURSIVE',
+        }),
       ).to.throw();
     });
 
@@ -264,39 +268,39 @@ describe('relation', () => {
               typeIdentifierFieldName: 'type',
             });
 
-            expect(main.relations[0].scope).to.be.equals('scope');
+            expect(main.relations[0].target.scope).to.be.equals('child1');
             expect(main.relations[0].type).to.be.equals('SUBCLASS');
-            expect(main.relations[0].model).to.be.equals('Child1');
+            expect(main.relations[0].target.model).to.be.equals('Child1');
             expect(main.relations[0].alias).to.be.equals('a');
             expect(main.relations[0].key).to.be.equals('id');
 
-            expect(child1.target.relations[0].scope).to.be.equals('scope');
+            expect(child1.target.relations[0].target.scope).to.be.equals('scope');
             expect(child1.target.relations[0].type).to.be.equals('SUPERCLASS');
-            expect(child1.target.relations[0].model).to.be.equals('Main');
+            expect(child1.target.relations[0].target.model).to.be.equals('Main');
             expect(child1.target.relations[0].alias).to.be.equals('main');
             expect(child1.target.relations[0].key).to.be.equals('id');
 
-            expect(main.relations[1].scope).to.be.equals('scope');
+            expect(main.relations[1].target.scope).to.be.equals('child2');
             expect(main.relations[1].type).to.be.equals('SUBCLASS');
-            expect(main.relations[1].model).to.be.equals('Child2');
+            expect(main.relations[1].target.model).to.be.equals('Child2');
             expect(main.relations[1].alias).to.be.equals('b');
             expect(main.relations[1].key).to.be.equals('id');
 
-            expect(child2.target.relations[0].scope).to.be.equals('scope');
+            expect(child2.target.relations[0].target.scope).to.be.equals('scope');
             expect(child2.target.relations[0].type).to.be.equals('SUPERCLASS');
-            expect(child2.target.relations[0].model).to.be.equals('Main');
+            expect(child2.target.relations[0].target.model).to.be.equals('Main');
             expect(child2.target.relations[0].alias).to.be.equals('main');
             expect(child2.target.relations[0].key).to.be.equals('id');
 
-            expect(main.relations[2].scope).to.be.equals('scope');
+            expect(main.relations[2].target.scope).to.be.equals('child3');
             expect(main.relations[2].type).to.be.equals('SUBCLASS');
-            expect(main.relations[2].model).to.be.equals('Child3');
+            expect(main.relations[2].target.model).to.be.equals('Child3');
             expect(main.relations[2].alias).to.be.equals('c');
             expect(main.relations[2].key).to.be.equals('id');
 
-            expect(child3.target.relations[0].scope).to.be.equals('scope');
+            expect(child3.target.relations[0].target.scope).to.be.equals('scope');
             expect(child3.target.relations[0].type).to.be.equals('SUPERCLASS');
-            expect(child3.target.relations[0].model).to.be.equals('Main');
+            expect(child3.target.relations[0].target.model).to.be.equals('Main');
             expect(child3.target.relations[0].alias).to.be.equals('main');
             expect(child3.target.relations[0].key).to.be.equals('id');
           },
@@ -363,23 +367,21 @@ describe('relation', () => {
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'details',
           required: true,
-          scope: 'scope',
           target: master,
-          targetScope: 'scope2',
         });
 
-        expect(master.relations[0].scope).to.be.equals('scope2');
+        expect(master.relations[0].target.scope).to.be.equals('detail');
         expect(master.relations[0].type).to.be.equals('DETAIL');
-        expect(master.relations[0].model).to.be.equals('Detail');
+        expect(master.relations[0].target.model).to.be.equals('Detail');
         expect(master.relations[0].alias).to.be.equals('details');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.equals(true);
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
-        expect(detail.relations[0].scope).to.be.equals('scope');
+        expect(detail.relations[0].target.scope).to.be.equals('master');
         expect(detail.relations[0].type).to.be.equals('MASTER');
-        expect(detail.relations[0].model).to.be.equals('Master');
+        expect(detail.relations[0].target.model).to.be.equals('Master');
         expect(detail.relations[0].alias).to.be.equals('master');
         expect(detail.relations[0].key).to.be.equals('someId');
         expect(detail.relations[0].required).to.be.equals(true);
@@ -454,23 +456,21 @@ describe('relation', () => {
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'some',
           required: true,
-          scope: 'scope',
           target: master,
-          targetScope: 'scope2',
         });
 
-        expect(master.relations[0].scope).to.be.equals('scope2');
+        expect(master.relations[0].target.scope).to.be.equals('injected');
         expect(master.relations[0].type).to.be.equals('INJECTIVE');
-        expect(master.relations[0].model).to.be.equals('Injected');
+        expect(master.relations[0].target.model).to.be.equals('Injected');
         expect(master.relations[0].alias).to.be.equals('some');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.true;
         expect(master.relations[0].onDelete).to.be.equals('RESTRICT');
         expect(master.relations[0].onUpdate).to.be.equals('NO ACTION');
 
-        expect(injected.relations[0].scope).to.be.equals('scope');
+        expect(injected.relations[0].target.scope).to.be.equals('master');
         expect(injected.relations[0].type).to.be.equals('MASTER');
-        expect(injected.relations[0].model).to.be.equals('Master');
+        expect(injected.relations[0].target.model).to.be.equals('Master');
         expect(injected.relations[0].alias).to.be.equals('master');
         expect(injected.relations[0].key).to.be.equals('someId');
         expect(injected.relations[0].required).to.be.true;
@@ -494,9 +494,7 @@ describe('relation', () => {
           onDelete: 'RESTRICT',
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'some',
-          scope: 'scope',
           target: master,
-          targetScope: 'scope2',
         });
 
         expect(injected.attributes[0].mutable).to.be.false;
@@ -515,9 +513,7 @@ describe('relation', () => {
           onUpdate: 'NO ACTION',
           ownAliasOnTarget: 'some',
           required: true,
-          scope: 'scope',
           target: master,
-          targetScope: 'scope2',
         });
 
         expect(injected.attributes[0].mutable).to.be.true;
@@ -579,9 +575,9 @@ describe('relation', () => {
           onUpdate: 'NO ACTION',
         });
 
-        expect(master.relations[0].scope).to.be.equals('scope');
+        expect(master.relations[0].target.scope).to.be.equals('scope');
         expect(master.relations[0].type).to.be.equals('RECURSIVE');
-        expect(master.relations[0].model).to.be.equals('Master');
+        expect(master.relations[0].target.model).to.be.equals('Master');
         expect(master.relations[0].alias).to.be.equals('parent');
         expect(master.relations[0].key).to.be.equals('someId');
         expect(master.relations[0].required).to.be.equals(false);

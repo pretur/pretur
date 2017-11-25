@@ -74,7 +74,7 @@ export function buildProvider<T extends SpecType>(
 
   const aliasModelMap = spec.relations.reduce(
     (m, r) => {
-      m[r.alias] = { scope: r.scope!, model: r.model };
+      m[r.alias] = r.target;
       return m;
     },
     <AliasModelMap<T>>{},

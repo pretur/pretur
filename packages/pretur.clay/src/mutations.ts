@@ -146,8 +146,8 @@ export function buildMutationsExtractor(
       if (clay.fields[relation.alias]) {
         data[relation.alias] = <any>extractInsertData(
           clay.fields[relation.alias],
-          relation.scope!,
-          relation.model,
+          relation.target.scope,
+          relation.target.model,
         );
       }
     }
@@ -245,9 +245,11 @@ export function buildMutationsExtractor(
 
         for (const relation of spec.relations) {
           if (clay.fields[relation.alias]) {
-            requests.push(
-              ...getMutations(clay.fields[relation.alias], relation.scope!, relation.model),
-            );
+            requests.push(...getMutations(
+              clay.fields[relation.alias],
+              relation.target.scope,
+              relation.target.model,
+            ));
           }
         }
       }
