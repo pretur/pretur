@@ -16,12 +16,12 @@
     "url": "git+https://github.com/pretur/pretur"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.4",
+    "@types/chai": "^4.0.5",
     "@types/mocha": "^2.2.44",
-    "@types/node": "^8.0.47",
+    "@types/node": "^8.0.53",
     "@types/react-addons-test-utils": "^0.14.20",
     "chai": "^4.1.2",
-    "lerna": "^2.4.0",
+    "lerna": "^2.5.1",
     "mocha": "^4.0.1",
     "react-addons-test-utils": "^15.6.2",
     "ts-node": "^3.3.0",

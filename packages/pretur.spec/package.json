@@ -28,8 +28,8 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.spec",
   "dependencies": {
-    "@types/lodash": "^4.14.80",
-    "@types/node": "^8.0.47",
+    "@types/lodash": "^4.14.85",
+    "@types/node": "^8.0.53",
     "lodash": "^4.17.4",
     "pretur.i18n": "^0.28.1",
     "tslib": "^1.8.0"

@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/pretur/pretur/tree/master/packages/pretur.util",
   "dependencies": {
-    "@types/lodash": "^4.14.80",
+    "@types/lodash": "^4.14.85",
     "lodash": "^4.17.4",
     "tslib": "^1.8.0"
   },
