@@ -1,6 +1,6 @@
 {
   "name": "pretur.navigation",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "description": "SPA navigation helper using react and redux",
   "main": "lib/main.js",
   "typings": "lib/main.d.ts",
