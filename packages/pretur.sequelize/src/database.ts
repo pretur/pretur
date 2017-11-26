@@ -64,7 +64,9 @@ export function buildDatabaseModel<T extends SpecType>(
     defineOptions.indexes = spec.indexes.unique.map(fields => ({ unique: true, fields }));
   }
 
-  const model = sequelize.define(spec.name, attributes, defineOptions);
+  const model = sequelize.define(`${spec.scope}_${spec.name}`, attributes, defineOptions);
+
+  (<any>model).spec = spec;
 
   function initialize(pool: ProviderPool) {
     for (const relation of spec.relations) {

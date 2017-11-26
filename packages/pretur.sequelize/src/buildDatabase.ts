@@ -1,4 +1,5 @@
 import * as Sequelize from 'sequelize';
+import { Spec } from 'pretur.spec';
 import { ProviderPool } from './pool';
 
 export interface TableCreationHook {
@@ -26,9 +27,8 @@ export async function createDatabase(
   (<any>sequelize).modelManager.forEachModel((db: any) => topologicallySorted.push(db));
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database).name;
-    const schema: string = (<any>database).options.schema;
-    const provider = pool.providers[schema][name];
+    const spec: Spec = (<any>database).spec;
+    const provider = spec && pool.providers[spec.scope][spec.name];
 
     const create = async () => {
       await database.sync();
@@ -42,9 +42,8 @@ export async function createDatabase(
   }
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database).name;
-    const schema: string = (<any>database).options.schema;
-    const provider = pool.providers[schema][name];
+    const spec: Spec = (<any>database).spec;
+    const provider = spec && pool.providers[spec.scope][spec.name];
 
     if (provider && provider.metadata.afterDatabaseCreationHook) {
       await provider.metadata.afterDatabaseCreationHook(database, context);
@@ -61,9 +60,8 @@ export async function destroyDatabase(
   (<any>sequelize).modelManager.forEachModel((db: any) => topologicallySorted.push(db));
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database).name;
-    const schema: string = (<any>database).options.schema;
-    const provider = pool.providers[schema][name];
+    const spec: Spec = (<any>database).spec;
+    const provider = spec && pool.providers[spec.scope][spec.name];
 
     const destroy = async () => {
       await database.drop({ cascade: true });
@@ -77,9 +75,8 @@ export async function destroyDatabase(
   }
 
   for (const database of topologicallySorted) {
-    const name: string = (<any>database).name;
-    const schema: string = (<any>database).options.schema;
-    const provider = pool.providers[schema][name];
+    const spec: Spec = (<any>database).spec;
+    const provider = spec && pool.providers[spec.scope][spec.name];
 
     if (provider && provider.metadata.afterDatabaseDestructionHook) {
       await provider.metadata.afterDatabaseDestructionHook(database, context);
